@@ -1,1 +1,2 @@
 # DJSON
+Delphi JSON library
