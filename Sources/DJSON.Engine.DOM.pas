@@ -82,16 +82,6 @@ type
     class function DeserializePropField(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
   end;
 
-
-
-function ISODateTimeToString(ADateTime: TDateTime): string;
-function ISODateToString(ADate: TDateTime): string;
-function ISOTimeToString(ATime: TTime): string;
-
-function ISOStrToDateTime(DateTimeAsString: string): TDateTime;
-function ISOStrToDate(DateAsString: string): TDate;
-function ISOStrToTime(TimeAsString: string): TTime;
-
 implementation
 
 uses
@@ -99,62 +89,6 @@ uses
   DJSON.Exceptions, DJSON.Serializers, DJSON.Constants, DJSON.Attributes,
   DJSON.Duck.Interfaces, DJSON.Factory, DJSON.Utils, System.Classes,
   Soap.EncdDecd;
-
-function ISOTimeToString(ATime: TTime): string;
-var
-  fs: TFormatSettings;
-begin
-  fs.TimeSeparator := ':';
-  Result := FormatDateTime('hh:nn:ss', ATime, fs);
-end;
-
-function ISODateToString(ADate: TDateTime): string;
-begin
-  Result := FormatDateTime('YYYY-MM-DD', ADate);
-end;
-
-function ISODateTimeToString(ADateTime: TDateTime): string;
-var
-  fs: TFormatSettings;
-begin
-  fs.TimeSeparator := ':';
-  Result := FormatDateTime('yyyy-mm-dd hh:nn:ss', ADateTime, fs);
-end;
-
-function ISOStrToDateTime(DateTimeAsString: string): TDateTime;
-begin
-  Result := EncodeDateTime(StrToInt(Copy(DateTimeAsString, 1, 4)),
-    StrToInt(Copy(DateTimeAsString, 6, 2)), StrToInt(Copy(DateTimeAsString, 9, 2)),
-    StrToInt(Copy(DateTimeAsString, 12, 2)), StrToInt(Copy(DateTimeAsString, 15, 2)),
-    StrToInt(Copy(DateTimeAsString, 18, 2)), 0);
-end;
-
-function ISOStrToTime(TimeAsString: string): TTime;
-begin
-  Result := EncodeTime(StrToInt(Copy(TimeAsString, 1, 2)), StrToInt(Copy(TimeAsString, 4, 2)),
-    StrToInt(Copy(TimeAsString, 7, 2)), 0);
-end;
-
-function ISOStrToDate(DateAsString: string): TDate;
-begin
-  Result := EncodeDate(StrToInt(Copy(DateAsString, 1, 4)), StrToInt(Copy(DateAsString, 6, 2)),
-    StrToInt(Copy(DateAsString, 9, 2)));
-  // , StrToInt
-  // (Copy(DateAsString, 12, 2)), StrToInt(Copy(DateAsString, 15, 2)),
-  // StrToInt(Copy(DateAsString, 18, 2)), 0);
-end;
-
-
-// function ISODateToStr(const ADate: TDate): String;
-// begin
-// Result := FormatDateTime('YYYY-MM-DD', ADate);
-// end;
-//
-// function ISOTimeToStr(const ATime: TTime): String;
-// begin
-// Result := FormatDateTime('HH:nn:ss', ATime);
-// end;
-
 
 class function TdjEngineDOM.DeserializeClass(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
   AMasterObj: TObject; const AParams: IdjParams): TValue;
@@ -457,19 +391,19 @@ begin
       if AJSONValue is TJSONNull then
         Result := 0
       else
-        Result := TValue.From<TDate>(ISOStrToDateTime(AJSONValue.Value + ' 00:00:00'));
+        Result := TValue.From<TDate>(TdjUtils.ISOStrToDateTime(AJSONValue.Value + ' 00:00:00'));
     end
     else if LQualifiedTypeName = 'System.TDateTime' then
     begin
       if AJSONValue is TJSONNull then
         Result := 0
       else
-        Result := TValue.From<TDateTime>(ISOStrToDateTime(AJSONValue.Value));
+        Result := TValue.From<TDateTime>(TdjUtils.ISOStrToDateTime(AJSONValue.Value));
     end
     else if LQualifiedTypeName = 'System.TTime' then
     begin
       if AJSONValue is TJSONString then
-        Result := TValue.From<TTime>(ISOStrToTime(AJSONValue.Value))
+        Result := TValue.From<TTime>(TdjUtils.ISOStrToTime(AJSONValue.Value))
       else
         raise EdjEngineError.CreateFmt('Cannot deserialize TTime value, expected [%s] got [%s]',
           ['TJSONString', AJSONValue.ClassName]);
@@ -498,7 +432,6 @@ class function TdjEngineDOM.DeserializeInterface(const AJSONValue: TJSONValue; c
   const AParams: IdjParams): TValue;
 var
   LChildObj: TObject;
-
 begin
   // Init
   LChildObj := nil;
@@ -627,7 +560,7 @@ begin
     end;
     // Se ancora non è stato determinato il ValueType prova anche a vedere se  stato specificato
     //  l'attributo dsonTypeAttribute
-    if (not Assigned(LValueType)) and Assigned(APropField)
+    if LValueQualifiedTypeName.IsEmpty and Assigned(APropField)
     and (TdjDuckPropField.QualifiedName(APropField) = AValueType.QualifiedName)  // Questo per evitare che nel caso delle liste anche le items vedano l'attributo dsonTypeAttribute della proprietà a cui ri riferisce la lista stessa
     and TdjRTTI.HasAttribute<djTypeAttribute>(APropField, LdsonTypeAttribute)
     then
@@ -1198,17 +1131,17 @@ begin
     if AValue.AsExtended = 0 then
       Result := TJSONNull.Create
     else
-      Result := TJSONString.Create(ISODateToString(AValue.AsExtended))
+      Result := TJSONString.Create(TdjUtils.ISODateToString(AValue.AsExtended))
   end
   else if LQualifiedTypeName = 'System.TDateTime' then
   begin
     if AValue.AsExtended = 0 then
       Result := TJSONNull.Create
     else
-      Result := TJSONString.Create(ISODateTimeToString(AValue.AsExtended))
+      Result := TJSONString.Create(TdjUtils.ISODateTimeToString(AValue.AsExtended))
   end
   else if LQualifiedTypeName = 'System.TTime' then
-   Result := TJSONString.Create(ISOTimeToString(AValue.AsExtended))
+   Result := TJSONString.Create(TdjUtils.ISOTimeToString(AValue.AsExtended))
   else
     Result := TJSONNumber.Create(AValue.AsExtended);
 end;
@@ -1297,7 +1230,7 @@ var
   ts: TTimeStamp;
   LQualifiedTypeName: String;
 begin
-//  LQualifiedTypeName := TDuckPropField.QualifiedName(APropField);
+  Result := nil;
   LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
   // TTimeStamp
   if LQualifiedTypeName = 'System.SysUtils.TTimeStamp' then

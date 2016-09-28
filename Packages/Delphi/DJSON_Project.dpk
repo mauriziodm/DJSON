@@ -46,6 +46,7 @@ contains
   DJSON.Factory in '..\..\Sources\DJSON.Factory.pas',
   DJSON.Utils in '..\..\Sources\DJSON.Utils.pas',
   DJSON.Duck.Interfaces in '..\..\Sources\DJSON.Duck.Interfaces.pas',
-  DJSON.Exceptions in '..\..\Sources\DJSON.Exceptions.pas';
+  DJSON.Exceptions in '..\..\Sources\DJSON.Exceptions.pas',
+  DJSON.Engine.Stream in '..\..\Sources\DJSON.Engine.Stream.pas';
 
 end.

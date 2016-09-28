@@ -1,6 +1,6 @@
 {***************************************************************************}
 {                                                                           }
-{           DJSON - (Delphi JSON library)                                    }
+{           DJSON - (Delphi JSON library)                                   }
 {                                                                           }
 {           Copyright (C) 2016 Maurizio Del Magno                           }
 {                                                                           }

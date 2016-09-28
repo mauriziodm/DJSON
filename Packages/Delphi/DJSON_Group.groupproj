@@ -7,7 +7,7 @@
             <Dependencies/>
         </Projects>
         <Projects Include="..\..\Samples\Mapper_Phonebook\MapperPhonebookExample.dproj">
-            <Dependencies/>
+            <Dependencies>DJSON_Project.dproj</Dependencies>
         </Projects>
         <Projects Include="..\..\Samples\Mapper_Phonebook_Dictionary\MapperPhonebookDictionaryExample.dproj">
             <Dependencies/>
@@ -32,13 +32,13 @@
     <Target Name="DJSON_Project:Make">
         <MSBuild Projects="DJSON_Project.dproj" Targets="Make"/>
     </Target>
-    <Target Name="MapperPhonebookExample">
+    <Target Name="MapperPhonebookExample" DependsOnTargets="DJSON_Project">
         <MSBuild Projects="..\..\Samples\Mapper_Phonebook\MapperPhonebookExample.dproj"/>
     </Target>
-    <Target Name="MapperPhonebookExample:Clean">
+    <Target Name="MapperPhonebookExample:Clean" DependsOnTargets="DJSON_Project:Clean">
         <MSBuild Projects="..\..\Samples\Mapper_Phonebook\MapperPhonebookExample.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="MapperPhonebookExample:Make">
+    <Target Name="MapperPhonebookExample:Make" DependsOnTargets="DJSON_Project:Make">
         <MSBuild Projects="..\..\Samples\Mapper_Phonebook\MapperPhonebookExample.dproj" Targets="Make"/>
     </Target>
     <Target Name="MapperPhonebookDictionaryExample">

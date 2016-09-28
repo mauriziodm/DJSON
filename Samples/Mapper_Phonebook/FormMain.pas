@@ -339,17 +339,47 @@ var
   LPerson: TPerson;
   LNumtel: TNumTel;
 begin
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('---------- Start deserialized --------------');
-  for LPerson in APersonList do
-  begin
+  Memo1.Lines.BeginUpdate;
+  try
     Memo1.Lines.Add('');
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('---------- Start deserialized --------------');
+    for LPerson in APersonList do
+    begin
+      Memo1.Lines.Add('');
+      Memo1.Lines.Add('Class: ' + TPerson.ClassName);
+      Memo1.Lines.Add('ID = ' +  LPerson.ID.ToString);
+      Memo1.Lines.Add('Descrizione = ' +  LPerson.Descrizione);
+      for LNumtel in LPerson.NumTel do
+      begin
+        Memo1.Lines.Add('');
+        Memo1.Lines.Add('     Class: ' + LNumtel.ClassName);
+        Memo1.Lines.Add('     ID: ' + LNumtel.ID.ToString);
+        Memo1.Lines.Add('     MasterID: ' + LNumtel.MasterID.ToString);
+        Memo1.Lines.Add('     Numero: ' + LNumtel.Numero);
+      end;
+    end;
+    Memo1.Lines.Add('---------- End deserialized --------------');
+  finally
+    Memo1.Lines.EndUpdate;
+  end;
+end;
+
+procedure TMainForm.ShowSingleObjectData(APerson: TPerson);
+var
+  LNumTel: TNumTel;
+begin
+  Memo1.Lines.BeginUpdate;
+  try
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('---------- Start deserialized --------------');
     Memo1.Lines.Add('Class: ' + TPerson.ClassName);
-    Memo1.Lines.Add('ID = ' +  LPerson.ID.ToString);
-    Memo1.Lines.Add('Descrizione = ' +  LPerson.Descrizione);
-    for LNumtel in LPerson.NumTel do
+    Memo1.Lines.Add('ID = ' +  APerson.ID.ToString);
+    Memo1.Lines.Add('Descrizione = ' +  APerson.Descrizione);
+    for LNumtel in APerson.NumTel do
     begin
       Memo1.Lines.Add('');
       Memo1.Lines.Add('     Class: ' + LNumtel.ClassName);
@@ -357,30 +387,10 @@ begin
       Memo1.Lines.Add('     MasterID: ' + LNumtel.MasterID.ToString);
       Memo1.Lines.Add('     Numero: ' + LNumtel.Numero);
     end;
+    Memo1.Lines.Add('---------- End deserialized --------------');
+  finally
+    Memo1.Lines.EndUpdate;
   end;
-  Memo1.Lines.Add('---------- End deserialized --------------');
-end;
-
-procedure TMainForm.ShowSingleObjectData(APerson: TPerson);
-var
-  LNumTel: TNumTel;
-begin
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('---------- Start deserialized --------------');
-  Memo1.Lines.Add('Class: ' + TPerson.ClassName);
-  Memo1.Lines.Add('ID = ' +  APerson.ID.ToString);
-  Memo1.Lines.Add('Descrizione = ' +  APerson.Descrizione);
-  for LNumtel in APerson.NumTel do
-  begin
-    Memo1.Lines.Add('');
-    Memo1.Lines.Add('     Class: ' + LNumtel.ClassName);
-    Memo1.Lines.Add('     ID: ' + LNumtel.ID.ToString);
-    Memo1.Lines.Add('     MasterID: ' + LNumtel.MasterID.ToString);
-    Memo1.Lines.Add('     Numero: ' + LNumtel.Numero);
-  end;
-  Memo1.Lines.Add('---------- End deserialized --------------');
 end;
 
 end.

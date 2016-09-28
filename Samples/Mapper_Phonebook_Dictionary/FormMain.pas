@@ -332,29 +332,34 @@ var
   LPhoneNumber: IPhoneNumber;
   LKey: String;
 begin
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('---------- Start deserialized --------------');
-  for LPerson in APersonList do
-  begin
+  Memo1.Lines.BeginUpdate;
+  try
     Memo1.Lines.Add('');
-    Memo1.Lines.Add('Class: ' + (LPerson as TObject).ClassName);
-    Memo1.Lines.Add('ID = ' +  LPerson.ID.ToString);
-    Memo1.Lines.Add('Name = ' +  LPerson.Name);
-    for LKey in LPerson.Phones.Keys do
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('---------- Start deserialized --------------');
+    for LPerson in APersonList do
     begin
-      LPhoneNumber := LPerson.Phones.Items[LKey];
       Memo1.Lines.Add('');
-      Memo1.Lines.Add('     Class: ' + (LPhoneNumber as TObject).ClassName);
-      Memo1.Lines.Add('     Key (Type of phone number): ' + LKey);
-      Memo1.Lines.Add('     ID: ' + LPhoneNumber.ID.ToString);
-      Memo1.Lines.Add('     MasterID: ' + LPhoneNumber.MasterID.ToString);
-      Memo1.Lines.Add('     Number: ' + LPhoneNumber.Number);
+      Memo1.Lines.Add('Class: ' + (LPerson as TObject).ClassName);
+      Memo1.Lines.Add('ID = ' +  LPerson.ID.ToString);
+      Memo1.Lines.Add('Name = ' +  LPerson.Name);
+      for LKey in LPerson.Phones.Keys do
+      begin
+        LPhoneNumber := LPerson.Phones.Items[LKey];
+        Memo1.Lines.Add('');
+        Memo1.Lines.Add('     Class: ' + (LPhoneNumber as TObject).ClassName);
+        Memo1.Lines.Add('     Key (Type of phone number): ' + LKey);
+        Memo1.Lines.Add('     ID: ' + LPhoneNumber.ID.ToString);
+        Memo1.Lines.Add('     MasterID: ' + LPhoneNumber.MasterID.ToString);
+        Memo1.Lines.Add('     Number: ' + LPhoneNumber.Number);
+      end;
     end;
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('---------- End deserialized --------------');
+  finally
+    Memo1.Lines.EndUpdate;
   end;
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('---------- End deserialized --------------');
 end;
 
 procedure TMainForm.ShowSingleObjectData(APerson: IPerson);
@@ -362,25 +367,30 @@ var
   LKey: String;
   LPhoneNumber: IPhoneNumber;
 begin
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('---------- Start deserialized --------------');
-  Memo1.Lines.Add('Class: ' + (APerson as TObject).ClassName);
-  Memo1.Lines.Add('ID = ' +  APerson.ID.ToString);
-  Memo1.Lines.Add('Name = ' +  APerson.Name);
-  for LKey in APerson.Phones.Keys do
-  begin
-    LPhoneNumber := APerson.Phones.Items[LKey];
+  Memo1.Lines.BeginUpdate;
+  try
     Memo1.Lines.Add('');
-    Memo1.Lines.Add('     Class: ' + (LPhoneNumber as TObject).ClassName);
-    Memo1.Lines.Add('     Key (Type of phone number): ' + LKey);
-    Memo1.Lines.Add('     ID: ' + LPhoneNumber.ID.ToString);
-    Memo1.Lines.Add('     MasterID: ' + LPhoneNumber.MasterID.ToString);
-    Memo1.Lines.Add('     Number: ' + LPhoneNumber.Number);
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('---------- Start deserialized --------------');
+    Memo1.Lines.Add('Class: ' + (APerson as TObject).ClassName);
+    Memo1.Lines.Add('ID = ' +  APerson.ID.ToString);
+    Memo1.Lines.Add('Name = ' +  APerson.Name);
+    for LKey in APerson.Phones.Keys do
+    begin
+      LPhoneNumber := APerson.Phones.Items[LKey];
+      Memo1.Lines.Add('');
+      Memo1.Lines.Add('     Class: ' + (LPhoneNumber as TObject).ClassName);
+      Memo1.Lines.Add('     Key (Type of phone number): ' + LKey);
+      Memo1.Lines.Add('     ID: ' + LPhoneNumber.ID.ToString);
+      Memo1.Lines.Add('     MasterID: ' + LPhoneNumber.MasterID.ToString);
+      Memo1.Lines.Add('     Number: ' + LPhoneNumber.Number);
+    end;
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('---------- End deserialized --------------');
+  finally
+    Memo1.Lines.EndUpdate;
   end;
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('---------- End deserialized --------------');
 end;
 
 end.

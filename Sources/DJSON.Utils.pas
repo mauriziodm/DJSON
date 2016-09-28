@@ -48,12 +48,21 @@ type
     class procedure GetTypeNameIfEmpty(const APropField: TRttiNamedObject; const AParams:IdjParams; var ATypeName: String); static;
     class procedure GetItemsTypeNameIfEmpty(const APropField: TRttiNamedObject; const AParams:IdjParams; var AValueTypeName: String); overload; static;
     class procedure GetItemsTypeNameIfEmpty(const APropField: TRttiNamedObject; const AParams:IdjParams; var AKeyTypeName, AValueTypeName: String); overload; static;
+
+    class function ISODateTimeToString(ADateTime: TDateTime): string;
+    class function ISODateToString(ADate: TDateTime): string;
+    class function ISOTimeToString(ATime: TTime): string;
+
+    class function ISOStrToDateTime(DateTimeAsString: string): TDateTime;
+    class function ISOStrToDate(DateAsString: string): TDate;
+    class function ISOStrToTime(TimeAsString: string): TTime;
   end;
 
 implementation
 
 uses
-  DJSON.Attributes, System.SysUtils, DJSON.Utils.RTTI, DJSON.Duck.PropField;
+  DJSON.Attributes, System.SysUtils, DJSON.Utils.RTTI, DJSON.Duck.PropField,
+  System.DateUtils;
 
 { TdjUtils }
 
@@ -140,6 +149,50 @@ begin
   // If a dsonTypeAttritbute is found then retrieve the TypeName from it
   if Assigned(LdsonTypeAttribute) and not LdsonTypeAttribute.QualifiedName.IsEmpty then
     ATypeName := LdsonTypeAttribute.QualifiedName
+end;
+
+class function TdjUtils.ISODateTimeToString(ADateTime: TDateTime): string;
+var
+  fs: TFormatSettings;
+begin
+  fs.TimeSeparator := ':';
+  Result := FormatDateTime('yyyy-mm-dd hh:nn:ss', ADateTime, fs);
+end;
+
+class function TdjUtils.ISODateToString(ADate: TDateTime): string;
+begin
+  Result := FormatDateTime('YYYY-MM-DD', ADate);
+end;
+
+class function TdjUtils.ISOStrToDate(DateAsString: string): TDate;
+begin
+  Result := EncodeDate(StrToInt(Copy(DateAsString, 1, 4)), StrToInt(Copy(DateAsString, 6, 2)),
+    StrToInt(Copy(DateAsString, 9, 2)));
+  // , StrToInt
+  // (Copy(DateAsString, 12, 2)), StrToInt(Copy(DateAsString, 15, 2)),
+  // StrToInt(Copy(DateAsString, 18, 2)), 0);
+end;
+
+class function TdjUtils.ISOStrToDateTime(DateTimeAsString: string): TDateTime;
+begin
+  Result := EncodeDateTime(StrToInt(Copy(DateTimeAsString, 1, 4)),
+    StrToInt(Copy(DateTimeAsString, 6, 2)), StrToInt(Copy(DateTimeAsString, 9, 2)),
+    StrToInt(Copy(DateTimeAsString, 12, 2)), StrToInt(Copy(DateTimeAsString, 15, 2)),
+    StrToInt(Copy(DateTimeAsString, 18, 2)), 0);
+end;
+
+class function TdjUtils.ISOStrToTime(TimeAsString: string): TTime;
+begin
+  Result := EncodeTime(StrToInt(Copy(TimeAsString, 1, 2)), StrToInt(Copy(TimeAsString, 4, 2)),
+    StrToInt(Copy(TimeAsString, 7, 2)), 0);
+end;
+
+class function TdjUtils.ISOTimeToString(ATime: TTime): string;
+var
+  fs: TFormatSettings;
+begin
+  fs.TimeSeparator := ':';
+  Result := FormatDateTime('hh:nn:ss', ATime, fs);
 end;
 
 class function TdjUtils.IsPropertyToBeIgnored(

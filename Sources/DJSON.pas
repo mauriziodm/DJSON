@@ -66,7 +66,7 @@ type
     constructor Create(const AValue: TValue; const AParams:IdjParams);
     // Destinations
     function ToJSON: TJSONValue;
-    function ToString: String;
+    function ToString: String; override;
     // Params
     function Params(const AParams:IdjParams): TdjValueDestination;
     function ItemsOfType(const AValueType: PTypeInfo): TdjValueDestination; overload;
@@ -127,7 +127,8 @@ type
 implementation
 
 uses
-  DJSON.Factory, DJSON.Utils.RTTI, DJSON.Engine.DOM, DJSON.Constants, DJSON.Exceptions;
+  DJSON.Factory, DJSON.Utils.RTTI, DJSON.Engine.DOM, DJSON.Constants, DJSON.Exceptions,
+  DJSON.Engine.Stream;
 
 { dj }
 
@@ -233,7 +234,9 @@ var
 begin
   try
     LRttiType := TdjRTTI.TypeInfoToRttiType(ATypeValue);
-    Result := TdjEngineDOM.DeserializePropField(FValue, LRttiType, nil, nil, FParams);
+//    Result := TdjEngineDOM.DeserializePropField(FValue, LRttiType, nil, nil, FParams);
+{ TODO : Modificare TdjJSONDestination in modo cge FValue := String }
+    Result := TdjEngineStream.Deserialize(FValue.ToJSON, LRttiType, nil, nil, FParams);
   finally
     Self.Free;
   end;
@@ -366,6 +369,7 @@ var
 begin
   try
     // Init
+    Result := nil;
     LRttiType := nil;
     // Load types informations from the JSON
     if (FValue is TJSONObject) then begin

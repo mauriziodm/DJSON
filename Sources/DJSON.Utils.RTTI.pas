@@ -45,7 +45,6 @@ type
   private
     class var TValueToStringFormatSettings: TFormatSettings;
     class procedure Initialize; static;
-    class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject; out AAttribute: T): boolean; overload; static;
   public
     class var Ctx: TRttiContext;
     class function TValueToObject(const AValue: TValue): TObject; static;
@@ -55,6 +54,7 @@ type
     class function CreateObject(ARttiType: TRttiType): TObject; overload; static;
     class function CreateObject(AQualifiedClassName: string): TObject; overload; static;
     class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject): boolean; overload;
+    class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject; out AAttribute: T): boolean; overload; static;
   end;
 
 implementation

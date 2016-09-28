@@ -195,6 +195,8 @@ var
   LPizza: TPizza;
   LJSONValue: TJSONValue;
 begin
+  // Init
+  LJSONValue := nil;
   LPizza := BuildSampleObject;
   try
     // ---------------------
