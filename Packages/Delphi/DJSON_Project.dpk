@@ -47,6 +47,9 @@ contains
   DJSON.Utils in '..\..\Sources\DJSON.Utils.pas',
   DJSON.Duck.Interfaces in '..\..\Sources\DJSON.Duck.Interfaces.pas',
   DJSON.Exceptions in '..\..\Sources\DJSON.Exceptions.pas',
-  DJSON.Engine.Stream in '..\..\Sources\DJSON.Engine.Stream.pas';
+  DJSON.Engine.Stream in '..\..\Sources\DJSON.Engine.Stream.pas',
+  DJSON.Engine.Interfaces in '..\..\Sources\DJSON.Engine.Interfaces.pas',
+  JsonDataObjects in '..\..\Sources\JsonDataObjects.pas',
+  DJSON.Engine.JDO in '..\..\Sources\DJSON.Engine.JDO.pas';
 
 end.

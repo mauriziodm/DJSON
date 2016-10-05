@@ -99,6 +99,7 @@ end;
 class procedure TdjRTTI.Initialize;
 begin
   Ctx := TRttiContext.Create;
+  Ctx.FindType(''); // Workaround for thread safe: https://quality.embarcadero.com/browse/RSP-9815
 end;
 
 class function TdjRTTI.TValueToObject(const AValue: TValue): TObject;

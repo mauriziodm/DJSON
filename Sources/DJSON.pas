@@ -54,8 +54,7 @@ type
     class function From(const AValue:TValue; const AParams:IdjParams=nil): TdjValueDestination; overload;
     class function From(const AObject:TObject; const AParams:IdjParams=nil): TdjValueDestination; overload;
     class function From(const AInterface:IInterface; const AParams:IdjParams=nil): TdjValueDestination; overload;
-    class function FromJSON(const AJSONValue:TJSONValue; const AParams:IdjParams=nil): TdjJSONDestination; overload;
-    class function FromJSON(const AJSONString:String; const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    class function FromJSON(const AJSONText:String; const AParams:IdjParams=nil): TdjJSONDestination; overload;
   end;
 
   TdjValueDestination = class
@@ -65,8 +64,7 @@ type
   public
     constructor Create(const AValue: TValue; const AParams:IdjParams);
     // Destinations
-    function ToJSON: TJSONValue;
-    function ToString: String; override;
+    function ToJSON: String;
     // Params
     function Params(const AParams:IdjParams): TdjValueDestination;
     function ItemsOfType(const AValueType: PTypeInfo): TdjValueDestination; overload;
@@ -91,12 +89,10 @@ type
 
   TdjJSONDestination = class
   strict private
-    FValue: TJSONValue;
-    FOwnJSONValue_Transient: Boolean;  // Usato da "FromJSON" con parametro stringa
+    FJSONText: String;
     FParams: IdjParams;
   public
-    constructor Create(const AValue: TJSONValue; const AParams:IdjParams);
-    destructor Destroy; override;
+    constructor Create(const AJSONText:String; const AParams:IdjParams);
     // Destinations
     function ToValue(const ATypeValue:PTypeInfo): TValue;
     function ToObject: TObject;
@@ -121,14 +117,13 @@ type
     function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
     function CustomSerializer<Target>(const ASerializer:TdjCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
     function CustomSerializer<Target; Serializer:TdjCustomSerializer>(const AParams:IdjParams=nil): TdjJSONDestination; overload;
-    function OwnJSONValue(const AOwnJSONValue: Boolean = True): TdjJSONDestination;
   end;
 
 implementation
 
 uses
   DJSON.Factory, DJSON.Utils.RTTI, DJSON.Engine.DOM, DJSON.Constants, DJSON.Exceptions,
-  DJSON.Engine.Stream;
+  DJSON.Engine.Stream, DJSON.Engine.JDO;
 
 { dj }
 
@@ -153,11 +148,6 @@ begin
   Result.TypeAnnotations := False;
 end;
 
-class function dj.FromJSON(const AJSONValue:TJSONValue; const AParams:IdjParams=nil): TdjJSONDestination;
-begin
-  Result := TdjJSONDestination.Create(AJSONValue, AParams);
-end;
-
 class function dj.From(const AValue: TValue;
   const AParams: IdjParams): TdjValueDestination;
 begin
@@ -179,11 +169,10 @@ begin
   Result := Self.From(AInterface as TObject, AParams);
 end;
 
-class function dj.FromJSON(const AJSONString: String;
+class function dj.FromJSON(const AJSONText: String;
   const AParams: IdjParams): TdjJSONDestination;
 begin
-  Result := Self.FromJSON(TJSONObject.ParseJSONValue(AJSONString), AParams);
-  Result.OwnJSONValue(True);
+  Result := TdjJSONDestination.Create(AJSONText, AParams);
 end;
 
 { TdjJSONDestination }
@@ -194,7 +183,7 @@ var
 begin
   try
     LRttiType := TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo);
-    TdjEngineDOM.DeserializePropField(FValue, LRttiType, nil, AObject, FParams);
+    TdjEngineDOM.Deserialize(FJSONText, LRttiType, nil, AObject, FParams);
   finally
     Self.Free;
   end;
@@ -217,11 +206,10 @@ begin
   Result := Self;
 end;
 
-constructor TdjJSONDestination.Create(const AValue: TJSONValue; const AParams:IdjParams);
+constructor TdjJSONDestination.Create(const AJSONText:String; const AParams:IdjParams);
 begin
   inherited Create;
-  FValue := AValue;
-  FOwnJSONValue_Transient := False; // JSONValue is not owned by default
+  FJSONText := AJSONText;
   if Assigned(AParams) then
     FParams := AParams
   else
@@ -234,9 +222,10 @@ var
 begin
   try
     LRttiType := TdjRTTI.TypeInfoToRttiType(ATypeValue);
-//    Result := TdjEngineDOM.DeserializePropField(FValue, LRttiType, nil, nil, FParams);
 { TODO : Modificare TdjJSONDestination in modo cge FValue := String }
-    Result := TdjEngineStream.Deserialize(FValue.ToJSON, LRttiType, nil, nil, FParams);
+//    Result := TdjEngineDOM.Deserialize(FJSONText, LRttiType, nil, nil, FParams);
+    Result := TdjEngineJDO.Deserialize(FJSONText, LRttiType, nil, nil, FParams);
+//    Result := TdjEngineStream.Deserialize(FJSONText, LRttiType, nil, nil, FParams);
   finally
     Self.Free;
   end;
@@ -310,14 +299,6 @@ begin
   Result := Self;
 end;
 
-destructor TdjJSONDestination.Destroy;
-begin
-  // Destroy the JSONValue if owned
-  if (FParams.OwnJSONValue or FOwnJSONValue_Transient) and Assigned(FValue) then
-    FValue.Free;
-  inherited;
-end;
-
 function TdjJSONDestination.ItemsOfType(const AKeyType,
   AValueType: PTypeInfo): TdjJSONDestination;
 begin
@@ -342,13 +323,6 @@ begin
   Result := Self;
 end;
 
-function TdjJSONDestination.OwnJSONValue(
-  const AOwnJSONValue: Boolean): TdjJSONDestination;
-begin
-  FOwnJSONValue_Transient := AOwnJSONValue;
-  Result := Self;
-end;
-
 function TdjJSONDestination.Params(
   const AParams: IdjParams): TdjJSONDestination;
 begin
@@ -363,26 +337,26 @@ end;
 
 function TdjJSONDestination.ToObject: TObject;
 var
-  LRttiType: TRttiType;
+//  LRttiType: TRttiType;
   ResultValue: TValue;
-  LTypeJSONValue: TJSONValue;
+//  LTypeJSONValue: TJSONValue;
 begin
   try
     // Init
     Result := nil;
-    LRttiType := nil;
+//    LRttiType := nil;
     // Load types informations from the JSON
-    if (FValue is TJSONObject) then begin
-      // Retrieve the value type if embedded in JSON
-      LTypeJSONValue := TJSONObject(FValue).GetValue(DJ_TYPENAME);
-      if Assigned(LTypeJSONValue) then
-        LRttiType := TdjRTTI.QualifiedTypeNameToRttiType(LTypeJSONValue.Value);
-    end;
+//    if (FValue is TJSONObject) then begin
+//      // Retrieve the value type if embedded in JSON
+//      LTypeJSONValue := TJSONObject(FValue).GetValue(DJ_TYPENAME);
+//      if Assigned(LTypeJSONValue) then
+//        LRttiType := TdjRTTI.QualifiedTypeNameToRttiType(LTypeJSONValue.Value);
+//    end;
     // Check for destination Rtti validity
-    if not Assigned(LRttiType) then
-      raise EdjException.Create('Deserialize ToObject: Type informations not found.');
+//    if not Assigned(LRttiType) then
+//      raise EdjException.Create('Deserialize ToObject: Type informations not found.');
     // Deserialize
-    ResultValue := TdjEngineDOM.DeserializePropField(FValue, LRttiType, nil, nil, FParams);
+    ResultValue := TdjEngineDOM.Deserialize(FJSONText, nil, nil, nil, FParams);
     Result := ResultValue.AsObject;
   finally
     Self.Free;
@@ -507,26 +481,13 @@ begin
   Result := Self;
 end;
 
-function TdjValueDestination.ToJSON: TJSONValue;
-var
-  LRttiType: TRttiType;
+function TdjValueDestination.ToJSON: String;
 begin
   try
-    Result := TdjEngineDOM.SerializePropField(FValue, nil, FParams);
+    Result := TdjEngineDOM.Serialize(FValue, nil, FParams);
+//    Result := TdjEngineJDO.Serialize(FValue, nil, FParams);
   finally
     Self.Free;
-  end;
-end;
-
-function TdjValueDestination.ToString: String;
-var
-  LJSONValue: TJSONValue;
-begin
-  LJSONValue := Self.ToJSON;
-  try
-    Result := LJSONValue.ToString;
-  finally
-    LJSONValue.Free;
   end;
 end;
 

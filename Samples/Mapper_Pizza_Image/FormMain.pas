@@ -193,23 +193,22 @@ end;
 procedure TMainForm.ButtonOtherSerialize1Click(Sender: TObject);
 var
   LPizza: TPizza;
-  LJSONValue: TJSONValue;
+  FJSONText: String;
 begin
   // Init
-  LJSONValue := nil;
   LPizza := BuildSampleObject;
   try
     // ---------------------
     // Esempio di come serializzare senza l'utilizzo di un oggetto "IomParams" ma specificando alcuni
     //  parametri direttamente sulla chiamata. In questo caso viene indicato di utilizzare il custom serializer
     //  "TStringCustomSerializer" per il tipo "String".
-    LJSONValue := dj.From(LPizza).CustomSerializer<String,TStringCustomSerializer>.ToJSON;
+    FJSONText := dj.From(LPizza).CustomSerializer<String,TStringCustomSerializer>.ToJSON;
     // ---------------------
+//    FJSONText := StringReplace(FJSONText,#$A,'',[rfReplaceAll]);
+//    FJSONText := StringReplace(FJSONText,#$D,'',[rfReplaceAll]);
     Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
+    Memo1.Lines.Text := FJSONText;
   finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
     LPizza.Free;
   end;
 end;
@@ -218,19 +217,19 @@ procedure TMainForm.ButtonSerializeObjectListClick(Sender: TObject);
 var
   LPizzaList: TObjectList<TPizza>;
   LParams: IdjParams;
-  LJSONValue: TJSONValue;
+  FJSONText: String;
 begin
   LParams     := BuildMapperParams;
   LPizzaList  := BuildSampleList;
   try
     // ---------------------
-    LJSONValue := dj.From(LPizzaList, LParams).ToJSON;
+    FJSONText := dj.From(LPizzaList, LParams).ToJSON;
     // ---------------------
+//    FJSONText := StringReplace(FJSONText,#$A,'',[rfReplaceAll]);
+//    FJSONText := StringReplace(FJSONText,#$D,'',[rfReplaceAll]);
     Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
+    Memo1.Lines.Text := FJSONText;
   finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
     LPizzaList.Free;
   end;
 end;
@@ -239,19 +238,19 @@ procedure TMainForm.ButtonSerializeSignleObjectClick(Sender: TObject);
 var
   LPizza: TPizza;
   LParams: IdjParams;
-  LJSONValue: TJSONValue;
+  FJSONText: String;
 begin
   LParams := BuildMapperParams;
   LPizza := BuildSampleObject;
   try
     // ---------------------
-    LJSONValue := dj.From(LPizza, LParams).ToJSON;
+    FJSONText := dj.From(LPizza, LParams).ToJSON;
     // ---------------------
+//    FJSONText := StringReplace(FJSONText,#$A,'',[rfReplaceAll]);
+//    FJSONText := StringReplace(FJSONText,#$D,'',[rfReplaceAll]);
     Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
+    Memo1.Lines.Text := FJSONText;
   finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
     LPizza.Free;
   end;
 end;

@@ -10,9 +10,15 @@
             <Dependencies>DJSON_Project.dproj</Dependencies>
         </Projects>
         <Projects Include="..\..\Samples\Mapper_Phonebook_Dictionary\MapperPhonebookDictionaryExample.dproj">
-            <Dependencies/>
+            <Dependencies>DJSON_Project.dproj</Dependencies>
         </Projects>
         <Projects Include="..\..\Samples\Mapper_Pizza_Image\MapperPizzaImageExample.dproj">
+            <Dependencies>DJSON_Project.dproj</Dependencies>
+        </Projects>
+        <Projects Include="..\..\Samples\PerformanceTest\PerformanceTest.dproj">
+            <Dependencies>DJSON_Project.dproj</Dependencies>
+        </Projects>
+        <Projects Include="C:\Users\Mauri\Desktop\Rtti-Speed-Demo\Project1.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -41,32 +47,50 @@
     <Target Name="MapperPhonebookExample:Make" DependsOnTargets="DJSON_Project:Make">
         <MSBuild Projects="..\..\Samples\Mapper_Phonebook\MapperPhonebookExample.dproj" Targets="Make"/>
     </Target>
-    <Target Name="MapperPhonebookDictionaryExample">
+    <Target Name="MapperPhonebookDictionaryExample" DependsOnTargets="DJSON_Project">
         <MSBuild Projects="..\..\Samples\Mapper_Phonebook_Dictionary\MapperPhonebookDictionaryExample.dproj"/>
     </Target>
-    <Target Name="MapperPhonebookDictionaryExample:Clean">
+    <Target Name="MapperPhonebookDictionaryExample:Clean" DependsOnTargets="DJSON_Project:Clean">
         <MSBuild Projects="..\..\Samples\Mapper_Phonebook_Dictionary\MapperPhonebookDictionaryExample.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="MapperPhonebookDictionaryExample:Make">
+    <Target Name="MapperPhonebookDictionaryExample:Make" DependsOnTargets="DJSON_Project:Make">
         <MSBuild Projects="..\..\Samples\Mapper_Phonebook_Dictionary\MapperPhonebookDictionaryExample.dproj" Targets="Make"/>
     </Target>
-    <Target Name="MapperPizzaImageExample">
+    <Target Name="MapperPizzaImageExample" DependsOnTargets="DJSON_Project">
         <MSBuild Projects="..\..\Samples\Mapper_Pizza_Image\MapperPizzaImageExample.dproj"/>
     </Target>
-    <Target Name="MapperPizzaImageExample:Clean">
+    <Target Name="MapperPizzaImageExample:Clean" DependsOnTargets="DJSON_Project:Clean">
         <MSBuild Projects="..\..\Samples\Mapper_Pizza_Image\MapperPizzaImageExample.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="MapperPizzaImageExample:Make">
+    <Target Name="MapperPizzaImageExample:Make" DependsOnTargets="DJSON_Project:Make">
         <MSBuild Projects="..\..\Samples\Mapper_Pizza_Image\MapperPizzaImageExample.dproj" Targets="Make"/>
     </Target>
+    <Target Name="PerformanceTest" DependsOnTargets="DJSON_Project">
+        <MSBuild Projects="..\..\Samples\PerformanceTest\PerformanceTest.dproj"/>
+    </Target>
+    <Target Name="PerformanceTest:Clean" DependsOnTargets="DJSON_Project:Clean">
+        <MSBuild Projects="..\..\Samples\PerformanceTest\PerformanceTest.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PerformanceTest:Make" DependsOnTargets="DJSON_Project:Make">
+        <MSBuild Projects="..\..\Samples\PerformanceTest\PerformanceTest.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Project1">
+        <MSBuild Projects="C:\Users\Mauri\Desktop\Rtti-Speed-Demo\Project1.dproj"/>
+    </Target>
+    <Target Name="Project1:Clean">
+        <MSBuild Projects="C:\Users\Mauri\Desktop\Rtti-Speed-Demo\Project1.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Project1:Make">
+        <MSBuild Projects="C:\Users\Mauri\Desktop\Rtti-Speed-Demo\Project1.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="DJSON_Project;MapperPhonebookExample;MapperPhonebookDictionaryExample;MapperPizzaImageExample"/>
+        <CallTarget Targets="DJSON_Project;MapperPhonebookExample;MapperPhonebookDictionaryExample;MapperPizzaImageExample;PerformanceTest;Project1"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="DJSON_Project:Clean;MapperPhonebookExample:Clean;MapperPhonebookDictionaryExample:Clean;MapperPizzaImageExample:Clean"/>
+        <CallTarget Targets="DJSON_Project:Clean;MapperPhonebookExample:Clean;MapperPhonebookDictionaryExample:Clean;MapperPizzaImageExample:Clean;PerformanceTest:Clean;Project1:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="DJSON_Project:Make;MapperPhonebookExample:Make;MapperPhonebookDictionaryExample:Make;MapperPizzaImageExample:Make"/>
+        <CallTarget Targets="DJSON_Project:Make;MapperPhonebookExample:Make;MapperPhonebookDictionaryExample:Make;MapperPizzaImageExample:Make;PerformanceTest:Make;Project1:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

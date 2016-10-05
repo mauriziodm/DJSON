@@ -224,41 +224,25 @@ end;
 procedure TMainForm.ButtonOtherSerialize1Click(Sender: TObject);
 var
   LPerson: IPerson;
-  LJSONValue: TJSONValue;
 begin
   LPerson := BuildSampleObject;
-  try
-    // ---------------------
-    // Questo è il modo più semplice di utilizzare il mapper in questo caso
-    LJSONValue := dj.From(LPerson).TypeAnnotationsON.ToJSON;
-    // ---------------------
-    Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
-  finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
-  end;
+  Memo1.Clear;
+  Memo1.Lines.Text := dj.From(LPerson).TypeAnnotationsON.ToJSON;
 end;
 
 procedure TMainForm.ButtonOtherSerialize2Click(Sender: TObject);
 var
   LPersonList: TList<IPerson>;
-  LJSONValue: TJSONValue;
 begin
   LPersonList := BuildSampleList;
   try
-    // ---------------------
     // Utilizzo del mapper senza un oggetto "Params" ma specificando gli eventuali parametri
     //  desiderati direttamente sulla chiamata.
     //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
     //  annotazione dei tipi nel JSON attivata e disabilita gli eventuali custom serializers.
-    LJSONValue := dj.From(LPersonList).byFields.TypeAnnotationsON.CustomSerializersOFF.ToJSON;
-    // ---------------------
     Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
+    Memo1.Lines.Text := dj.From(LPersonList).byFields.TypeAnnotationsON.CustomSerializersOFF.ToJSON;
   finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
     LPersonList.Free;
   end;
 end;
@@ -266,42 +250,27 @@ end;
 procedure TMainForm.ButtonOtherSerialize3Click(Sender: TObject);
 var
   LPerson: IPerson;
-  LJSONValue: TJSONValue;
 begin
   LPerson := BuildSampleObject;
-  try
-    // ---------------------
-    // Utilizzo del mapper senza un oggetto "Params" ma specificando gli eventuali parametri
-    //  desiderati direttamente sulla chiamata.
-    //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
-    //  annotazione dei tipi nel JSON attivata e con gli eventuali custom serializers attivati.
-    LJSONValue := dj.From(LPerson).byFields.TypeAnnotationsON.CustomSerializersON.ToJSON;
-    // ---------------------
-    Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
-  finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
-  end;
+  // Utilizzo del mapper senza un oggetto "Params" ma specificando gli eventuali parametri
+  //  desiderati direttamente sulla chiamata.
+  //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
+  //  annotazione dei tipi nel JSON attivata e con gli eventuali custom serializers attivati.
+  Memo1.Clear;
+  Memo1.Lines.Text := dj.From(LPerson).byFields.TypeAnnotationsON.CustomSerializersON.ToJSON;
 end;
 
 procedure TMainForm.ButtonSerializeObjectListClick(Sender: TObject);
 var
   LPersonList: TList<IPerson>;
   LParams: IdjParams;
-  LJSONValue: TJSONValue;
 begin
   LParams     := BuildMapperParams;
   LPersonList := BuildSampleList;
   try
-    // ---------------------
-    LJSONValue := dj.From(LPersonList, LParams).ToJSON;
-    // ---------------------
     Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
+    Memo1.Lines.Text := dj.From(LPersonList, LParams).ToJSON;
   finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
     LPersonList.Free;
   end;
 end;
@@ -310,20 +279,11 @@ procedure TMainForm.ButtonSerializeSignleObjectClick(Sender: TObject);
 var
   LPerson: IPerson;
   LParams: IdjParams;
-  LJSONValue: TJSONValue;
 begin
   LParams := BuildMapperParams;
   LPerson := BuildSampleObject;
-  try
-    // ---------------------
-    LJSONValue := dj.From(LPerson, LParams).ToJSON;
-    // ---------------------
-    Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
-  finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
-  end;
+  Memo1.Clear;
+  Memo1.Lines.Text := dj.From(LPerson, LParams).ToJSON;
 end;
 
 procedure TMainForm.ShowListData(APersonList: TList<IPerson>);

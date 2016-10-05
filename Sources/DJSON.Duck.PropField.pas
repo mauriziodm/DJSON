@@ -123,6 +123,10 @@ begin
 end;
 
 class procedure TdjDuckPropField.SetValue(const Instance: TObject; const ARttiType: TRttiNamedObject; const AValue: TValue);
+// --------------- TEST FOR OPTIMIZATION (for properties only, no fields) --------------------
+//var
+//  LPropInfo:PPropInfo;
+// --------------- TEST FOR OPTIMIZATION (for properties only, no fields) --------------------
 begin
   case GetPropFieldType(ARttiType) of
     ptField:
@@ -132,6 +136,15 @@ begin
   else
       raise EdsonDuckException.CreateFmt('Invalid prop/field type $s', [ARttiType.Name]);
   end;
+// --------------- TEST FOR OPTIMIZATION (for properties only, no fields) --------------------
+//  LPropInfo := TRttiInstanceProperty(ARttiType).PropInfo;
+//  case LPropInfo.PropType^.Kind of
+//    tkString, tkLString, tkWString, tkUString:
+//      SetStrProp(Instance, LPropInfo, AValue.AsString);
+//    tkInteger, tkInt64:
+//      SetOrdProp(Instance, LPropInfo, AValue.AsOrdinal);
+//  end;
+// --------------- TEST FOR OPTIMIZATION (for properties only, no fields) --------------------
 end;
 
 class function TdjDuckPropField.TypeKind(const ARttiType: TRttiNamedObject): TTypeKind;

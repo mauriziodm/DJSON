@@ -1,2 +1,2 @@
 # DJSON
-Delphi JSON library
+Delphi JSON object mapper

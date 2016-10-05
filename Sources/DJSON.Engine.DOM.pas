@@ -46,6 +46,7 @@ type
   TdjEngineDOM = class
   private
     // Serializers
+    class function SerializePropField(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): TJSONValue; static;
     class function SerializeFloat(const AValue: TValue): TJSONValue; static;
     class function SerializeEnumeration(const AValue: TValue): TJSONValue; static;
     class function SerializeInteger(const AValue: TValue): TJSONValue; static;
@@ -62,6 +63,7 @@ type
     class function SerializeStreamableObject(const AObj: TObject; const APropField: TRttiNamedObject; out ResultJSONValue:TJSONValue): Boolean; static;
     class function SerializeStream(const AStream: TObject; const APropField: TRttiNamedObject; out ResultJSONValue:TJSONValue): Boolean; static;
     // Deserializers
+    class function DeserializePropField(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class function DeserializeFloat(const AJSONValue: TJSONValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeEnumeration(const AJSONValue: TJSONValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeInteger(const AJSONValue: TJSONValue): TValue; static;
@@ -78,8 +80,8 @@ type
     class function DeserializeStreamableObject(AObj: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject): Boolean; static;
     class function DeserializeStream(AStream: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject): Boolean; static;
   public
-    class function SerializePropField(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): TJSONValue; static;
-    class function DeserializePropField(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
+    class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; static;
+    class function Deserialize(const AJSONText: String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
   end;
 
 implementation
@@ -89,6 +91,22 @@ uses
   DJSON.Exceptions, DJSON.Serializers, DJSON.Constants, DJSON.Attributes,
   DJSON.Duck.Interfaces, DJSON.Factory, DJSON.Utils, System.Classes,
   Soap.EncdDecd;
+
+class function TdjEngineDOM.Deserialize(const AJSONText: String;
+  const AValueType: TRttiType; const APropField: TRttiNamedObject;
+  const AMasterObj: TObject; const AParams: IdjParams): TValue;
+var
+  LJSONValue: TJSONValue;
+begin
+  LJSONValue := TJSONObject.ParseJSONValue(AJSONText);
+  if not Assigned(LJSONValue) then
+    raise EdjEngineError.Create('Wrong JSON text.');
+  try
+    Result := DeserializePropField(LJSONValue, AValueType, APropField, AMasterObj, AParams);
+  finally
+    LJSONValue.Free;
+  end;
+end;
 
 class function TdjEngineDOM.DeserializeClass(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
   AMasterObj: TObject; const AParams: IdjParams): TValue;
@@ -549,7 +567,7 @@ begin
   LValueType := nil;
   LValueQualifiedTypeName := String.Empty;
   // Non deve considerare i TValue
-  if AValueType.Name <> 'TValue' then
+  if not(   Assigned(AValueType) and (AValueType.Name = 'TValue')   ) then
   begin
     // Cerca il ValueType in una eventuale JSONAnnotation
     if AParams.TypeAnnotations and (AJSONValue is TJSONObject) then
@@ -908,6 +926,20 @@ begin
   Result := True;
 end;
 
+class function TdjEngineDOM.Serialize(const AValue: TValue;
+  const APropField: TRttiNamedObject; const AParams: IdjParams;
+  const AEnableCustomSerializers: Boolean): String;
+var
+  LJSONValue: TJSONValue;
+begin
+  LJSONValue := SerializePropField(AValue, APropField, AParams, AEnableCustomSerializers);
+  try
+    Result := LJSONValue.ToJSON;
+  finally
+    LJSONValue.Free;
+  end;
+end;
+
 class function TdjEngineDOM.SerializeClass(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue;
 var
   AChildObj: TObject;
@@ -1179,10 +1211,9 @@ begin
       if (LPropField.Name = 'FRefCount') or (LPropField.Name = 'RefCount') then Continue;
       // f := LowerCase(_property.Name);
       LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
-      // Check if there is properties to ignore
-      if TdjUtils.IsPropertyToBeIgnored(LPropField, AParams) then
-      // Check for "DoNotSerializeAttribute"
-      if TdjRTTI.HasAttribute<djSkipAttribute>(LPropField) then
+      // Check for "DoNotSerializeAttribute" or property to ignore
+      if TdjRTTI.HasAttribute<djSkipAttribute>(LPropField)
+      or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams) then
         Continue;
       // Serialize the currente member and add it to the JSONBox
       LValue := TdjDuckPropField.GetValue(AObject, LPropField);

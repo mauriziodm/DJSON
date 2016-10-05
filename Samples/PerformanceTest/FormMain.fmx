@@ -1,0 +1,116 @@
+object MainForm: TMainForm
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 596
+  ClientWidth = 380
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnDestroy = FormDestroy
+  DesignerMasterStyle = 0
+  object ButtonCreate: TButton
+    Position.X = 24.000000000000000000
+    Position.Y = 88.000000000000000000
+    Size.Width = 153.000000000000000000
+    Size.Height = 33.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 4
+    Text = 'Create samples objects'
+    OnClick = ButtonCreateClick
+  end
+  object eNumOfObjects: TEdit
+    Tag = 1000
+    Touch.InteractiveGestures = [LongTap, DoubleTap]
+    TabOrder = 5
+    Position.X = 24.000000000000000000
+    Position.Y = 48.000000000000000000
+  end
+  object LabelElapsedCreate: TLabel
+    Position.X = 192.000000000000000000
+    Position.Y = 96.000000000000000000
+    Size.Width = 177.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = '- - -'
+  end
+  object ButonSerializeDOM: TButton
+    Position.X = 24.000000000000000000
+    Position.Y = 152.000000000000000000
+    Size.Width = 153.000000000000000000
+    Size.Height = 33.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+    Text = 'Serialize (DOM)'
+    OnClick = ButonSerializeDOMClick
+  end
+  object LabelElapsedSerializeDOM: TLabel
+    Position.X = 192.000000000000000000
+    Position.Y = 160.000000000000000000
+    Size.Width = 177.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = '- - -'
+  end
+  object ButtonDeserializeDOM: TButton
+    Position.X = 24.000000000000000000
+    Position.Y = 344.000000000000000000
+    Size.Width = 153.000000000000000000
+    Size.Height = 33.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    Text = 'Deserialize (DOM)'
+    OnClick = ButtonDeserializeDOMClick
+  end
+  object LabelElapsedDeserializeDOM: TLabel
+    Position.X = 192.000000000000000000
+    Position.Y = 352.000000000000000000
+    Size.Width = 177.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = '- - -'
+  end
+  object ButtonDeserializaStream: TButton
+    Position.X = 24.000000000000000000
+    Position.Y = 384.000000000000000000
+    Size.Width = 153.000000000000000000
+    Size.Height = 33.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    Text = 'Deserialize (stream)'
+    OnClick = ButtonDeserializaStreamClick
+  end
+  object LabelElapsedDeserializeStream: TLabel
+    Position.X = 192.000000000000000000
+    Position.Y = 392.000000000000000000
+    Size.Width = 177.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = '- - -'
+  end
+  object ButtonDeserializaJDO: TButton
+    Position.X = 24.000000000000000000
+    Position.Y = 424.000000000000000000
+    Size.Width = 153.000000000000000000
+    Size.Height = 33.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    Text = 'Deserialize (JDO)'
+    OnClick = ButtonDeserializaJDOClick
+  end
+  object LabelElapsedDeserializeJDO: TLabel
+    Position.X = 192.000000000000000000
+    Position.Y = 432.000000000000000000
+    Size.Width = 177.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = '- - -'
+  end
+  object Button1: TButton
+    Position.X = 216.000000000000000000
+    Position.Y = 248.000000000000000000
+    TabOrder = 6
+    Text = 'Button1'
+    OnClick = Button1Click
+  end
+end

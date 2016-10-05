@@ -13,8 +13,6 @@ type
     class function DeserializePropField(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class function DeserializeFloat(const AJSONReader: TJSONReader; const AValueType: TRttiType): TValue; static;
     class function DeserializeEnumeration(const AJSONReader: TJSONReader; const AValueType: TRttiType): TValue; static;
-    class function DeserializeInteger(const AJSONReader: TJSONReader): TValue; static;
-    class function DeserializeString(const AJSONReader: TJSONReader): TValue; static;
     class function DeserializeRecord(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
     class procedure DeserializeClassCommon(var AChildObj: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class function DeserializeClass(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; AMasterObj: TObject; const AParams: IdjParams): TValue; static;
@@ -28,9 +26,10 @@ type
     class function DeserializeStream(AStream: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject): Boolean; static;
     // Other
     class function TryGetTypeAnnotation(const AJSONReader: TJSONReader; const ATypeAnnotationName:String; var ResultTypeAnnotationValue:String): Boolean;
-  public
-    class function Deserialize(const AJSONText:String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class function CheckForEndObjectCharIfTypeAnnotations(const AJSONReader: TJSONReader; const AParams: IdjParams): Boolean;
+  public
+    class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; static;
+    class function Deserialize(const AJSONText:String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
   end;
 
 implementation
@@ -64,6 +63,7 @@ var
   LStringReader: TStringReader;
   LJSONReader: TJSONTextReader;
 begin
+  inherited;
   LStringReader := TStringReader.Create(AJSONText);
   LJSONReader := TJsonTextReader.Create(LStringReader);
   try
@@ -313,16 +313,6 @@ begin
     raise EdjEngineError.Create('Cannot deserialize float value.');
 end;
 
-class function TdjEngineStream.DeserializeInteger(
-  const AJSONReader: TJSONReader): TValue;
-begin
-  case AJSONReader.TokenType of
-    TJsonToken.Integer: Result := AJSONReader.Value;
-  else
-    raise EdjEngineError.Create('Cannot deserialize integer value.');
-  end;
-end;
-
 class function TdjEngineStream.DeserializeInterface(
   const AJSONReader: TJSONReader; const AValueType: TRttiType;
   const APropField: TRttiNamedObject; AMasterObj: TObject;
@@ -439,7 +429,7 @@ var
     end;
     // If found then exit else continue find considering even the djNameAttribute
     if Assigned(LPropField) then Exit;
-    // Get members list if not alreadi assigned
+    // Get members list if not already assigned
     if not Assigned(LPropsFields) then
     begin
       case AParams.SerializationType of
@@ -451,7 +441,7 @@ var
     end;
     // Loop and find
     for LPropFieldInternal in LPropsFields do
-      if TdjRTTI.HasAttribute(LPropFieldInternal, LNameAttribute) and (LNameAttribute.Name = LPropFieldKey) then
+      if TdjRTTI.HasAttribute<djNameAttribute>(LPropFieldInternal, LNameAttribute) and (LNameAttribute.Name = LPropFieldKey) then
       begin
         LPropField := LPropFieldInternal;
         Exit;
@@ -518,7 +508,7 @@ begin
   LValueType := nil;
   LValueQualifiedTypeName := String.Empty;
   // Non deve considerare i TValue
-  if AValueType.Name <> 'TValue' then
+  if not(   Assigned(AValueType) and (AValueType.Name = 'TValue')   ) then
   begin
     // Cerca il ValueType in una eventuale JSONAnnotation e se non la trova
     //  cerca anche un eventuale attributo LValueQualifiedTypeName
@@ -547,11 +537,11 @@ begin
     tkEnumeration:
       Result := DeserializeEnumeration(AJSONReader, LValueType);
     tkInteger, tkInt64:
-      Result := DeserializeInteger(AJSONReader);
+      Result := AJSONReader.Value;
     tkFloat:
-      Result := AJSONReader.Value.AsExtended;
+      Result := DeserializeFloat(AJSONReader, AValueType);
     tkString, tkLString, tkWString, tkUString:
-      Result := DeserializeString(AJSONReader);
+      Result := AJSONReader.Value;
     tkRecord:
       Result := DeserializeRecord(AJSONReader, LValueType, APropField, AParams);
     tkClass:
@@ -662,12 +652,13 @@ begin
   // Init
   Result := False;
   // The JSONToken must be a string type
-  if not(AJSONReader.TokenType <> TJsonToken.String) then
+  if AJSONReader.TokenType <> TJsonToken.String then
     raise EdjEngineError.Create('Wrong JSON token type deserializing a streamable object (' + AObj.ClassName + ')');
   // Load the string representation of the stream from the JSON then
   //  load it into the object
   LValueAsString := AJSONReader.Value.AsString;
-  AJSONReader.Read;
+  { TODO : Risistemare }
+//  AJSONReader.Read;
   LStringStream := TSTringStream.Create;
   LMemoryStream := TMemoryStream.Create;
   try
@@ -682,19 +673,6 @@ begin
   end;
   // Se tutto è andato bene...
   Result := True;
-end;
-
-class function TdjEngineStream.DeserializeString(
-  const AJSONReader: TJSONReader): TValue;
-begin
- Result := AJSONReader.Value;
-
-{ TODO : Risistemare }
-//  case AJSONReader.TokenType of
-//    TJsonToken.String: Result := AJSONReader.Value;
-//  else
-//    raise EdjEngineError.Create('Cannot deserialize string value.');
-//  end;
 end;
 
 class function TdjEngineStream.DeserializeTValue(const AJSONReader: TJSONReader;
@@ -728,6 +706,13 @@ begin
   // If TypeAnnotations is enabled then e "CloseObject" char is expected
   if CheckForEndObjectCharIfTypeAnnotations(AJSONReader, AParams) then
     raise EdjEngineError.Create('EndObject char expected for TValue (TypeAnnotations enabled).');
+end;
+
+class function TdjEngineStream.Serialize(const AValue: TValue;
+  const APropField: TRttiNamedObject; const AParams: IdjParams;
+  const AEnableCustomSerializers: Boolean): String;
+begin
+  inherited;
 end;
 
 class function TdjEngineStream.TryGetTypeAnnotation(
