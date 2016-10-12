@@ -3,7 +3,8 @@ unit DJSON.Engine.Stream;
 interface
 
 uses
-  System.Rtti, DJSON.Params, System.JSON.Readers, System.JSON.Writers;
+  System.Rtti, DJSON.Params, System.JSON.Readers, System.JSON.Writers,
+  DJSON.Duck.Interfaces;
 
 type
 
@@ -34,7 +35,7 @@ type
     class function DeserializeInterface(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class procedure DeserializeObject(const AJSONReader: TJSONReader; AObject:TObject; const AParams: IdjParams); static;
     class function DeserializeTValue(const AJSONReader: TJSONReader; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
-    class function DeserializeList(AList: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
+    class procedure DeserializeList(const ADuckList: IdjDuckList; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class function DeserializeDictionary(ADictionary: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
     class function DeserializeStreamableObject(AObj: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject): Boolean; static;
     class function DeserializeStream(AStream: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject): Boolean; static;
@@ -52,7 +53,7 @@ implementation
 uses
   System.Classes, System.SysUtils, System.JSON.Types, DJSON.Constants,
   DJSON.Duck.PropField, DJSON.Utils.RTTI, DJSON.Attributes, DJSON.Exceptions,
-  DJSON.Utils, DJSON.Factory, DJSON.Duck.Interfaces, Soap.EncdDecd;
+  DJSON.Utils, DJSON.Factory, Soap.EncdDecd, DJSON.TypeInfoCache;
 
 { TdjEngineStream }
 
@@ -126,24 +127,44 @@ end;
 class procedure TdjEngineStream.DeserializeClassCommon(var AChildObj: TObject;
   const AJSONReader: TJSONReader; const APropField: TRttiNamedObject;
   const AParams: IdjParams);
+var
+  LTypeInfoCacheItem: TdjTypeInfoCacheItem;
 begin
-  // Stream
-  if DeserializeStream(AChildObj, AJSONReader, APropField) then
-  // Dictionary
-  else if DeserializeDictionary(AChildObj, AJSONReader, APropField, AParams) then
-  // List
-  else if DeserializeList(AChildObj, AJSONReader, APropField, AParams) then
-  // StreamableObject
-  else if DeserializeStreamableObject(AChildObj, AJSONReader, APropField) then
-  // Normal object property (try to deserialize but the JSON must be a JSONObject)
-  else if (AJSONReader.TokenType <> TJsonToken.Null) then
-    DeserializeObject(AJSONReader, AChildObj, AParams)
-  // If the JSONValue is a TJSONNull
-  else if (AJSONReader.TokenType = TJsonToken.Null) then
-    FreeAndNil(AChildObj)
-  // Raise an exception
+  LTypeInfoCacheItem := AParams.TypeInfoCache.Get(AChildObj);
+  case LTypeInfoCacheItem.FDuckType of
+    dtList: DeserializeList(LTypeInfoCacheItem.FDuckListWrapper, AJSONReader, APropField, AParams);
   else
-    raise EdjEngineError.Create('Deserialize Class: Cannot deserialize as object.');
+    begin
+      if (AJSONReader.TokenType <> TJsonToken.Null) then
+        DeserializeObject(AJSONReader, AChildObj, AParams)
+      // If the JSONValue is a TJSONNull
+      else if (AJSONReader.TokenType = TJsonToken.Null) then
+        FreeAndNil(AChildObj)
+      // Raise an exception
+      else
+        raise EdjEngineError.Create('Deserialize Class: Cannot deserialize as object.');
+    end;
+  end;
+
+
+
+  // Stream
+//  if DeserializeStream(AChildObj, AJSONReader, APropField) then
+  // Dictionary
+//  else if DeserializeDictionary(AChildObj, AJSONReader, APropField, AParams) then
+  // List
+//  else if DeserializeList(AChildObj, AJSONReader, APropField, AParams) then
+  // StreamableObject
+//  else if DeserializeStreamableObject(AChildObj, AJSONReader, APropField) then
+  // Normal object property (try to deserialize but the JSON must be a JSONObject)
+//  else if (AJSONReader.TokenType <> TJsonToken.Null) then
+//    DeserializeObject(AJSONReader, AChildObj, AParams)
+  // If the JSONValue is a TJSONNull
+//  else if (AJSONReader.TokenType = TJsonToken.Null) then
+//    FreeAndNil(AChildObj)
+  // Raise an exception
+//  else
+//    raise EdjEngineError.Create('Deserialize Class: Cannot deserialize as object.');
 end;
 
 class function TdjEngineStream.DeserializeCustom(const AJSONReader: TJSONReader;
@@ -362,20 +383,15 @@ begin
     TValue.Make(@LChildObj, LChildObj.ClassInfo, Result);
 end;
 
-class function TdjEngineStream.DeserializeList(AList: TObject;
+class procedure TdjEngineStream.DeserializeList(const ADuckList: IdjDuckList;
   const AJSONReader: TJSONReader; const APropField: TRttiNamedObject;
-  const AParams: IdjParams): Boolean;
+  const AParams: IdjParams);
 var
   LValueQualifiedTypeName: String;
   LValueRTTIType: TRttiType;
-  LDuckList: IdjDuckList;
   LValue: TValue;
 begin
-  // Checks
-  if not TdjFactory.TryWrapAsDuckList(Alist, LDuckList) then
-    Exit(False);
   // Defaults
-  Result := False;
   LValueRTTIType          := nil;
   LValueQualifiedTypeName := '';
   // If TypeAnnotations is enabled then get the "items" JSONArray containing the list items
@@ -384,15 +400,15 @@ begin
   begin
     // Get the value type name (collection TypeName already retrieved by DeserializePropField)
     if not TryGetTypeAnnotation(AJSONReader, DJ_VALUE, LValueQualifiedTypeName) then
-      raise EdjEngineError.Create('Value type annotation expected for ' + AList.QualifiedClassName + '(TypeAnnotations enabled).');
+      raise EdjEngineError.Create('Value type annotation expected (TypeAnnotations enabled).');
     // The current token must be a property name named 'items'
     if not ((AJSONReader.TokenType = TJSONToken.PropertyName) and (AJSONReader.Value.AsString = 'items')) then
-      raise EdjEngineError.Create('"items" property expected for ' + AList.QualifiedClassName + '(TypeAnnotations enabled).');
+      raise EdjEngineError.Create('"items" property expected(TypeAnnotations enabled).');
     AJSONReader.Read;
   end;
   // Now a JSONArray must be present
   if AJSONReader.TokenType <> TJsonToken.StartArray then
-    raise EdjEngineError.Create('JSONArray expected for ' + AList.QualifiedClassName);
+    raise EdjEngineError.Create('JSONArray expected.');
   AJSONReader.Read;
   // Get values RttiType, if the RttiType is not found then check for
   //  "MapperItemsClassType"  or "MapperItemsType" attribute or from PARAMS
@@ -401,26 +417,20 @@ begin
   TdjUtils.GetItemsTypeNameIfEmpty(APropField, AParams, LValueQualifiedTypeName);
   LValueRTTIType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
   if (not Assigned(LValueRTTIType)) and (AJSONReader.TokenType <> TJsonToken.EndArray) then
-    raise EdjEngineError.Create('Value type not found deserializing ' + AList.QualifiedClassName);
+    raise EdjEngineError.Create('Value type not found.');
   // Loop
   repeat
     // If the current JSONToken is an EndArray token then exit from the loop
     if (AJSONReader.TokenType = TJSONToken.EndArray) then
-    begin
-    { TODO : Risistemare }
-//      AJSONReader.Read;
       Break;
-    end;
     // Deserialize the current element
     LValue := DeserializePropField(AJSONReader, LValueRttiType, APropField, nil, AParams);
     // Add to the list
-    LDuckList.AddValue(LValue);
+    ADuckList.AddValue(LValue);
   until not AJSONReader.Read;
   // If TypeAnnotations is enabled then e "CloseObject" char is expected
   if CheckForEndObjectCharIfTypeAnnotations(AJSONReader, AParams) then
-    raise EdjEngineError.Create('EndObject char expected for ' + AList.QualifiedClassName + '(TypeAnnotations enabled).');
-  // Se tutto è andato bene...
-  Result := True;
+    raise EdjEngineError.Create('EndObject char expected (TypeAnnotations enabled).');
 end;
 
 

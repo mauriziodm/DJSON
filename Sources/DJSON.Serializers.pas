@@ -42,7 +42,6 @@ uses
 type
 
   TdjCustomSerializerRef = class of TdjCustomSerializer;
-
   TdjCustomSerializer = class abstract
   public
     class function Serialize(const AValue:TValue; var ADone:Boolean): TJSONValue; virtual;

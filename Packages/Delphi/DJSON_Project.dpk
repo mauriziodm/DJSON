@@ -49,6 +49,7 @@ contains
   DJSON.Exceptions in '..\..\Sources\DJSON.Exceptions.pas',
   DJSON.Engine.Stream in '..\..\Sources\DJSON.Engine.Stream.pas',
   JsonDataObjects in '..\..\Sources\JsonDataObjects.pas',
-  DJSON.Engine.JDO in '..\..\Sources\DJSON.Engine.JDO.pas';
+  DJSON.Engine.JDO in '..\..\Sources\DJSON.Engine.JDO.pas',
+  DJSON.TypeInfoCache in '..\..\Sources\DJSON.TypeInfoCache.pas';
 
 end.

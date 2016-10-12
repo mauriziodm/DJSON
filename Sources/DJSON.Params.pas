@@ -37,7 +37,8 @@ unit DJSON.Params;
 interface
 
 uses
-  System.TypInfo, DJSON.Serializers, System.Generics.Collections, System.Rtti;
+  System.TypInfo, DJSON.Serializers, System.Generics.Collections, System.Rtti,
+  DJSON.TypeInfoCache;
 
 type
 
@@ -93,6 +94,8 @@ type
     // Serializers
     function GetSerializers: TdjSerializersContainer;
     property Serializers: TdjSerializersContainer read GetSerializers;
+    // TypeInfoCache
+    function TypeInfoCache: TdjTypeInfoCache;
     // ItemsKeyDefaultQualifiedName
     procedure SetItemsKeyDefaultQualifiedName(const AValue:String);
     function GetItemsKeyDefaultQualifiedName: String;
@@ -133,9 +136,10 @@ type
     FItemsValueDefaultQualifiedName: String;
     FOwnJSONValue: Boolean;
     FNameCase: TdjNameCase;
+    FTypeInfoCache: TdjTypeInfoCache;
     // Engine (No property)
     function GetEngineClass: TdjEngineRef;
-    // EntineType
+    // EngineType
     procedure SetEngine(const AValue: TdjEngine);
     function GetEngine: TdjEngine;
     // SerializationMode
@@ -155,6 +159,8 @@ type
     function GetEnableCustomSerializers: Boolean;
     // Serializers
     function GetSerializers: TdjSerializersContainer;
+    // TypeInfoCache
+    function TypeInfoCache: TdjTypeInfoCache;
     // ItemsKeyDefaultQualifiedName
     procedure SetItemsKeyDefaultQualifiedName(const AValue:String);
     function GetItemsKeyDefaultQualifiedName: String;
@@ -223,6 +229,7 @@ constructor TdjParams.Create;
 begin
   inherited;
   SetEngine(TdjEngine.eDelphiStream);
+  FTypeInfoCache := TdjTypeInfoCache.Create;
   FSerializers := TdjSerializersContainer.Create;
   FTypeAnnotations := False;
   FEnableCustomSerializers := False;
@@ -234,6 +241,7 @@ end;
 
 destructor TdjParams.Destroy;
 begin
+  FTypeInfoCache.Free;
   FSerializers.Free;
   inherited;
 end;
@@ -311,6 +319,11 @@ end;
 procedure TdjParams.SetTypeAnnotations(const AValue: Boolean);
 begin
   FTypeAnnotations := AValue;
+end;
+
+function TdjParams.TypeInfoCache: TdjTypeInfoCache;
+begin
+  Result := FTypeInfoCache;
 end;
 
 procedure TdjParams.SetEnableCustomSerializers(const AValue: Boolean);

@@ -68,6 +68,7 @@ type
       const AAddMethod:TRTTIMethod; const AKeysEnumerator,AValuesEnumerator:TdjDuckDictionaryEnumerator);
     destructor Destroy; override;
     procedure Add(const AKey, AValue: TValue);
+    procedure SetObject(const AObj:TObject);
     function GetCurrentKey: TValue;
     function GetCurrentValue: TValue;
     function MoveNext: Boolean;
@@ -126,6 +127,11 @@ end;
 function TdjDuckDictionary.MoveNext: Boolean;
 begin
   Result := (FKeysEnumerator.MoveNext and FValuesEnumerator.MoveNext);
+end;
+
+procedure TdjDuckDictionary.SetObject(const AObj: TObject);
+begin
+  FObjAsDuck := AObj;
 end;
 
 class function TdjDuckDictionary.TryCreate(const AObjAsDuck: TObject): IdjDuckDictionary;

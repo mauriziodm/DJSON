@@ -58,6 +58,7 @@ type
     procedure Add(AObj: TObject);
     procedure AddValue(const AValue: TValue);
     procedure Clear;
+    procedure SetObject(const AObj:TObject);
     function Count: Integer;
     function GetItem(Index: Integer): TObject;
     function GetItemValue(const index: Integer): TValue;
@@ -149,6 +150,11 @@ begin
   Result := False;
   if Assigned(FOwnsObjectsProperty) then
     Result := FOwnsObjectsProperty.GetValue(FObjAsDuck).AsBoolean;
+end;
+
+procedure TdjDuckList.SetObject(const AObj: TObject);
+begin
+  FObjAsDuck := AObj;
 end;
 
 procedure TdjDuckList.SetOwnsObjects(AValue: Boolean);

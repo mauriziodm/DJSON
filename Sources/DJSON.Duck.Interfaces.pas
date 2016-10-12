@@ -45,6 +45,7 @@ type
     ['{D95AD3B5-02AC-49E6-B54E-2ECAA7D5B54B}']
     procedure LoadFromStream(Stream: TStream);
     procedure SaveToStream(Stream: TStream);
+    procedure SetObject(const AObj:TObject);
     function IsEmpty: Boolean;
   end;
 
@@ -53,6 +54,7 @@ type
     procedure Add(AObject: TObject);
     procedure AddValue(const AValue: TValue);
     procedure Clear;
+    procedure SetObject(const AObj:TObject);
     function Count: Integer;
     function GetEnumerator: IEnumerator;
     function GetItem(Index: Integer): TObject;
@@ -71,6 +73,7 @@ type
     function GetCurrentValue: TValue;
     function MoveNext: Boolean;
     procedure Add(const AKey, AValue: TValue);
+    procedure SetObject(const AObj:TObject);
   end;
 
 implementation

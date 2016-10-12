@@ -59,9 +59,9 @@ type
     class function SerializeTValue(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue; static;
     class function SerializeList(const AList: TObject; const APropField: TRttiNamedObject; const AParams: IdjParams; out ResultJSONValue:TJSONValue): Boolean; static;
     class function SerializeDictionary(const ADictionary: TObject; const APropField: TRttiNamedObject; const AParams: IdjParams; out ResultJSONValue:TJSONValue): Boolean; static;
-    class function SerializeCustom(AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; out ResultJSONValue:TJSONValue): Boolean; static;
     class function SerializeStreamableObject(const AObj: TObject; const APropField: TRttiNamedObject; out ResultJSONValue:TJSONValue): Boolean; static;
     class function SerializeStream(const AStream: TObject; const APropField: TRttiNamedObject; out ResultJSONValue:TJSONValue): Boolean; static;
+    class function SerializeCustom(AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; out ResultJSONValue:TJSONValue): Boolean; static;
     // Deserializers
     class function DeserializePropField(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class function DeserializeFloat(const AJSONValue: TJSONValue; const AValueType: TRttiType): TValue; static;
@@ -76,9 +76,9 @@ type
     class function DeserializeTValue(const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
     class function DeserializeList(AList: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
     class function DeserializeDictionary(ADictionary: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
-    class function DeserializeCustom(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams; out ResultValue:TValue): Boolean; static;
     class function DeserializeStreamableObject(AObj: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject): Boolean; static;
     class function DeserializeStream(AStream: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject): Boolean; static;
+    class function DeserializeCustom(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams; out ResultValue:TValue): Boolean; static;
   public
     class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; override;
     class function Deserialize(const AJSONText: String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; override;

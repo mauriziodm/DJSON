@@ -53,6 +53,7 @@ type
     constructor Create(const AObjAsDuck:TObject; const ALoadFromStreamMethod,ASaveToStreamMethod,AIsEmptyMethod:TRTTIMethod; const ACountProperty:TRTTIProperty);
     procedure LoadFromStream(AStream: TStream);
     procedure SaveToStream(AStream: TStream);
+    procedure SetObject(const AObj:TObject);
     function IsEmpty: Boolean;
   end;
 
@@ -93,6 +94,11 @@ end;
 procedure TdjDuckStreamable.SaveToStream(AStream: TStream);
 begin
   FSaveToStreamMethod.Invoke(FObjAsDuck, [AStream]);
+end;
+
+procedure TdjDuckStreamable.SetObject(const AObj: TObject);
+begin
+  FObjAsDuck := AObj;
 end;
 
 class function TdjDuckStreamable.TryCreate(
