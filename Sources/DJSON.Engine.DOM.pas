@@ -43,9 +43,10 @@ type
 
   TJSONBox = TJSONObject;
 
-  TdjEngineDOM = class
+  TdjEngineDOM = class(TdjEngineIntf)
   private
     // Serializers
+    class function SerializePropField(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): TJSONValue; static;
     class function SerializeFloat(const AValue: TValue): TJSONValue; static;
     class function SerializeEnumeration(const AValue: TValue): TJSONValue; static;
     class function SerializeInteger(const AValue: TValue): TJSONValue; static;
@@ -62,6 +63,7 @@ type
     class function SerializeStreamableObject(const AObj: TObject; const APropField: TRttiNamedObject; out ResultJSONValue:TJSONValue): Boolean; static;
     class function SerializeStream(const AStream: TObject; const APropField: TRttiNamedObject; out ResultJSONValue:TJSONValue): Boolean; static;
     // Deserializers
+    class function DeserializePropField(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class function DeserializeFloat(const AJSONValue: TJSONValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeEnumeration(const AJSONValue: TJSONValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeInteger(const AJSONValue: TJSONValue): TValue; static;
@@ -78,19 +80,9 @@ type
     class function DeserializeStreamableObject(AObj: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject): Boolean; static;
     class function DeserializeStream(AStream: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject): Boolean; static;
   public
-    class function SerializePropField(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): TJSONValue; static;
-    class function DeserializePropField(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
+    class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; override;
+    class function Deserialize(const AJSONText: String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; override;
   end;
-
-
-
-function ISODateTimeToString(ADateTime: TDateTime): string;
-function ISODateToString(ADate: TDateTime): string;
-function ISOTimeToString(ATime: TTime): string;
-
-function ISOStrToDateTime(DateTimeAsString: string): TDateTime;
-function ISOStrToDate(DateAsString: string): TDate;
-function ISOStrToTime(TimeAsString: string): TTime;
 
 implementation
 
@@ -100,61 +92,21 @@ uses
   DJSON.Duck.Interfaces, DJSON.Factory, DJSON.Utils, System.Classes,
   Soap.EncdDecd;
 
-function ISOTimeToString(ATime: TTime): string;
+class function TdjEngineDOM.Deserialize(const AJSONText: String;
+  const AValueType: TRttiType; const APropField: TRttiNamedObject;
+  const AMasterObj: TObject; const AParams: IdjParams): TValue;
 var
-  fs: TFormatSettings;
+  LJSONValue: TJSONValue;
 begin
-  fs.TimeSeparator := ':';
-  Result := FormatDateTime('hh:nn:ss', ATime, fs);
+  LJSONValue := TJSONObject.ParseJSONValue(AJSONText);
+  if not Assigned(LJSONValue) then
+    raise EdjEngineError.Create('Wrong JSON text.');
+  try
+    Result := DeserializePropField(LJSONValue, AValueType, APropField, AMasterObj, AParams);
+  finally
+    LJSONValue.Free;
+  end;
 end;
-
-function ISODateToString(ADate: TDateTime): string;
-begin
-  Result := FormatDateTime('YYYY-MM-DD', ADate);
-end;
-
-function ISODateTimeToString(ADateTime: TDateTime): string;
-var
-  fs: TFormatSettings;
-begin
-  fs.TimeSeparator := ':';
-  Result := FormatDateTime('yyyy-mm-dd hh:nn:ss', ADateTime, fs);
-end;
-
-function ISOStrToDateTime(DateTimeAsString: string): TDateTime;
-begin
-  Result := EncodeDateTime(StrToInt(Copy(DateTimeAsString, 1, 4)),
-    StrToInt(Copy(DateTimeAsString, 6, 2)), StrToInt(Copy(DateTimeAsString, 9, 2)),
-    StrToInt(Copy(DateTimeAsString, 12, 2)), StrToInt(Copy(DateTimeAsString, 15, 2)),
-    StrToInt(Copy(DateTimeAsString, 18, 2)), 0);
-end;
-
-function ISOStrToTime(TimeAsString: string): TTime;
-begin
-  Result := EncodeTime(StrToInt(Copy(TimeAsString, 1, 2)), StrToInt(Copy(TimeAsString, 4, 2)),
-    StrToInt(Copy(TimeAsString, 7, 2)), 0);
-end;
-
-function ISOStrToDate(DateAsString: string): TDate;
-begin
-  Result := EncodeDate(StrToInt(Copy(DateAsString, 1, 4)), StrToInt(Copy(DateAsString, 6, 2)),
-    StrToInt(Copy(DateAsString, 9, 2)));
-  // , StrToInt
-  // (Copy(DateAsString, 12, 2)), StrToInt(Copy(DateAsString, 15, 2)),
-  // StrToInt(Copy(DateAsString, 18, 2)), 0);
-end;
-
-
-// function ISODateToStr(const ADate: TDate): String;
-// begin
-// Result := FormatDateTime('YYYY-MM-DD', ADate);
-// end;
-//
-// function ISOTimeToStr(const ATime: TTime): String;
-// begin
-// Result := FormatDateTime('HH:nn:ss', ATime);
-// end;
-
 
 class function TdjEngineDOM.DeserializeClass(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
   AMasterObj: TObject; const AParams: IdjParams): TValue;
@@ -457,19 +409,19 @@ begin
       if AJSONValue is TJSONNull then
         Result := 0
       else
-        Result := TValue.From<TDate>(ISOStrToDateTime(AJSONValue.Value + ' 00:00:00'));
+        Result := TValue.From<TDate>(TdjUtils.ISOStrToDateTime(AJSONValue.Value + ' 00:00:00'));
     end
     else if LQualifiedTypeName = 'System.TDateTime' then
     begin
       if AJSONValue is TJSONNull then
         Result := 0
       else
-        Result := TValue.From<TDateTime>(ISOStrToDateTime(AJSONValue.Value));
+        Result := TValue.From<TDateTime>(TdjUtils.ISOStrToDateTime(AJSONValue.Value));
     end
     else if LQualifiedTypeName = 'System.TTime' then
     begin
       if AJSONValue is TJSONString then
-        Result := TValue.From<TTime>(ISOStrToTime(AJSONValue.Value))
+        Result := TValue.From<TTime>(TdjUtils.ISOStrToTime(AJSONValue.Value))
       else
         raise EdjEngineError.CreateFmt('Cannot deserialize TTime value, expected [%s] got [%s]',
           ['TJSONString', AJSONValue.ClassName]);
@@ -498,7 +450,6 @@ class function TdjEngineDOM.DeserializeInterface(const AJSONValue: TJSONValue; c
   const AParams: IdjParams): TValue;
 var
   LChildObj: TObject;
-
 begin
   // Init
   LChildObj := nil;
@@ -616,7 +567,7 @@ begin
   LValueType := nil;
   LValueQualifiedTypeName := String.Empty;
   // Non deve considerare i TValue
-  if AValueType.Name <> 'TValue' then
+  if not(   Assigned(AValueType) and (AValueType.Name = 'TValue')   ) then
   begin
     // Cerca il ValueType in una eventuale JSONAnnotation
     if AParams.TypeAnnotations and (AJSONValue is TJSONObject) then
@@ -627,7 +578,7 @@ begin
     end;
     // Se ancora non è stato determinato il ValueType prova anche a vedere se  stato specificato
     //  l'attributo dsonTypeAttribute
-    if (not Assigned(LValueType)) and Assigned(APropField)
+    if LValueQualifiedTypeName.IsEmpty and Assigned(APropField)
     and (TdjDuckPropField.QualifiedName(APropField) = AValueType.QualifiedName)  // Questo per evitare che nel caso delle liste anche le items vedano l'attributo dsonTypeAttribute della proprietà a cui ri riferisce la lista stessa
     and TdjRTTI.HasAttribute<djTypeAttribute>(APropField, LdsonTypeAttribute)
     then
@@ -923,7 +874,7 @@ end;
 
 class function TdjEngineDOM.SerializeList(const AList: TObject; const APropField: TRttiNamedObject; const AParams: IdjParams; out ResultJSONValue:TJSONValue): Boolean;
 var
-  LListTypeName, LValueQualifiedTypeName: String;
+  LValueQualifiedTypeName: String;
   LDuckList: IdjDuckList;
   LJSONArray: TJSONArray;
   I: Integer;
@@ -937,7 +888,6 @@ begin
     Exit(False);
   // Init
   Result := False;
-  LListTypeName           := '';
   LValueQualifiedTypeName := '';
   // Create the Items JSON array
   LJSONArray := TJSONArray.Create;
@@ -973,6 +923,20 @@ begin
     ResultJSONValue := LJSONArray;
   // If everething OK!
   Result := True;
+end;
+
+class function TdjEngineDOM.Serialize(const AValue: TValue;
+  const APropField: TRttiNamedObject; const AParams: IdjParams;
+  const AEnableCustomSerializers: Boolean): String;
+var
+  LJSONValue: TJSONValue;
+begin
+  LJSONValue := SerializePropField(AValue, APropField, AParams, AEnableCustomSerializers);
+  try
+    Result := LJSONValue.ToJSON;
+  finally
+    LJSONValue.Free;
+  end;
 end;
 
 class function TdjEngineDOM.SerializeClass(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue;
@@ -1198,17 +1162,17 @@ begin
     if AValue.AsExtended = 0 then
       Result := TJSONNull.Create
     else
-      Result := TJSONString.Create(ISODateToString(AValue.AsExtended))
+      Result := TJSONString.Create(TdjUtils.ISODateToString(AValue.AsExtended))
   end
   else if LQualifiedTypeName = 'System.TDateTime' then
   begin
     if AValue.AsExtended = 0 then
       Result := TJSONNull.Create
     else
-      Result := TJSONString.Create(ISODateTimeToString(AValue.AsExtended))
+      Result := TJSONString.Create(TdjUtils.ISODateTimeToString(AValue.AsExtended))
   end
   else if LQualifiedTypeName = 'System.TTime' then
-   Result := TJSONString.Create(ISOTimeToString(AValue.AsExtended))
+   Result := TJSONString.Create(TdjUtils.ISOTimeToString(AValue.AsExtended))
   else
     Result := TJSONNumber.Create(AValue.AsExtended);
 end;
@@ -1225,7 +1189,6 @@ var
   LKeyName: String;
   LJSONValue: TJSONValue;
   LValue: TValue;
-  I: Integer;
 begin
   Result := TJSONBox.Create;
   try
@@ -1246,10 +1209,9 @@ begin
       if (LPropField.Name = 'FRefCount') or (LPropField.Name = 'RefCount') then Continue;
       // f := LowerCase(_property.Name);
       LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
-      // Check if there is properties to ignore
-      if TdjUtils.IsPropertyToBeIgnored(LPropField, AParams) then
-      // Check for "DoNotSerializeAttribute"
-      if TdjRTTI.HasAttribute<djSkipAttribute>(LPropField) then
+      // Check for "DoNotSerializeAttribute" or property to ignore
+      if TdjRTTI.HasAttribute<djSkipAttribute>(LPropField)
+      or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams) then
         Continue;
       // Serialize the currente member and add it to the JSONBox
       LValue := TdjDuckPropField.GetValue(AObject, LPropField);
@@ -1297,7 +1259,7 @@ var
   ts: TTimeStamp;
   LQualifiedTypeName: String;
 begin
-//  LQualifiedTypeName := TDuckPropField.QualifiedName(APropField);
+  Result := nil;
   LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
   // TTimeStamp
   if LQualifiedTypeName = 'System.SysUtils.TTimeStamp' then

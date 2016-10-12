@@ -81,7 +81,7 @@ type
 implementation
 
 uses
-  DJSON.Utils.RTTI, DJSON.Exceptions;
+  DJSON.Utils.RTTI, DJSON.Exceptions, System.TypInfo;
 
 { TdjDuckList }
 

@@ -11,8 +11,15 @@ Samples/Mapper_Phonebook_Dictionary/__history/
 Samples/Mapper_Pizza_Image/Win32/
 Samples/Mapper_Pizza_Image/__history/
 Sources/__history/
+<<<<<<< HEAD
 *.md
 *.tvsconfig
 Samples/PerformanceTest/Win32/
 Samples/PerformanceTest/__history/DeserializeDOMU.pas.~27~
 Samples/PerformanceTest/__history/
+=======
+*.tvsconfig
+Samples/PerformanceTest/Win32/
+Samples/PerformanceTest/__history/
+*.md
+>>>>>>> develop

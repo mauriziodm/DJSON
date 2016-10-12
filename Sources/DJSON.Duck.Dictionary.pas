@@ -59,17 +59,19 @@ type
     FAddMethod: TRttiMethod;
     FKeysProperty: TRttiProperty;
     FValuesProperty: TRttiProperty;
+    FCountProperty: TRttiProperty;
     FKeysEnumerator: TdjDuckDictionaryEnumerator;
     FValuesEnumerator: TdjDuckDictionaryEnumerator;
   public
     class function TryCreate(const AObjAsDuck:TObject): IdjDuckDictionary;
-    constructor Create(AObjAsDuck:TObject; const AKeysProperty,AValuesProperty:TRTTIProperty;
+    constructor Create(AObjAsDuck:TObject; const AKeysProperty,AValuesProperty,ACountProperty:TRTTIProperty;
       const AAddMethod:TRTTIMethod; const AKeysEnumerator,AValuesEnumerator:TdjDuckDictionaryEnumerator);
     destructor Destroy; override;
     procedure Add(const AKey, AValue: TValue);
     function GetCurrentKey: TValue;
     function GetCurrentValue: TValue;
     function MoveNext: Boolean;
+    function Count: Integer;
   end;
 
 implementation
@@ -84,13 +86,19 @@ begin
   FAddMethod.Invoke(FObjAsDuck, [AKey, AValue]);
 end;
 
-constructor TdjDuckDictionary.Create(AObjAsDuck:TObject; const AKeysProperty,AValuesProperty:TRTTIProperty;
+function TdjDuckDictionary.Count: Integer;
+begin
+  Result := FCountProperty.GetValue(FObjAsDuck).AsInteger;
+end;
+
+constructor TdjDuckDictionary.Create(AObjAsDuck:TObject; const AKeysProperty,AValuesProperty,ACountProperty:TRTTIProperty;
   const AAddMethod:TRTTIMethod; const AKeysEnumerator,AValuesEnumerator:TdjDuckDictionaryEnumerator);
 begin
   inherited Create;
   FObjAsDuck := AObjAsDuck;
   FKeysProperty := AKeysProperty;
   FValuesProperty := AValuesProperty;
+  FCountProperty := ACountProperty;
   FAddMethod := AAddMethod;
   FKeysEnumerator := AKeysEnumerator;
   FValuesEnumerator := AValuesEnumerator;
@@ -125,6 +133,7 @@ var
   LType: TRttiType;
   LKeysProperty: TRttiProperty;
   LValuesProperty: TRttiProperty;
+  LCountProperty: TRttiProperty;
   LAddMethod: TRttiMethod;
   LKeysEnumerator: TdjDuckDictionaryEnumerator;
   LValuesEnumerator: TdjDuckDictionaryEnumerator;
@@ -141,6 +150,9 @@ begin
   // Values Property
   LValuesProperty := LType.GetProperty('Values');
   if not Assigned(LValuesProperty) then Exit(nil);
+  // Keys Property
+  LCountProperty := LType.GetProperty('Count');
+  if not Assigned(LCountProperty) then Exit(nil);
   // Add method
   LAddMethod := LType.GetMethod('Add');
   if not Assigned(LAddMethod) then Exit(nil);
@@ -155,7 +167,7 @@ begin
   LObj := TdjRTTI.Ctx.GetType(LObj.ClassInfo).GetMethod('GetEnumerator').Invoke(LObj, []).AsObject;
   LValuesEnumerator := TdjDuckDictionaryEnumerator.Create(   LObj   );
   // If everithing is OK then create the Duck
-  Result := Self.Create(AObjAsDuck, LKeysProperty, LValuesProperty, LAddMethod, LKeysEnumerator, LValuesEnumerator);
+  Result := Self.Create(AObjAsDuck, LKeysProperty, LValuesProperty, LCountProperty, LAddMethod, LKeysEnumerator, LValuesEnumerator);
 end;
 
 { TdjDuckDictionaryEnumerator }
