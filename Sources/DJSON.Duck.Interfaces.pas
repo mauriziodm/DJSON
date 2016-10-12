@@ -66,6 +66,7 @@ type
 
   IdjDuckDictionary = interface
     ['{CC1ED317-DB5D-43E5-B62E-2A0C11137534}']
+    function Count: Integer;
     function GetCurrentKey: TValue;
     function GetCurrentValue: TValue;
     function MoveNext: Boolean;

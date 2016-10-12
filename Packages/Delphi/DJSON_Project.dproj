@@ -126,7 +126,6 @@
         <DCCReference Include="..\..\Sources\DJSON.Duck.Interfaces.pas"/>
         <DCCReference Include="..\..\Sources\DJSON.Exceptions.pas"/>
         <DCCReference Include="..\..\Sources\DJSON.Engine.Stream.pas"/>
-        <DCCReference Include="..\..\Sources\DJSON.Engine.Interfaces.pas"/>
         <DCCReference Include="..\..\Sources\JsonDataObjects.pas"/>
         <DCCReference Include="..\..\Sources\DJSON.Engine.JDO.pas"/>
         <BuildConfiguration Include="Release">

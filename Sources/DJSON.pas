@@ -85,6 +85,7 @@ type
     function CustomSerializer<Target; Serializer:TdjCustomSerializer>(const AParams:IdjParams=nil): TdjValueDestination; overload;
     function UpperCase: TdjValueDestination;
     function LowerCase: TdjValueDestination;
+    function Engine(const AEngine:TdjEngine): TdjValueDestination;
   end;
 
   TdjJSONDestination = class
@@ -117,6 +118,7 @@ type
     function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
     function CustomSerializer<Target>(const ASerializer:TdjCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
     function CustomSerializer<Target; Serializer:TdjCustomSerializer>(const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    function Engine(const AEngine:TdjEngine): TdjJSONDestination;
   end;
 
 implementation
@@ -183,7 +185,7 @@ var
 begin
   try
     LRttiType := TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo);
-    TdjEngineDOM.Deserialize(FJSONText, LRttiType, nil, AObject, FParams);
+    FParams.GetEngineClass.Deserialize(FJSONText, LRttiType, nil, AObject, FParams);
   finally
     Self.Free;
   end;
@@ -222,10 +224,7 @@ var
 begin
   try
     LRttiType := TdjRTTI.TypeInfoToRttiType(ATypeValue);
-{ TODO : Modificare TdjJSONDestination in modo cge FValue := String }
-//    Result := TdjEngineDOM.Deserialize(FJSONText, LRttiType, nil, nil, FParams);
-    Result := TdjEngineJDO.Deserialize(FJSONText, LRttiType, nil, nil, FParams);
-//    Result := TdjEngineStream.Deserialize(FJSONText, LRttiType, nil, nil, FParams);
+    Result := FParams.GetEngineClass.Deserialize(FJSONText, LRttiType, nil, nil, FParams);
   finally
     Self.Free;
   end;
@@ -299,6 +298,13 @@ begin
   Result := Self;
 end;
 
+function TdjJSONDestination.Engine(
+  const AEngine: TdjEngine): TdjJSONDestination;
+begin
+  FParams.Engine := AEngine;
+  Result := Self;
+end;
+
 function TdjJSONDestination.ItemsOfType(const AKeyType,
   AValueType: PTypeInfo): TdjJSONDestination;
 begin
@@ -337,26 +343,11 @@ end;
 
 function TdjJSONDestination.ToObject: TObject;
 var
-//  LRttiType: TRttiType;
   ResultValue: TValue;
-//  LTypeJSONValue: TJSONValue;
 begin
   try
-    // Init
     Result := nil;
-//    LRttiType := nil;
-    // Load types informations from the JSON
-//    if (FValue is TJSONObject) then begin
-//      // Retrieve the value type if embedded in JSON
-//      LTypeJSONValue := TJSONObject(FValue).GetValue(DJ_TYPENAME);
-//      if Assigned(LTypeJSONValue) then
-//        LRttiType := TdjRTTI.QualifiedTypeNameToRttiType(LTypeJSONValue.Value);
-//    end;
-    // Check for destination Rtti validity
-//    if not Assigned(LRttiType) then
-//      raise EdjException.Create('Deserialize ToObject: Type informations not found.');
-    // Deserialize
-    ResultValue := TdjEngineDOM.Deserialize(FJSONText, nil, nil, nil, FParams);
+    ResultValue := FParams.GetEngineClass.Deserialize(FJSONText, nil, nil, nil, FParams);
     Result := ResultValue.AsObject;
   finally
     Self.Free;
@@ -437,6 +428,13 @@ begin
   Result := Self;
 end;
 
+function TdjValueDestination.Engine(
+  const AEngine: TdjEngine): TdjValueDestination;
+begin
+  FParams.Engine := AEngine;
+  Result := Self;
+end;
+
 function TdjValueDestination.ItemsOfType(
   const AValueType: PTypeInfo): TdjValueDestination;
 begin
@@ -484,8 +482,7 @@ end;
 function TdjValueDestination.ToJSON: String;
 begin
   try
-    Result := TdjEngineDOM.Serialize(FValue, nil, FParams);
-//    Result := TdjEngineJDO.Serialize(FValue, nil, FParams);
+    Result := FParams.GetEngineClass.Serialize(FValue, nil, FParams);
   finally
     Self.Free;
   end;

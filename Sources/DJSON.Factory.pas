@@ -44,6 +44,7 @@ type
   TdjFactory = class
   public
     class function NewParams: IdjParams;
+    class function GetEngine(const AEngineType:TdjEngine): TdjEngineRef;
     class function TryWrapAsDuckStreamable(const AObjAsDuck: TObject; out ResultDuckStreamable:IdjDuckStreamable): Boolean;
     class function TryWrapAsDuckList(const AObjAsDuck: TObject; out ResultDuckList:IdjDuckList): Boolean;
     class function TryWrapAsDuckDictionary(const AObjAsDuck: TObject; out ResultDuckDictionary:IdjDuckDictionary): Boolean;
@@ -52,9 +53,22 @@ type
 implementation
 
 uses
-  DJSON.Duck.Dictionary, DJSON.Duck.List, DJSON.Duck.Obj;
+  DJSON.Duck.Dictionary, DJSON.Duck.List, DJSON.Duck.Obj, DJSON.Engine.Stream,
+  DJSON.Engine.JDO, DJSON.Engine.DOM, DJSON.Exceptions;
 
 { TdjFactory }
+
+class function TdjFactory.GetEngine(
+  const AEngineType: TdjEngine): TdjEngineRef;
+begin
+  case AEngineType of
+    TdjEngine.eDelphiStream:  Result := TdjEngineStream;
+    TdjEngine.eJDO:           Result := TdjEngineJDO;
+    TdjEngine.eDelphiDOM:     Result := TdjEngineDOM;
+  else
+    raise EdjException.Create('TdjFactory: Wrong engine type.');
+  end;
+end;
 
 class function TdjFactory.NewParams: IdjParams;
 begin

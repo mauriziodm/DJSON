@@ -3,12 +3,27 @@ unit DJSON.Engine.Stream;
 interface
 
 uses
-  System.Rtti, DJSON.Params, System.JSON.Readers;
+  System.Rtti, DJSON.Params, System.JSON.Readers, System.JSON.Writers;
 
 type
 
-  TdjEngineStream = class
+  TdjEngineStream = class(TdjEngineIntf)
   private
+    // Serializers
+    class procedure SerializePropField(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True); static;
+    class procedure SerializeFloat(const AJSONWriter: TJSONWriter; const AValue: TValue); static;
+    class procedure SerializeEnumeration(const AJSONWriter: TJSONWriter; const AValue: TValue); static;
+    class procedure SerializeRecord(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
+    class procedure SerializeClass(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
+    class procedure SerializeInterface(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
+    class procedure SerializeObject(const AJSONWriter: TJSONWriter; const AObject: TObject; const AParams: IdjParams); overload; static;
+    class procedure SerializeObject(const AJSONWriter: TJSONWriter; const AInterfacedObject: IInterface; const AParams: IdjParams); overload; static;
+    class procedure SerializeTValue(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
+    class function SerializeList(const AJSONWriter: TJSONWriter; const AList: TObject; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
+    class function SerializeDictionary(const AJSONWriter: TJSONWriter; const ADictionary: TObject; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
+    class function SerializeStreamableObject(const AJSONWriter: TJSONWriter; const AObj: TObject; const APropField: TRttiNamedObject): Boolean; static;
+    class function SerializeStream(const AJSONWriter: TJSONWriter; const AStream: TObject; const APropField: TRttiNamedObject): Boolean; static;
+    class function SerializeCustom(const AJSONWriter: TJSONWriter; AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
     // Deserializers
     class function DeserializePropField(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class function DeserializeFloat(const AJSONReader: TJSONReader; const AValueType: TRttiType): TValue; static;
@@ -21,15 +36,15 @@ type
     class function DeserializeTValue(const AJSONReader: TJSONReader; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
     class function DeserializeList(AList: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
     class function DeserializeDictionary(ADictionary: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
-    class function DeserializeCustom(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams; out ResultValue:TValue): Boolean; static;
     class function DeserializeStreamableObject(AObj: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject): Boolean; static;
     class function DeserializeStream(AStream: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject): Boolean; static;
+    class function DeserializeCustom(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams; out ResultValue:TValue): Boolean; static;
     // Other
     class function TryGetTypeAnnotation(const AJSONReader: TJSONReader; const ATypeAnnotationName:String; var ResultTypeAnnotationValue:String): Boolean;
     class function CheckForEndObjectCharIfTypeAnnotations(const AJSONReader: TJSONReader; const AParams: IdjParams): Boolean;
   public
-    class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; static;
-    class function Deserialize(const AJSONText:String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
+    class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; override;
+    class function Deserialize(const AJSONText:String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; override;
   end;
 
 implementation
@@ -711,8 +726,458 @@ end;
 class function TdjEngineStream.Serialize(const AValue: TValue;
   const APropField: TRttiNamedObject; const AParams: IdjParams;
   const AEnableCustomSerializers: Boolean): String;
+var
+  LStringWriter: TStringWriter;
+  LJSONWriter: TJSONTextWriter;
 begin
   inherited;
+  LStringWriter := TStringWriter.Create;
+  LJSONWriter := TJsonTextWriter.Create(LStringWriter);
+  try
+    SerializePropField(LJSONWriter, AValue, APropField, AParams, AEnableCustomSerializers);
+    Result := LStringWriter.ToString;
+  finally
+    LJSONWriter.Free;
+    LStringWriter.Free;
+  end;
+end;
+
+class procedure TdjEngineStream.SerializeClass(const AJSONWriter: TJSONWriter;
+  const AValue: TValue; const APropField: TRttiNamedObject;
+  const AParams: IdjParams);
+var
+  AChildObj: TObject;
+begin
+  // Get the child object
+  AChildObj := AValue.AsObject;
+  // Dictionary
+  if SerializeDictionary(AJSONWriter, AChildObj, APropField, AParams) then
+  // List
+  else if SerializeList(AJSONWriter, AChildObj, APropField, AParams) then
+  // Stream
+  else if SerializeStream(AJSONWriter, AChildObj, APropField) then
+  // StreamableObject
+  else if SerializeStreamableObject(AJSONWriter, AChildObj, APropField) then
+  // Other type of object
+  else if Assigned(AChildObj) then
+    SerializeObject(AJSONWriter, AChildObj, AParams)
+  // Object not assigned
+  else
+    AJSONWriter.WriteNull;
+end;
+
+class function TdjEngineStream.SerializeCustom(const AJSONWriter: TJSONWriter;
+  AValue: TValue; const APropField: TRttiNamedObject;
+  const AParams: IdjParams): Boolean;
+begin
+
+end;
+
+class function TdjEngineStream.SerializeDictionary(
+  const AJSONWriter: TJSONWriter; const ADictionary: TObject;
+  const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean;
+var
+  LDuckDictionary: IdjDuckDictionary;
+  LKey, LValue: TValue;
+  LKeyQualifiedTypeName, LValueQualifiedTypeName: String;
+  LSkipFirst: Boolean;
+begin
+  // Wrap the dictionary in the DuckObject
+  if not TdjFactory.TryWrapAsDuckDictionary(ADictionary, LDuckDictionary) then
+    Exit(False);
+  // Init
+  Result := False;
+  LSkipFirst := False;
+  LKeyQualifiedTypeName   := '';
+  LValueQualifiedTypeName := '';
+
+  // If TypeAnnotations enabled...
+  if AParams.TypeAnnotations then
+  begin
+    AJSONWriter.WriteStartObject;
+    // Add the List TypeName
+    AJSONWriter.WritePropertyName(DJ_TYPENAME);
+    AJSONWriter.WriteValue(ADictionary.QualifiedClassName);
+    // Get the first element type name
+    if LDuckDictionary.MoveNext then
+    begin
+      LSkipFirst := True;
+      LKey   := LDuckDictionary.GetCurrentKey;
+      LValue := LDuckDictionary.GetCurrentValue;
+      LKeyQualifiedTypeName   := TdjRTTI.TypeInfoToQualifiedTypeName(LKey.TypeInfo);
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
+    end;
+    // Add the items TypeName (base on the first element of the list only)
+    if  (not LKeyQualifiedTypeName.IsEmpty) then
+    begin
+      AJSONWriter.WritePropertyName(DJ_KEY);
+      AJSONWriter.WriteValue(LKeyQualifiedTypeName);
+    end;
+    if  (not LValueQualifiedTypeName.IsEmpty) then
+    begin
+      AJSONWriter.WritePropertyName(DJ_VALUE);
+      AJSONWriter.WriteValue(LValueQualifiedTypeName);
+    end;
+    // Add the "items" property
+    AJSONWriter.WritePropertyName('items');
+  end;
+
+  // Items array start
+  AJSONWriter.WriteStartArray;
+
+  // Loop
+  while LSkipFirst or LDuckDictionary.MoveNext do
+  begin
+    LSkipFirst := False;
+    AJSONWriter.WriteStartObject;
+    // Read values
+    LKey   := LDuckDictionary.GetCurrentKey;
+    LValue := LDuckDictionary.GetCurrentValue;
+    // Serialize values
+    case AParams.SerializationMode of
+      smJavaScript:
+      begin
+        // Key
+        // NB: In JavaScript mode le chiavi posso essere solo stringhe o interi
+        case LKey.Kind of
+          tkString,tkUString,tkLString,tkWString: AJSONWriter.WritePropertyName(LKey.AsString);
+          tkInteger,tkInt64:  AJSONWriter.WritePropertyName(LKey.AsString);
+        else
+          raise EdjEngineError.Create('TdjEngineStream: In this engine only string or integer key type is allowed.');
+        end;
+        // Value
+        SerializePropField(AJSONWriter, LValue, APropField, AParams);
+      end;
+      smDataContract:
+      begin
+        // Key
+        AJSONWriter.WritePropertyName(DJ_KEY);
+        SerializePropField(AJSONWriter, LKey, APropField, AParams);
+        // Value
+        AJSONWriter.WritePropertyName(DJ_VALUE);
+        SerializePropField(AJSONWriter, LValue, APropField, AParams);
+      end;
+    end;
+    AJSONWriter.WriteEndObject;
+  end;
+
+  // Items array end
+  AJSONWriter.WriteEndArray;
+  // If TypeAnnotations enabled...
+  if AParams.TypeAnnotations then
+    AJSONWriter.WriteEndObject;
+  // If everething OK!
+  Result := True;
+end;
+
+class procedure TdjEngineStream.SerializeEnumeration(
+  const AJSONWriter: TJSONWriter; const AValue: TValue);
+var
+  LQualifiedTypeName: String;
+begin
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
+  // Boolean
+  if LQualifiedTypeName = 'System.Boolean' then
+    AJSONWriter.WriteValue(AValue.AsBoolean)
+  // Other enumeration
+  else
+    AJSONWriter.WriteValue(AValue.AsOrdinal);
+end;
+
+class procedure TdjEngineStream.SerializeFloat(const AJSONWriter: TJSONWriter;
+  const AValue: TValue);
+var
+  LQualifiedTypeName: String;
+begin
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
+  if LQualifiedTypeName = 'System.TDate' then
+  begin
+    if AValue.AsExtended = 0 then
+      AJSONWriter.WriteNull
+    else
+      AJSONWriter.WriteValue(TdjUtils.ISODateToString(AValue.AsExtended));
+  end
+  else if LQualifiedTypeName = 'System.TDateTime' then
+  begin
+    if AValue.AsExtended = 0 then
+      AJSONWriter.WriteNull
+    else
+      AJSONWriter.WriteValue(TdjUtils.ISODateTimeToString(AValue.AsExtended));
+  end
+  else if LQualifiedTypeName = 'System.TTime' then
+   AJSONWriter.WriteValue(TdjUtils.ISOTimeToString(AValue.AsExtended))
+  else
+    AJSONWriter.WriteValue(AValue.AsExtended);
+end;
+
+class procedure TdjEngineStream.SerializeInterface(
+  const AJSONWriter: TJSONWriter; const AValue: TValue;
+  const APropField: TRttiNamedObject; const AParams: IdjParams);
+var
+  AChildInterface: IInterface;
+  AChildObj: TObject;
+begin
+  AChildInterface := AValue.AsInterface;
+  AChildObj := AChildInterface as TObject;
+  SerializeClass(AJSONWriter, AChildObj, APropField, AParams);
+end;
+
+class function TdjEngineStream.SerializeList(const AJSONWriter: TJSONWriter;
+  const AList: TObject; const APropField: TRttiNamedObject;
+  const AParams: IdjParams): Boolean;
+var
+  LValueQualifiedTypeName: String;
+  LDuckList: IdjDuckList;
+  I: Integer;
+  LValue: TValue;
+begin
+  // Wrap the dictionary in the DuckObject
+  if not TdjFactory.TryWrapAsDuckList(Alist, LDuckList) then
+    Exit(False);
+  // Init
+  Result := False;
+  LValueQualifiedTypeName := '';
+
+  // If TypeAnnotations enabled...
+  if AParams.TypeAnnotations then
+  begin
+    AJSONWriter.WriteStartObject;
+    // Add the List TypeName
+    AJSONWriter.WritePropertyName(DJ_TYPENAME);
+    AJSONWriter.WriteValue(AList.QualifiedClassName);
+    // Get the first element type name (for non class/interface list contents)
+    if LDuckList.Count > 0 then
+    begin
+      LValue := LDuckList.GetItemValue(0);
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
+    end;
+    // Add the items TypeName (base on the first element of the list only
+    if  (not LValueQualifiedTypeName.IsEmpty) then
+    begin
+      AJSONWriter.WritePropertyName(DJ_VALUE);
+      AJSONWriter.WriteValue(LValueQualifiedTypeName);
+    end;
+    // Add the "items" property
+    AJSONWriter.WritePropertyName('items');
+  end;
+
+  // Items array start
+  AJSONWriter.WriteStartArray;
+
+  // Loop for all items in the list and serialize it
+  for I := 0 to LDuckList.Count-1 do
+  begin
+    // Read values
+    LValue := LDuckList.GetItemValue(I);
+    // Serialize values
+    SerializePropField(AJSONWriter, LValue, APropField, AParams);
+  end;
+
+  // Items array end
+  AJSONWriter.WriteEndArray;
+  // If TypeAnnotations enabled...
+  if AParams.TypeAnnotations then
+    AJSONWriter.WriteEndObject;
+  // If everething OK!
+  Result := True;
+end;
+
+class procedure TdjEngineStream.SerializeObject(const AJSONWriter: TJSONWriter;
+  const AInterfacedObject: IInterface; const AParams: IdjParams);
+begin
+  SerializeObject(AJSONWriter, AInterfacedObject as TObject, AParams);
+end;
+
+class procedure TdjEngineStream.SerializeObject(const AJSONWriter: TJSONWriter;
+  const AObject: TObject; const AParams: IdjParams);
+var
+  LPropField: System.Rtti.TRttiNamedObject;
+  LPropsFields: TArray<System.Rtti.TRttiNamedObject>;
+  LKeyName: String;
+  LValue: TValue;
+begin
+  AJSONWriter.WriteStartObject;
+  // add the $dmvc.classname property to allows a strict deserialization
+  if AParams.TypeAnnotations then
+  begin
+    AJSONWriter.WritePropertyName(DJ_TYPENAME);
+    AJSONWriter.WriteValue(AObject.QualifiedClassName);
+  end;
+  // Get members list
+  case AParams.SerializationType of
+    stProperties:
+      LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
+    stFields:
+      LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
+  end;
+  // Loop for all members
+  for LPropField in LPropsFields do
+  begin
+    // Skip the RefCount
+    // Check for "DoNotSerializeAttribute" or property to ignore
+    if (LPropField.Name = 'FRefCount')
+    or (LPropField.Name = 'RefCount')
+    or TdjRTTI.HasAttribute<djSkipAttribute>(LPropField)
+    or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
+    then
+      Continue;
+    // Get KeyName
+    LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
+    // Write the property name
+    AJSONWriter.WritePropertyName(LKeyName);
+    // Write/serialize the property value
+    LValue := TdjDuckPropField.GetValue(AObject, LPropField);
+    SerializePropField(AJSONWriter, LValue, LPropField, AParams);
+  end;
+  AJSONWriter.WriteEndObject;
+end;
+
+class procedure TdjEngineStream.SerializePropField(
+  const AJSONWriter: TJSONWriter; const AValue: TValue;
+  const APropField: TRttiNamedObject; const AParams: IdjParams;
+  const AEnableCustomSerializers: Boolean);
+begin
+  // If a custom serializer exists for the current type then use it
+//  if AEnableCustomSerializers and AParams.EnableCustomSerializers and SerializeCustom(AValue, APropField, AParams, Result) then
+//    Exit;
+  // Standard serialization by TypeKind
+  case AValue.Kind of
+    tkInteger, tkInt64:
+      AJSONWriter.WriteValue(AValue.AsInteger);
+    tkFloat:
+      SerializeFloat(AJSONWriter, AValue);
+    tkString, tkLString, tkWString, tkUString:
+      AJSONWriter.WriteValue(AValue.AsString);
+    tkEnumeration:
+      SerializeEnumeration(AJSONWriter, AValue);
+    tkRecord:
+      SerializeRecord(AJSONWriter, AValue, APropField, AParams);
+    tkClass:
+      SerializeClass(AJSONWriter, AValue, APropField, AParams);
+    tkInterface:
+      SerializeInterface(AJSONWriter, AValue, APropField, AParams);
+  end;
+end;
+
+class procedure TdjEngineStream.SerializeRecord(const AJSONWriter: TJSONWriter;
+  const AValue: TValue; const APropField: TRttiNamedObject;
+  const AParams: IdjParams);
+var
+  LTimeStamp: TTimeStamp;
+  LQualifiedTypeName: String;
+begin
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
+  // TTimeStamp
+  if LQualifiedTypeName = 'System.SysUtils.TTimeStamp' then
+  begin
+    LTimeStamp := AValue.AsType<System.SysUtils.TTimeStamp>;
+    AJSONWriter.WriteValue(TimeStampToMsecs(LTimeStamp));
+  end
+  // TValue
+  else if LQualifiedTypeName = 'System.Rtti.TValue' then
+    SerializeTValue(AJSONWriter, AValue.AsType<TValue>, APropField, AParams);
+end;
+
+class function TdjEngineStream.SerializeStream(const AJSONWriter: TJSONWriter;
+  const AStream: TObject; const APropField: TRttiNamedObject): Boolean;
+var
+  LdsonEncodingAttribute: djEncodingAttribute;
+  LEncoding: TEncoding;
+  LStringStream: TStringStream;
+begin
+  // Checks
+  if not (Assigned(AStream) and (AStream is TStream)) then
+    Exit(False);
+  // Init
+  Result := False;
+  // If the "dsonEncodingAtribute" is specified then use that encoding
+  if TdjRTTI.HasAttribute<djEncodingAttribute>(APropField, LdsonEncodingAttribute) then
+  begin
+    // -------------------------------------------------------------------------
+    TStream(AStream).Position := 0;
+    LEncoding := TEncoding.GetEncoding(LdsonEncodingAttribute.Encoding);
+    LStringStream := TStringStream.Create('', LEncoding);
+    try
+      LStringStream.LoadFromStream(TStream(AStream));
+      AJSONWriter.WriteValue(LStringStream.DataString);
+    finally
+      LStringStream.Free;
+    end;
+    // -------------------------------------------------------------------------
+  end
+  // Else if the atribute is not present then serialize as base64 by default
+  else
+  begin
+    // -------------------------------------------------------------------------
+    TStream(AStream).Position := 0;
+    LStringStream := TStringStream.Create;
+    try
+      EncodeStream(TStream(AStream), LStringStream);
+      AJSONWriter.WriteValue(LStringStream.DataString);
+    finally
+      LStringStream.Free;
+    end;
+    // -------------------------------------------------------------------------
+  end;
+  // If everething OK!
+  Result := True;
+end;
+
+class function TdjEngineStream.SerializeStreamableObject(
+  const AJSONWriter: TJSONWriter; const AObj: TObject;
+  const APropField: TRttiNamedObject): Boolean;
+var
+  LDuckStreamable: IdjDuckStreamable;
+  LMemoryStream: TMemoryStream;
+  LStringStream: TStringStream;
+begin
+  // Wrap the dictionary in the DuckObject
+  if not TdjFactory.TryWrapAsDuckStreamable(AObj, LDuckStreamable) then
+    Exit(False);
+  // Init
+  Result := False;
+  LMemoryStream := TMemoryStream.Create;
+  LStringStream := TStringStream.Create;
+  try
+    LDuckStreamable.SaveToStream(LMemoryStream);
+    LMemoryStream.Position := 0;
+    EncodeStream(LMemoryStream, LStringStream);
+    AJSONWriter.WriteValue(LStringStream.DataString);
+  finally
+    LMemoryStream.Free;
+    LStringStream.Free;
+  end;
+  // If everething OK!
+  Result := True;
+end;
+
+class procedure TdjEngineStream.SerializeTValue(const AJSONWriter: TJSONWriter;
+  const AValue: TValue; const APropField: TRttiNamedObject;
+  const AParams: IdjParams);
+var
+  LRttiType: TRttiType;
+begin
+  // If the TValue is empty then return a TJSONNull and exit
+  if AValue.IsEmpty then
+  begin
+    AJSONWriter.WriteNull;
+    Exit;
+  end;
+  // Init
+  LRttiType := TdjRTTI.TypeInfoToRttiType(AValue.TypeInfo);
+  // Add the qualified type name if enabled
+  if AParams.TypeAnnotations then
+  begin
+    AJSONWriter.WriteStartObject;
+    AJSONWriter.WritePropertyName(DJ_TYPENAME);
+    AJSONWriter.WriteValue(LRttiType.QualifiedName);
+    AJSONWriter.WritePropertyName(DJ_VALUE);
+  end;
+  // Add the JSONValue
+  SerializePropField(AJSONWriter, AValue, APropField, AParams);
+  // Close type annotations if enabled
+  if AParams.TypeAnnotations then
+    AJSONWriter.WriteEndObject;
 end;
 
 class function TdjEngineStream.TryGetTypeAnnotation(

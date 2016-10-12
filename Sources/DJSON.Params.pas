@@ -37,9 +37,11 @@ unit DJSON.Params;
 interface
 
 uses
-  System.TypInfo, DJSON.Serializers, System.Generics.Collections;
+  System.TypInfo, DJSON.Serializers, System.Generics.Collections, System.Rtti;
 
 type
+
+  TdjEngine = (eDelphiDOM, eDelphiStream, eJDO);
 
   TdjNameCase = (ncUndefinedCase, ncUpperCase, ncLowerCase);
 
@@ -51,8 +53,23 @@ type
 
   TdjSerializersContainer = class;
 
+  IdjParams = interface;
+
+  TdjEngineRef = class of TdjEngineIntf;
+  TdjEngineIntf = class abstract
+  public
+    class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; virtual; abstract;
+    class function Deserialize(const AJSONText:String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; virtual; abstract;
+  end;
+
   IdjParams = interface
     ['{347611D7-F62B-49DB-B08A-E158D466F8AE}']
+    // Engine (No property)
+    function GetEngineClass: TdjEngineRef;
+    // EngineType
+    procedure SetEngine(const AValue: TdjEngine);
+    function GetEngine: TdjEngine;
+    property Engine: TdjEngine read GetEngine write SetEngine;
     // SerializationMode
     procedure SetSerializationMode(const AValue: TdjSerializationMode);
     function GetSerializationMode: TdjSerializationMode;
@@ -104,6 +121,8 @@ type
 
   TdjParams = class(TInterfacedObject, IdjParams)
   strict private
+    FEngineClass: TdjEngineRef;
+    FEngineType: TdjEngine;
     FSerializationMode: TdjSerializationMode;
     FSerializationType: TdjSerializationType;
     FTypeAnnotations: Boolean;
@@ -114,6 +133,11 @@ type
     FItemsValueDefaultQualifiedName: String;
     FOwnJSONValue: Boolean;
     FNameCase: TdjNameCase;
+    // Engine (No property)
+    function GetEngineClass: TdjEngineRef;
+    // EntineType
+    procedure SetEngine(const AValue: TdjEngine);
+    function GetEngine: TdjEngine;
     // SerializationMode
     procedure SetSerializationMode(const AValue: TdjSerializationMode);
     function GetSerializationMode: TdjSerializationMode;
@@ -191,13 +215,14 @@ type
 implementation
 
 uses
-  DJSON.Utils.RTTI;
+  DJSON.Utils.RTTI, DJSON.Factory;
 
 { TdjParams }
 
 constructor TdjParams.Create;
 begin
   inherited;
+  SetEngine(TdjEngine.eDelphiStream);
   FSerializers := TdjSerializersContainer.Create;
   FTypeAnnotations := False;
   FEnableCustomSerializers := False;
@@ -221,6 +246,16 @@ end;
 function TdjParams.GetEnableCustomSerializers: Boolean;
 begin
   Result := FEnableCustomSerializers;
+end;
+
+function TdjParams.GetEngineClass: TdjEngineRef;
+begin
+  Result := FEngineClass;
+end;
+
+function TdjParams.GetEngine: TdjEngine;
+begin
+  Result := FEngineType;
 end;
 
 function TdjParams.GetIgnoredProperties: TdjIgnoredProperties;
@@ -281,6 +316,13 @@ end;
 procedure TdjParams.SetEnableCustomSerializers(const AValue: Boolean);
 begin
  FEnableCustomSerializers := AValue;
+end;
+
+procedure TdjParams.SetEngine(const AValue: TdjEngine);
+begin
+  FEngineType := AValue;
+  // Set the engine
+  FEngineClass := TdjFactory.GetEngine(AValue);
 end;
 
 procedure TdjParams.SetIgnoredProperties(const AValue: TdjIgnoredProperties);

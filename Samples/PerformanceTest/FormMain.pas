@@ -10,9 +10,7 @@ uses
 
 type
   TMainForm = class(TForm)
-    ButtonCreate: TButton;
     eNumOfObjects: TEdit;
-    LabelElapsedCreate: TLabel;
     ButonSerializeDOM: TButton;
     LabelElapsedSerializeDOM: TLabel;
     ButtonDeserializeDOM: TButton;
@@ -21,15 +19,22 @@ type
     LabelElapsedDeserializeStream: TLabel;
     ButtonDeserializaJDO: TButton;
     LabelElapsedDeserializeJDO: TLabel;
-    Button1: TButton;
-    procedure ButtonCreateClick(Sender: TObject);
+    ButonSerializeJDO: TButton;
+    LabelElapsedSerializeJDO: TLabel;
+    ButonSerializeStream: TButton;
+    LabelElapsedSerializeStream: TLabel;
+    ButtonDeserializeOM: TButton;
+    LabelElapsedDeserializeOM: TLabel;
+    procedure CreateSampleObj;
     procedure FormDestroy(Sender: TObject);
     procedure ButonSerializeDOMClick(Sender: TObject);
     procedure ButtonDeserializeDOMClick(Sender: TObject);
     procedure ButtonDeserializaStreamClick(Sender: TObject);
     procedure ButtonDeserializaJDOClick(Sender: TObject);
     function Prova: TJsonDataValue;
-    procedure Button1Click(Sender: TObject);
+    procedure ButonSerializeJDOClick(Sender: TObject);
+    procedure ButonSerializeStreamClick(Sender: TObject);
+    procedure ButtonDeserializeOMClick(Sender: TObject);
   private
     { Private declarations }
     FList: TObjectList<TPerson>;
@@ -54,28 +59,48 @@ procedure TMainForm.ButonSerializeDOMClick(Sender: TObject);
 var
   LStopWatch: TStopWatch;
 begin
-  if not Assigned(FList) then
-    raise Exception.Create('Sample objects not created.');
-
-  LStopWatch := TStopwatch.StartNew;
-
-  FJSONText := dj.From(FList).ToJSON;
-  FreeAndNil(FList);
-
-  LStopWatch.Stop;
-  LabelElapsedSerializeDOM.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms';
-
+  CreateSampleObj;
+  try
+    LStopWatch := TStopwatch.StartNew;
+    FJSONText := dj.From(FList).Engine(eDelphiDOM).ToJSON;
+    LStopWatch.Stop;
+    LabelElapsedSerializeDOM.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms';
+  finally
+    FreeAndNil(FList);
+  end;
 end;
 
-procedure TMainForm.Button1Click(Sender: TObject);
+procedure TMainForm.ButonSerializeJDOClick(Sender: TObject);
 var
-  Tmp: TJsonDataValue;
+  LStopWatch: TStopWatch;
 begin
-  Tmp := Prova;
-  ShowMessage(IntToStr(Tmp.IntValue));
+  CreateSampleObj;
+  try
+    LStopWatch := TStopwatch.StartNew;
+    FJSONText := dj.From(FList).Engine(eJDO).ToJSON;
+    LStopWatch.Stop;
+    LabelElapsedSerializeJDO.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms';
+  finally
+    FreeAndNil(FList);
+  end;
 end;
 
-procedure TMainForm.ButtonCreateClick(Sender: TObject);
+procedure TMainForm.ButonSerializeStreamClick(Sender: TObject);
+var
+  LStopWatch: TStopWatch;
+begin
+  CreateSampleObj;
+  try
+    LStopWatch := TStopwatch.StartNew;
+    FJSONText := dj.From(FList).Engine(eDelphiStream).ToJSON;
+    LStopWatch.Stop;
+    LabelElapsedSerializeStream.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms';
+  finally
+    FreeAndNil(FList);
+  end;
+end;
+
+procedure TMainForm.CreateSampleObj;
 var
   LCurrPersonID, LCurrNumberID, LNumOfObjectsToCreate: Integer;
   LNewPerson: TPerson;
@@ -83,9 +108,6 @@ var
 begin
   if Assigned(FList) then
     FreeAndNil(FList);
-
-  LStopWatch := TStopwatch.StartNew;
-
   LNumOfObjectsToCreate := StrToInt(eNumOfObjects.Text);
   FList := TObjectList<TPerson>.Create;
   LCurrNumberID := 0;
@@ -100,24 +122,18 @@ begin
     LNewPerson.NumTel.Add(   TNumTel.Create(LCurrNumberID, '0541/694750', LCurrPersonID)   );
     FList.Add(LNewPerson);
   end;
-
-  LStopWatch.Stop;
-  LabelElapsedCreate.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms';
 end;
 
 procedure TMainForm.ButtonDeserializaJDOClick(Sender: TObject);
 var
   ResultList: TObjectList<TPerson>;
   LStopWatch: TStopWatch;
-  LParams: IdjParams;
 begin
   try
+    ResultList := TObjectList<TPerson>.Create;
     LStopWatch := TStopwatch.StartNew;
 
-    ResultList := TObjectList<TPerson>.Create;
-    LParams := dj.Default;
-    LParams.ItemsValueDefaultTypeInfo := TypeInfo(TPerson);
-    TdjEngineJDO.Deserialize(FJSONText, TdjRTTI.TypeInfoToRttiType(TypeInfo(TObjectList<TPerson>)), nil, ResultList, LParams);
+    dj.FromJSON(FJSONText).ItemsOfType<TPerson>.Engine(eJDO).&To(ResultList);
 
     LStopWatch.Stop;
     LabelElapsedDeserializeJDO.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms   (' + IntToStr(ResultList.Count) + ' items)';
@@ -130,61 +146,53 @@ procedure TMainForm.ButtonDeserializaStreamClick(Sender: TObject);
 var
   ResultList: TObjectList<TPerson>;
   LStopWatch: TStopWatch;
-  LParams: IdjParams;
 begin
   try
+    ResultList := TObjectList<TPerson>.Create;
     LStopWatch := TStopwatch.StartNew;
 
-    ResultList := TObjectList<TPerson>.Create;
-    LParams := dj.Default;
-    LParams.ItemsValueDefaultTypeInfo := TypeInfo(TPerson);
-    TdjEngineStream.Deserialize(FJSONText, TdjRTTI.TypeInfoToRttiType(TypeInfo(TObjectList<TPerson>)), nil, ResultList, LParams);
-
-//    ResultList := dj.FromJSON(FJSONText).ItemsOfType<TPerson>.&To<TObjectList<TPerson>>;
-//    ResultList := TDOMDeserializer.Deserialize(FJSONText);
+    dj.FromJSON(FJSONText).ItemsOfType<TPerson>.Engine(eDelphiStream).&To(ResultList);
 
     LStopWatch.Stop;
     LabelElapsedDeserializeStream.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms   (' + IntToStr(ResultList.Count) + ' items)';
   finally
     ResultList.Free;
   end;
-
-//  try
-//    LStopWatch := TStopwatch.StartNew;
-//
-//    ResultList := TStreamDeserializer.Deserialize(FJSONText);
-//
-//    LStopWatch.Stop;
-//    LabelElapsedDeserializeStream.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms   (' + IntToStr(ResultList.Count) + ' items)';
-//  finally
-//    ResultList.Free;
-//  end;
 end;
 
 procedure TMainForm.ButtonDeserializeDOMClick(Sender: TObject);
 var
   ResultList: TObjectList<TPerson>;
   LStopWatch: TStopWatch;
-  LParams: IdjParams;
 begin
   try
+    ResultList := TObjectList<TPerson>.Create;
     LStopWatch := TStopwatch.StartNew;
 
-    ResultList := TObjectList<TPerson>.Create;
-    LParams := dj.Default;
-    LParams.ItemsValueDefaultTypeInfo := TypeInfo(TPerson);
-    TdjEngineDOM.Deserialize(FJSONText, TdjRTTI.TypeInfoToRttiType(TypeInfo(TObjectList<TPerson>)), nil, ResultList, LParams);
-
-//    ResultList := dj.FromJSON(FJSONText).ItemsOfType<TPerson>.&To<TObjectList<TPerson>>;
-//    ResultList := TDOMDeserializer.Deserialize(FJSONText);
-
-//    LJSONValue := TJSONObject.ParseJSONValue(FJSONText) as TJSONArray;
-//    ResultList := Mapper.JSONArrayToObjectList<TPerson>(LJSONValue);
+    dj.FromJSON(FJSONText).ItemsOfType<TPerson>.Engine(eDelphiDOM).&To(ResultList);
 
     LStopWatch.Stop;
     LabelElapsedDeserializeDOM.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms   (' + IntToStr(ResultList.Count) + ' items)';
   finally
-//    LJSONValue.Free;
+    ResultList.Free;
+  end;
+end;
+
+procedure TMainForm.ButtonDeserializeOMClick(Sender: TObject);
+var
+  ResultList: TObjectList<TPerson>;
+  LStopWatch: TStopWatch;
+  LJSONValue: TJSONArray;
+begin
+  try
+    LStopWatch := TStopwatch.StartNew;
+
+    LJSONValue := TJSONObject.ParseJSONValue(FJSONText) as TJSONArray;
+    ResultList := Mapper.JSONArrayToObjectList<TPerson>(LJSONValue);
+
+    LStopWatch.Stop;
+    LabelElapsedDeserializeOM.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms   (' + IntToStr(ResultList.Count) + ' items)';
+  finally
     ResultList.Free;
   end;
 end;

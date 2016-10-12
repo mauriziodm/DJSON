@@ -12,3 +12,6 @@ Samples/Mapper_Pizza_Image/Win32/
 Samples/Mapper_Pizza_Image/__history/
 Sources/__history/
 *.tvsconfig
+Samples/PerformanceTest/Win32/
+Samples/PerformanceTest/__history/
+*.md

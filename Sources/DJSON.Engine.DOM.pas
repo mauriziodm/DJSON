@@ -43,7 +43,7 @@ type
 
   TJSONBox = TJSONObject;
 
-  TdjEngineDOM = class
+  TdjEngineDOM = class(TdjEngineIntf)
   private
     // Serializers
     class function SerializePropField(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): TJSONValue; static;
@@ -80,8 +80,8 @@ type
     class function DeserializeStreamableObject(AObj: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject): Boolean; static;
     class function DeserializeStream(AStream: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject): Boolean; static;
   public
-    class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; static;
-    class function Deserialize(const AJSONText: String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
+    class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; override;
+    class function Deserialize(const AJSONText: String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; override;
   end;
 
 implementation
@@ -874,7 +874,7 @@ end;
 
 class function TdjEngineDOM.SerializeList(const AList: TObject; const APropField: TRttiNamedObject; const AParams: IdjParams; out ResultJSONValue:TJSONValue): Boolean;
 var
-  LListTypeName, LValueQualifiedTypeName: String;
+  LValueQualifiedTypeName: String;
   LDuckList: IdjDuckList;
   LJSONArray: TJSONArray;
   I: Integer;
@@ -888,7 +888,6 @@ begin
     Exit(False);
   // Init
   Result := False;
-  LListTypeName           := '';
   LValueQualifiedTypeName := '';
   // Create the Items JSON array
   LJSONArray := TJSONArray.Create;
@@ -1190,7 +1189,6 @@ var
   LKeyName: String;
   LJSONValue: TJSONValue;
   LValue: TValue;
-  I: Integer;
 begin
   Result := TJSONBox.Create;
   try
