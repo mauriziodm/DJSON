@@ -224,41 +224,25 @@ end;
 procedure TMainForm.ButtonOtherSerialize1Click(Sender: TObject);
 var
   LPerson: IPerson;
-  LJSONValue: TJSONValue;
 begin
   LPerson := BuildSampleObject;
-  try
-    // ---------------------
-    // Questo è il modo più semplice di utilizzare il mapper in questo caso
-    LJSONValue := dj.From(LPerson).TypeAnnotationsON.ToJSON;
-    // ---------------------
-    Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
-  finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
-  end;
+  Memo1.Clear;
+  Memo1.Lines.Text := dj.From(LPerson).TypeAnnotationsON.ToJSON;
 end;
 
 procedure TMainForm.ButtonOtherSerialize2Click(Sender: TObject);
 var
   LPersonList: TList<IPerson>;
-  LJSONValue: TJSONValue;
 begin
   LPersonList := BuildSampleList;
   try
-    // ---------------------
     // Utilizzo del mapper senza un oggetto "Params" ma specificando gli eventuali parametri
     //  desiderati direttamente sulla chiamata.
     //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
     //  annotazione dei tipi nel JSON attivata e disabilita gli eventuali custom serializers.
-    LJSONValue := dj.From(LPersonList).byFields.TypeAnnotationsON.CustomSerializersOFF.ToJSON;
-    // ---------------------
     Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
+    Memo1.Lines.Text := dj.From(LPersonList).byFields.TypeAnnotationsON.CustomSerializersOFF.ToJSON;
   finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
     LPersonList.Free;
   end;
 end;
@@ -266,42 +250,27 @@ end;
 procedure TMainForm.ButtonOtherSerialize3Click(Sender: TObject);
 var
   LPerson: IPerson;
-  LJSONValue: TJSONValue;
 begin
   LPerson := BuildSampleObject;
-  try
-    // ---------------------
-    // Utilizzo del mapper senza un oggetto "Params" ma specificando gli eventuali parametri
-    //  desiderati direttamente sulla chiamata.
-    //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
-    //  annotazione dei tipi nel JSON attivata e con gli eventuali custom serializers attivati.
-    LJSONValue := dj.From(LPerson).byFields.TypeAnnotationsON.CustomSerializersON.ToJSON;
-    // ---------------------
-    Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
-  finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
-  end;
+  // Utilizzo del mapper senza un oggetto "Params" ma specificando gli eventuali parametri
+  //  desiderati direttamente sulla chiamata.
+  //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
+  //  annotazione dei tipi nel JSON attivata e con gli eventuali custom serializers attivati.
+  Memo1.Clear;
+  Memo1.Lines.Text := dj.From(LPerson).byFields.TypeAnnotationsON.CustomSerializersON.ToJSON;
 end;
 
 procedure TMainForm.ButtonSerializeObjectListClick(Sender: TObject);
 var
   LPersonList: TList<IPerson>;
   LParams: IdjParams;
-  LJSONValue: TJSONValue;
 begin
   LParams     := BuildMapperParams;
   LPersonList := BuildSampleList;
   try
-    // ---------------------
-    LJSONValue := dj.From(LPersonList, LParams).ToJSON;
-    // ---------------------
     Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
+    Memo1.Lines.Text := dj.From(LPersonList, LParams).ToJSON;
   finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
     LPersonList.Free;
   end;
 end;
@@ -310,20 +279,11 @@ procedure TMainForm.ButtonSerializeSignleObjectClick(Sender: TObject);
 var
   LPerson: IPerson;
   LParams: IdjParams;
-  LJSONValue: TJSONValue;
 begin
   LParams := BuildMapperParams;
   LPerson := BuildSampleObject;
-  try
-    // ---------------------
-    LJSONValue := dj.From(LPerson, LParams).ToJSON;
-    // ---------------------
-    Memo1.Clear;
-    Memo1.Lines.Text := LJSONValue.ToString;
-  finally
-    if Assigned(LJSONValue) then
-      LJSONValue.Free;
-  end;
+  Memo1.Clear;
+  Memo1.Lines.Text := dj.From(LPerson, LParams).ToJSON;
 end;
 
 procedure TMainForm.ShowListData(APersonList: TList<IPerson>);
@@ -332,29 +292,34 @@ var
   LPhoneNumber: IPhoneNumber;
   LKey: String;
 begin
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('---------- Start deserialized --------------');
-  for LPerson in APersonList do
-  begin
+  Memo1.Lines.BeginUpdate;
+  try
     Memo1.Lines.Add('');
-    Memo1.Lines.Add('Class: ' + (LPerson as TObject).ClassName);
-    Memo1.Lines.Add('ID = ' +  LPerson.ID.ToString);
-    Memo1.Lines.Add('Name = ' +  LPerson.Name);
-    for LKey in LPerson.Phones.Keys do
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('---------- Start deserialized --------------');
+    for LPerson in APersonList do
     begin
-      LPhoneNumber := LPerson.Phones.Items[LKey];
       Memo1.Lines.Add('');
-      Memo1.Lines.Add('     Class: ' + (LPhoneNumber as TObject).ClassName);
-      Memo1.Lines.Add('     Key (Type of phone number): ' + LKey);
-      Memo1.Lines.Add('     ID: ' + LPhoneNumber.ID.ToString);
-      Memo1.Lines.Add('     MasterID: ' + LPhoneNumber.MasterID.ToString);
-      Memo1.Lines.Add('     Number: ' + LPhoneNumber.Number);
+      Memo1.Lines.Add('Class: ' + (LPerson as TObject).ClassName);
+      Memo1.Lines.Add('ID = ' +  LPerson.ID.ToString);
+      Memo1.Lines.Add('Name = ' +  LPerson.Name);
+      for LKey in LPerson.Phones.Keys do
+      begin
+        LPhoneNumber := LPerson.Phones.Items[LKey];
+        Memo1.Lines.Add('');
+        Memo1.Lines.Add('     Class: ' + (LPhoneNumber as TObject).ClassName);
+        Memo1.Lines.Add('     Key (Type of phone number): ' + LKey);
+        Memo1.Lines.Add('     ID: ' + LPhoneNumber.ID.ToString);
+        Memo1.Lines.Add('     MasterID: ' + LPhoneNumber.MasterID.ToString);
+        Memo1.Lines.Add('     Number: ' + LPhoneNumber.Number);
+      end;
     end;
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('---------- End deserialized --------------');
+  finally
+    Memo1.Lines.EndUpdate;
   end;
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('---------- End deserialized --------------');
 end;
 
 procedure TMainForm.ShowSingleObjectData(APerson: IPerson);
@@ -362,25 +327,30 @@ var
   LKey: String;
   LPhoneNumber: IPhoneNumber;
 begin
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('---------- Start deserialized --------------');
-  Memo1.Lines.Add('Class: ' + (APerson as TObject).ClassName);
-  Memo1.Lines.Add('ID = ' +  APerson.ID.ToString);
-  Memo1.Lines.Add('Name = ' +  APerson.Name);
-  for LKey in APerson.Phones.Keys do
-  begin
-    LPhoneNumber := APerson.Phones.Items[LKey];
+  Memo1.Lines.BeginUpdate;
+  try
     Memo1.Lines.Add('');
-    Memo1.Lines.Add('     Class: ' + (LPhoneNumber as TObject).ClassName);
-    Memo1.Lines.Add('     Key (Type of phone number): ' + LKey);
-    Memo1.Lines.Add('     ID: ' + LPhoneNumber.ID.ToString);
-    Memo1.Lines.Add('     MasterID: ' + LPhoneNumber.MasterID.ToString);
-    Memo1.Lines.Add('     Number: ' + LPhoneNumber.Number);
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('---------- Start deserialized --------------');
+    Memo1.Lines.Add('Class: ' + (APerson as TObject).ClassName);
+    Memo1.Lines.Add('ID = ' +  APerson.ID.ToString);
+    Memo1.Lines.Add('Name = ' +  APerson.Name);
+    for LKey in APerson.Phones.Keys do
+    begin
+      LPhoneNumber := APerson.Phones.Items[LKey];
+      Memo1.Lines.Add('');
+      Memo1.Lines.Add('     Class: ' + (LPhoneNumber as TObject).ClassName);
+      Memo1.Lines.Add('     Key (Type of phone number): ' + LKey);
+      Memo1.Lines.Add('     ID: ' + LPhoneNumber.ID.ToString);
+      Memo1.Lines.Add('     MasterID: ' + LPhoneNumber.MasterID.ToString);
+      Memo1.Lines.Add('     Number: ' + LPhoneNumber.Number);
+    end;
+    Memo1.Lines.Add('');
+    Memo1.Lines.Add('---------- End deserialized --------------');
+  finally
+    Memo1.Lines.EndUpdate;
   end;
-  Memo1.Lines.Add('');
-  Memo1.Lines.Add('---------- End deserialized --------------');
 end;
 
 end.
