@@ -25,6 +25,8 @@ type
     LabelElapsedSerializeStream: TLabel;
     ButtonDeserializeOM: TButton;
     LabelElapsedDeserializeOM: TLabel;
+    ButonSerializeOM: TButton;
+    LabelElapsedSerializeOM: TLabel;
     procedure CreateSampleObj;
     procedure FormDestroy(Sender: TObject);
     procedure ButonSerializeDOMClick(Sender: TObject);
@@ -35,6 +37,7 @@ type
     procedure ButonSerializeJDOClick(Sender: TObject);
     procedure ButonSerializeStreamClick(Sender: TObject);
     procedure ButtonDeserializeOMClick(Sender: TObject);
+    procedure ButonSerializeOMClick(Sender: TObject);
   private
     { Private declarations }
     FList: TObjectList<TPerson>;
@@ -80,6 +83,21 @@ begin
     FJSONText := dj.From(FList).Engine(eJDO).ToJSON;
     LStopWatch.Stop;
     LabelElapsedSerializeJDO.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms';
+  finally
+    FreeAndNil(FList);
+  end;
+end;
+
+procedure TMainForm.ButonSerializeOMClick(Sender: TObject);
+var
+  LStopWatch: TStopWatch;
+begin
+  CreateSampleObj;
+  try
+    LStopWatch := TStopwatch.StartNew;
+    FJSONText := Mapper.ObjectListToJSONArray<TPerson>(FList).ToJSON;
+    LStopWatch.Stop;
+    LabelElapsedSerializeOM.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms';
   finally
     FreeAndNil(FList);
   end;
