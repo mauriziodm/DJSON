@@ -47,6 +47,7 @@ type
     procedure SaveToStream(Stream: TStream);
     procedure SetObject(const AObj:TObject);
     function IsEmpty: Boolean;
+    function DuckObjQualifiedName: String;
   end;
 
   IdjDuckList = interface
@@ -60,6 +61,7 @@ type
     function GetItem(Index: Integer): TObject;
     function GetItemValue(const index: Integer): TValue;
     function GetGenericTypeName: String;
+    function DuckObjQualifiedName: String;
     // OwnsObjects property
     procedure SetOwnsObjects(AValue:Boolean);
     function GetOwnsObjects: Boolean;
@@ -72,6 +74,7 @@ type
     function GetCurrentKey: TValue;
     function GetCurrentValue: TValue;
     function MoveNext: Boolean;
+    function DuckObjQualifiedName: String;
     procedure Add(const AKey, AValue: TValue);
     procedure SetObject(const AObj:TObject);
   end;

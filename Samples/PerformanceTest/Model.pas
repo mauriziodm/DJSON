@@ -3,7 +3,7 @@ unit Model;
 interface
 
 uses
-  System.Generics.Collections, System.JSON, DJSON.Attributes;
+  System.Generics.Collections, System.JSON, DJSON.Attributes, ObjectsMappers;
 
 type
 
@@ -44,6 +44,7 @@ type
     destructor Destroy; override;
     property ID:Integer read GetID write SetID;
     property Descrizione:String read GetDescrizione write SetDescrizione;
+    [MapperItemsClassType(TNumTel)]
     [djItemsType(TNumTel)]  // Not needed if "TypeAnnnotations" = True or "ItemsType" is specified
     property NumTel:TObjectList<TNumTel> read GetNumTel;
   end;

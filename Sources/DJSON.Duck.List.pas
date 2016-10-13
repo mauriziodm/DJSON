@@ -64,6 +64,7 @@ type
     function GetItemValue(const index: Integer): TValue;
     function GetGenericTypeName: String;
     function GetEnumerator: IEnumerator;
+    function DuckObjQualifiedName: String;
     property OwnsObjects:Boolean read GetOwnsObjects write SetOwnsObjects;
   end;
 
@@ -82,17 +83,21 @@ type
 implementation
 
 uses
-  DJSON.Utils.RTTI, DJSON.Exceptions, System.TypInfo;
+  DJSON.Utils.RTTI, DJSON.Exceptions, System.TypInfo,
+  System.Generics.Collections;
 
 { TdjDuckList }
 
 procedure TdjDuckList.Add(AObj: TObject);
 begin
+{ TODO : Possibile ottimizzazione se si trova il modo di richiamare il metodo Add più direttamente (noR RTTI) }
+//  TList<TObject>(FObjAsDuck).Add(AObj);
   FAddMethod.Invoke(FObjAsDuck, [AObj]);
 end;
 
 procedure TdjDuckList.AddValue(const AValue: TValue);
 begin
+{ TODO : Possibile ottimizzazione se si trova il modo di richiamare il metodo Add più direttamente (noR RTTI) }
   FAddMethod.Invoke(FObjAsDuck, [AValue]);
 end;
 
@@ -117,6 +122,11 @@ begin
   FGetItemMethod := AGetItemMethod;
 end;
 
+function TdjDuckList.DuckObjQualifiedName: String;
+begin
+  Result := FObjAsDuck.QualifiedClassName;
+end;
+
 function TdjDuckList.GetEnumerator: IEnumerator;
 begin
   Result := TdjDuckListEnumerator.Create(self);
@@ -126,17 +136,19 @@ function TdjDuckList.GetItem(Index: Integer): TObject;
 var
   AValue: TValue;
 begin
+{ TODO : Possibile ottimizzazione se si trova il modo di richiamare il metodo Add più direttamente (noR RTTI) }
   AValue := FGetItemMethod.Invoke(FObjAsDuck, [index]);
   case AValue.Kind of
     tkClass:
-      Result := FGetItemMethod.Invoke(FObjAsDuck, [index]).AsObject;
+      Result := AValue.AsObject;
     tkInterface:
-      Result := FGetItemMethod.Invoke(FObjAsDuck, [index]).AsInterface as TObject;
+      Result := AValue.AsInterface as TObject;
   end;
 end;
 
 function TdjDuckList.GetItemValue(const index: Integer): TValue;
 begin
+{ TODO : Possibile ottimizzazione se si trova il modo di richiamare il metodo Add più direttamente (noR RTTI) }
   Result := FGetItemMethod.Invoke(FObjAsDuck, [index]);
 end;
 

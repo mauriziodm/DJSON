@@ -7,14 +7,14 @@ uses
 
 type
 
-  TdjDuckType = (dtNone=0, dtList, dtStreamable, dtDictionary);
+  TdjDuckType = (dtNone=0, dtList, dtStreamable, dtDictionary, dtStream);
 
   TdjTypeInfoCacheItem = class
   public
-    FDuckType: TdjDuckType;
-    FDuckListWrapper: IdjDuckList;
-    FDuckStreamableWrapper: IdjDuckStreamable;
-    FDuckDictionaryWrapper: IdjDuckDictionary;
+    DuckType: TdjDuckType;
+    DuckListWrapper: IdjDuckList;
+    DuckStreamableWrapper: IdjDuckStreamable;
+    DuckDictionaryWrapper: IdjDuckDictionary;
   end;
 
   TdjTypeInfoCacheInternalContainer = TObjectDictionary<String, TdjTypeInfoCacheItem>;
@@ -30,7 +30,7 @@ type
 implementation
 
 uses
-  DJSON.Factory;
+  DJSON.Factory, System.Classes;
 
 { TdjTypeInfoCache }
 
@@ -50,24 +50,30 @@ function TdjTypeInfoCache.Get(const AObj: TObject): TdjTypeInfoCacheItem;
 begin
   if FInternatContainer.TryGetValue(AObj.ClassName, Result) then
   begin
-    case Result.FDuckType of
+    case Result.DuckType of
       dtNone:;
-      dtList: Result.FDuckListWrapper.SetObject(AObj);
-      dtStreamable: Result.FDuckStreamableWrapper.SetObject(AObj);
-      dtDictionary: Result.FDuckDictionaryWrapper.SetObject(AObj);
+      dtList: Result.DuckListWrapper.SetObject(AObj);
+      dtStreamable: Result.DuckStreamableWrapper.SetObject(AObj);
+      dtDictionary: Result.DuckDictionaryWrapper.SetObject(AObj);
+      dtStream:;
     end;
   end
   else
   begin
     Result := TdjTypeInfoCacheItem.Create;
-    if TdjFactory.TryWrapAsDuckList(AObj, Result.FDuckListWrapper) then
-      Result.FDuckType := TdjDuckType.dtList
-    else if TdjFactory.TryWrapAsDuckStreamable(AObj, Result.FDuckStreamableWrapper) then
-      Result.FDuckType := TdjDuckType.dtStreamable
-    else if TdjFactory.TryWrapAsDuckDictionary(AObj, Result.FDuckDictionaryWrapper) then
-      Result.FDuckType := TdjDuckType.dtDictionary
+    if AObj is TStream then
+      Result.DuckType := TdjDuckType.dtStream
     else
-      Result.FDuckType := TdjDuckType.dtNone;
+    if TdjFactory.TryWrapAsDuckDictionary(AObj, Result.DuckDictionaryWrapper) then
+      Result.DuckType := TdjDuckType.dtDictionary
+    else
+    if TdjFactory.TryWrapAsDuckList(AObj, Result.DuckListWrapper) then
+      Result.DuckType := TdjDuckType.dtList
+    else
+    if TdjFactory.TryWrapAsDuckStreamable(AObj, Result.DuckStreamableWrapper) then
+      Result.DuckType := TdjDuckType.dtStreamable
+    else
+      Result.DuckType := TdjDuckType.dtNone;
     FInternatContainer.Add(AObj.ClassName, Result);
   end;
 end;

@@ -55,6 +55,7 @@ type
     procedure SaveToStream(AStream: TStream);
     procedure SetObject(const AObj:TObject);
     function IsEmpty: Boolean;
+    function DuckObjQualifiedName: String;
   end;
 
 implementation
@@ -72,6 +73,11 @@ begin
   FSaveToStreamMethod := ASaveToStreamMethod;
   FIsEmptyMethod := AIsEmptyMethod;
   FCountProperty := ACountProperty;
+end;
+
+function TdjDuckStreamable.DuckObjQualifiedName: String;
+begin
+  Result := FObjAsDuck.QualifiedClassName;
 end;
 
 function TdjDuckStreamable.IsEmpty: Boolean;

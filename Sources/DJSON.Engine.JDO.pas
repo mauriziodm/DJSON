@@ -3,7 +3,7 @@ unit DJSON.Engine.JDO;
 interface
 
 uses
-  JsonDataObjects, System.Rtti, DJSON.Params;
+  JsonDataObjects, System.Rtti, DJSON.Params, DJSON.Duck.Interfaces;
 
 type
 
@@ -21,10 +21,10 @@ type
     class function SerializeObject(const AObject: TObject; const AParams: IdjParams): TJSONBox; overload; static;
     class function SerializeObject(const AInterfacedObject: IInterface; const AParams: IdjParams): TJSONBox; overload; static;
     class procedure SerializeTValue(const AResult:PJsonDataValue; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
-    class function SerializeList(const AResult:PJsonDataValue; const AList: TObject; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
-    class function SerializeDictionary(const AResult:PJsonDataValue; const ADictionary: TObject; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
-    class function SerializeStreamableObject(const AResult:PJsonDataValue; const AObj: TObject; const APropField: TRttiNamedObject): Boolean; static;
-    class function SerializeStream(const AResult:PJsonDataValue; const AStream: TObject; const APropField: TRttiNamedObject): Boolean; static;
+    class procedure SerializeList(const AResult:PJsonDataValue; const ADuckList: IdjDuckList; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
+    class procedure SerializeDictionary(const AResult:PJsonDataValue; const ADuckDictionary: IdjDuckDictionary; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
+    class procedure SerializeStreamableObject(const AResult:PJsonDataValue; const ADuckStreamable:IdjDuckStreamable; const APropField: TRttiNamedObject); static;
+    class procedure SerializeStream(const AResult:PJsonDataValue; const AStream: TObject; const APropField: TRttiNamedObject); static;
     class function SerializeCustom(AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; out ResultJSONValue:PJsonDataValue): Boolean; static;
     // Deserializers
     class function DeserializePropField(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
@@ -36,10 +36,10 @@ type
     class function DeserializeInterface(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class function DeserializeObject(const AJSONBox: TJSONBox; AObject:TObject; const AParams: IdjParams): TObject; static;
     class function DeserializeTValue(const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
-    class function DeserializeList(AList: TObject; const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
-    class function DeserializeDictionary(ADictionary: TObject; const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
-    class function DeserializeStreamableObject(AObj: TObject; const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject): Boolean; static;
-    class function DeserializeStream(AStream: TObject; const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject): Boolean; static;
+    class procedure DeserializeList(const ADuckList: IdjDuckList; const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
+    class procedure DeserializeDictionary(const ADuckDictionary: IdjDuckDictionary; const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
+    class procedure DeserializeStreamableObject(const ADuckStreamable:IdjDuckStreamable; const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject); static;
+    class procedure DeserializeStream(AStream: TObject; const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject); static;
     class function DeserializeCustom(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams; out ResultValue:TValue): Boolean; static;
   public
     class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; override;
@@ -50,8 +50,9 @@ implementation
 
 uses
   DJSON.Duck.PropField, DJSON.Utils.RTTI, System.SysUtils, DJSON.Exceptions,
-  DJSON.Serializers, DJSON.Attributes, DJSON.Constants, DJSON.Duck.Interfaces,
-  DJSON.Factory, DJSON.Utils, System.Classes, Soap.EncdDecd;
+  DJSON.Serializers, DJSON.Attributes, DJSON.Constants,
+  DJSON.Factory, DJSON.Utils, System.Classes, Soap.EncdDecd,
+  DJSON.TypeInfoCache;
 
 class function TdjEngineJDO.Deserialize(const AJSONText: String;
   const AValueType: TRttiType; const APropField: TRttiNamedObject;
@@ -106,27 +107,29 @@ end;
 
 class procedure TdjEngineJDO.DeserializeClassCommon(var AChildObj: TObject; const AJSONValue: PJsonDataValue;
   const APropField: TRttiNamedObject; const AParams: IdjParams);
+var
+  LTypeInfoCacheItem: TdjTypeInfoCacheItem;
 begin
-  // Check JSONValue
-  if not Assigned(AJSONValue) then
-    Exit;
-  // Stream
-  if DeserializeStream(AChildObj, AJSONValue, APropField) then
-  // Dictionary
-  else if DeserializeDictionary(AChildObj, AJSONValue, APropField, AParams) then
-  // List
-  else if DeserializeList(AChildObj, AJSONValue, APropField, AParams) then
-  // StreamableObject
-  else if DeserializeStreamableObject(AChildObj, AJSONValue, APropField) then
-  // Normal object property (try to deserialize but the JSON must be a JSONObject)
-  else if AJSONValue.Typ = TJsonDataType.jdtObject then
-    AChildObj := DeserializeObject(AJSONValue.ObjectValue, AChildObj, AParams)
-  // If the JSONValue is a TJSONNull
-  else if (AJSONValue.Typ = TJsonDataType.jdtNone) then
-    FreeAndNil(AChildObj)
-  // Raise an exception
-  else
-    raise EdjEngineError.Create('Deserialize Class: Cannot deserialize as object.');
+  LTypeInfoCacheItem := AParams.TypeInfoCache.Get(AChildObj);
+  case LTypeInfoCacheItem.DuckType of
+    dtNone:
+    begin
+      if AJSONValue.Typ = TJsonDataType.jdtObject then
+        AChildObj := DeserializeObject(AJSONValue.ObjectValue, AChildObj, AParams)
+      else if (AJSONValue.Typ = TJsonDataType.jdtNone) then
+        FreeAndNil(AChildObj)
+      else
+        raise EdjEngineError.Create('Deserialize Class: Cannot deserialize as object.');
+    end;
+    dtList:
+      DeserializeList(LTypeInfoCacheItem.DuckListWrapper, AJSONValue, APropField, AParams);
+    dtStreamable:
+      DeserializeStreamableObject(LTypeInfoCacheItem.DuckStreamableWrapper, AJSONValue, APropField);
+    dtDictionary:
+      DeserializeDictionary(LTypeInfoCacheItem.DuckDictionaryWrapper, AJSONValue, APropField, AParams);
+    dtStream:
+      DeserializeStream(AChildObj, AJSONValue, APropField);
+  end;
 end;
 
 class function TdjEngineJDO.DeserializeCustom(const AJSONValue: PJsonDataValue;
@@ -248,10 +251,9 @@ begin
     ResultValue := DeserializePropField(LJSONValue, LValueType, APropField, AMasterObj, AParams);
 end;
 
-class function TdjEngineJDO.DeserializeDictionary(ADictionary: TObject; const AJSONValue: PJsonDataValue;
-  const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean;
+class procedure TdjEngineJDO.DeserializeDictionary(const ADuckDictionary: IdjDuckDictionary; const AJSONValue: PJsonDataValue;
+  const APropField: TRttiNamedObject; const AParams: IdjParams);
 var
-  LDuckDictionary: IdjDuckDictionary;
   LKeyQualifiedTypeName, LValueQualifiedTypeName, LDictionaryTypeName: String;
   LKeyRttiType, LValueRTTIType: TRttiType;
   LJSONValue, LKeyJSONValue, LValueJSONValue: PJsonDataValue;
@@ -262,11 +264,9 @@ begin
   // Checks
   if (not Assigned(AJSONValue))
   or (AJSONValue.Typ = TJsonDataType.jdtNone)
-  or (not TdjFactory.TryWrapAsDuckDictionary(ADictionary, LDuckDictionary))
   then
-    Exit(False);
+    Exit;
   // Defaults
-  Result := False;
   LDictionaryTypeName     := '';
   LKeyQualifiedTypeName   := '';
   LValueQualifiedTypeName := '';
@@ -275,7 +275,7 @@ begin
   if AParams.TypeAnnotations then
   begin
     if AJSONValue.Typ <> TJsonDataType.jdtObject then
-      raise EdjEngineError.Create('Wrong serialization for ' + ADictionary.QualifiedClassName);
+      raise EdjEngineError.Create('Wrong serialization for ' + ADuckDictionary.DuckObjQualifiedName);
     LJObj := AJSONValue.ObjectValue;
     // Get the Dictionary, Key and Value type names
     LDictionaryTypeName := LJObj.S[DJ_TYPENAME];
@@ -330,10 +330,9 @@ begin
     if AParams.SerializationMode = smJavaScript then
       LTmpKeyJSONArray.Free;
     // Add to the dictionary
-    LDuckDictionary.Add(LKey, LValue);
+    ADuckDictionary.Add(LKey, LValue);
   end;
   // If everething OK!
-  Result := True;
 end;
 
 class function TdjEngineJDO.DeserializeEnumeration(const AJSONValue: PJsonDataValue; const AValueType: TRttiType): TValue;
@@ -407,26 +406,23 @@ begin
     TValue.Make(@LChildObj, LChildObj.ClassInfo, Result);
 end;
 
-class function TdjEngineJDO.DeserializeList(AList: TObject; const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject;
-  const AParams: IdjParams): Boolean;
+class procedure TdjEngineJDO.DeserializeList(const ADuckList: IdjDuckList; const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject;
+  const AParams: IdjParams);
 var
   LListTypeName, LValueQualifiedTypeName: String;
   LJSONObject: TJSONObject;
   LJSONValue, LValueJSONValue: PJsonDataValue;
   LJSONArray: TJSONArray;
   LValueRTTIType: TRttiType;
-  LDuckList: IdjDuckList;
   LValue: TValue;
   I: Integer;
 begin
   // Checks
   if (not Assigned(AJSONValue))
   or (AJSONValue.Typ = TJsonDataType.jdtNone)
-  or (not TdjFactory.TryWrapAsDuckList(Alist, LDuckList))
   then
-    Exit(False);
+    Exit;
   // Defaults
-  Result := False;
   LValueRTTIType          := nil;
   LListTypeName           := '';
   LValueQualifiedTypeName := '';
@@ -435,7 +431,7 @@ begin
   if AParams.TypeAnnotations then
   begin
     if AJSONValue.Typ <> TJsonDataType.jdtObject then
-      raise EdjEngineError.Create('Wrong serialization for ' + AList.QualifiedClassName);
+      raise EdjEngineError.Create('Wrong serialization for ' + ADuckList.DuckObjQualifiedName);
     LJSONObject := AJSONValue.ObjectValue;
     // Get the collection anche the value type name
     LListTypeName := LJSONObject.S[DJ_TYPENAME];
@@ -463,10 +459,8 @@ begin
     // Deserialize the current element
     LValue := DeserializePropField(LValueJSONValue, LValueRttiType, APropField, nil, AParams);
     // Add to the list
-    LDuckList.AddValue(LValue);
+    ADuckList.AddValue(LValue);
   end;
-  // Se tutto è andato bene...
-  Result := True;
 end;
 
 class function TdjEngineJDO.DeserializePropField(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
@@ -556,8 +550,8 @@ begin
     Exit(   DeserializeTValue(AJSONValue, APropField, AParams)   );
 end;
 
-class function TdjEngineJDO.DeserializeStream(AStream: TObject;
-  const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject): Boolean;
+class procedure TdjEngineJDO.DeserializeStream(AStream: TObject;
+  const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject);
 var
   LStreamASString: string;
   LdsonEncodingAttribute: djEncodingAttribute;
@@ -570,9 +564,7 @@ begin
   or (AJSONValue.Typ = TJsonDataType.jdtNone)
   or not (Assigned(AStream) and (AStream is TStream))
   then
-    Exit(False);
-  // Defaults
-  Result := False;
+    Exit;
   // Get the stream as string from the JSONValue
   if AJSONValue.Typ <> TJsonDataType.jdtString then
     raise EdjEngineError.Create('Deserialize stream: JSONString expected.');
@@ -605,26 +597,21 @@ begin
     end;
     // -------------------------------------------------------------------------
   end;
-  // If everething OK!
-  Result := True;
 end;
 
-class function TdjEngineJDO.DeserializeStreamableObject(AObj: TObject;
-  const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject): Boolean;
+class procedure TdjEngineJDO.DeserializeStreamableObject(const ADuckStreamable:IdjDuckStreamable;
+  const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject);
 var
   LValueAsString: string;
   LStringStream: TStringStream;
   LMemoryStream: TMemoryStream;
-  LDuckStreamable: IdjDuckStreamable;
 begin
   // Checks
   if (not Assigned(AJSONValue))
   or (AJSONValue.Typ = TJsonDataType.jdtNone)
-  or (not TdjFactory.TryWrapAsDuckStreamable(AObj, LDuckStreamable))
   then
-    Exit(False);
+    Exit;
   // Init
-  Result := False;
   LValueAsString := AJSONValue.Value;
   LStringStream := TSTringStream.Create;
   LMemoryStream := TMemoryStream.Create;
@@ -633,13 +620,11 @@ begin
     LStringStream.Position := 0;
     DecodeStream(LStringStream, LMemoryStream);
     LMemoryStream.Position := 0;
-    LDuckStreamable.LoadFromStream(LMemoryStream);
+    ADuckStreamable.LoadFromStream(LMemoryStream);
   finally
     LMemoryStream.Free;
     LStringStream.Free;
   end;
-  // Se tutto è andato bene...
-  Result := True;
 end;
 
 class function TdjEngineJDO.DeserializeTValue(const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject; const AParams:IdjParams): TValue;
@@ -717,22 +702,24 @@ class procedure TdjEngineJDO.SerializeClass(const AResult:PJsonDataValue; const 
   const APropField: TRttiNamedObject; const AParams: IdjParams);
 var
   AChildObj: TObject;
+  LTypeInfoCacheItem: TdjTypeInfoCacheItem;
 begin
   // Get the child object
   AChildObj := AValue.AsObject;
-  // Dictionary
-  if SerializeDictionary(AResult, AChildObj, APropField, AParams) then
-  // List
-  else if SerializeList(AResult, AChildObj, APropField, AParams) then
-  // Stream
-  else if SerializeStream(AResult, AChildObj, APropField) then
-  // StreamableObject
-  else if SerializeStreamableObject(AResult, AChildObj, APropField) then
-  // Other type of object
-  else if Assigned(AChildObj) then
-    AResult.ObjectValue := SerializeObject(AChildObj, AParams)
-  // Object not assigned
-  else;
+  LTypeInfoCacheItem := AParams.TypeInfoCache.Get(AValue.AsObject);
+  case LTypeInfoCacheItem.DuckType of
+    dtNone:
+      if Assigned(AChildObj) then
+        AResult.ObjectValue := SerializeObject(AChildObj, AParams);
+    dtList:
+      SerializeList(AResult, LTypeInfoCacheItem.DuckListWrapper, APropField, AParams);
+    dtStreamable:
+      SerializeStreamableObject(AResult, LTypeInfoCacheItem.DuckStreamableWrapper, APropField);
+    dtDictionary:
+      SerializeDictionary(AResult, LTypeInfoCacheItem.DuckDictionaryWrapper, APropField, AParams);
+    dtStream:
+      SerializeStream(AResult, AChildObj, APropField);
+  end;
 end;
 
 class function TdjEngineJDO.SerializeCustom(AValue: TValue;
@@ -742,10 +729,9 @@ begin
 
 end;
 
-class function TdjEngineJDO.SerializeDictionary(const AResult:PJsonDataValue; const ADictionary: TObject;
-  const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean;
+class procedure TdjEngineJDO.SerializeDictionary(const AResult:PJsonDataValue; const ADuckDictionary: IdjDuckDictionary;
+  const APropField: TRttiNamedObject; const AParams: IdjParams);
 var
-  LDuckDictionary: IdjDuckDictionary;
   LJSONArray: TJSONArray;
   LResultJSONObj, CurrJSONObj: TJSONObject;
   LJSONKey, LJSONValue: PJsonDataValue;
@@ -753,22 +739,18 @@ var
   LKey, LValue: TValue;
   TmpKeyStr, LKeyQualifiedTypeName, LValueQualifiedTypeName: String;
 begin
-  // Wrap the dictionary in the DuckObject
-  if not TdjFactory.TryWrapAsDuckDictionary(ADictionary, LDuckDictionary) then
-    Exit(False);
   // Init
-  Result := False;
   LKeyQualifiedTypeName   := '';
   LValueQualifiedTypeName := '';
   // Create the Items JSON array
   LJSONArray := TJSONArray.Create;
   // Loop
   LFirst := True;
-  while LDuckDictionary.MoveNext do
+  while ADuckDictionary.MoveNext do
   begin
     // Read values
-    LKey   := LDuckDictionary.GetCurrentKey;
-    LValue := LDuckDictionary.GetCurrentValue;
+    LKey   := ADuckDictionary.GetCurrentKey;
+    LValue := ADuckDictionary.GetCurrentValue;
     // Create the JSONObject for the current element (to add to the array)
     //  and create/get the empties JSONValues
     CurrJSONObj := TJSONObject.Create;
@@ -815,7 +797,7 @@ begin
   if AParams.TypeAnnotations then
   begin
     LResultJSONObj := TJSONObject.Create;
-    LResultJSONObj.S[DJ_TYPENAME] := ADictionary.QualifiedClassName;
+    LResultJSONObj.S[DJ_TYPENAME] := ADuckDictionary.DuckObjQualifiedName;
     if not LKeyQualifiedTypeName.IsEmpty then
       LResultJSONObj.S[DJ_KEY] := LKeyQualifiedTypeName;
     if not LValueQualifiedTypeName.IsEmpty then
@@ -825,8 +807,6 @@ begin
   end
   else
     AResult.ArrayValue := LJSONArray;
-  // If everething OK!
-  Result := True;
 end;
 
 class procedure TdjEngineJDO.SerializeEnumeration(const AResult:PJsonDataValue;
@@ -882,11 +862,10 @@ begin
   SerializeClass(AResult, AChildObj, APropField, AParams);
 end;
 
-class function TdjEngineJDO.SerializeList(const AResult:PJsonDataValue; const AList: TObject;
-  const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean;
+class procedure TdjEngineJDO.SerializeList(const AResult:PJsonDataValue; const ADuckList: IdjDuckList;
+  const APropField: TRttiNamedObject; const AParams: IdjParams);
 var
   LValueQualifiedTypeName: String;
-  LDuckList: IdjDuckList;
   LJSONArray: TJSONArray;
   I: Integer;
   LValue: TValue;
@@ -894,21 +873,17 @@ var
   LFirst: Boolean;
   LResultJSONObj: TJSONObject;
 begin
-  // Wrap the dictionary in the DuckObject
-  if not TdjFactory.TryWrapAsDuckList(Alist, LDuckList) then
-    Exit(False);
   // Init
-  Result := False;
   LValueQualifiedTypeName := '';
   // Create the Items JSON array
   LJSONArray := TJSONArray.Create;
   // Loop for all objects in the list (now compatible with interfaces)
   LFirst := True;
-  LJSONArray.Count := LDuckList.Count;
-  for I := 0 to LDuckList.Count-1 do
+  LJSONArray.Count := ADuckList.Count;
+  for I := 0 to ADuckList.Count-1 do
   begin
     // Read values
-    LValue := LDuckList.GetItemValue(I);
+    LValue := ADuckList.GetItemValue(I);
     // Create the new PJsonDataValue
     LJSONValue := LJSONArray.Items[I];
     // Serialize values
@@ -925,7 +900,7 @@ begin
   if AParams.TypeAnnotations then
   begin
     LResultJSONObj := TJSONObject.Create;
-    LResultJSONObj.S[DJ_TYPENAME] := AList.QualifiedClassName;
+    LResultJSONObj.S[DJ_TYPENAME] := ADuckList.DuckObjQualifiedName;
     if not LValueQualifiedTypeName.IsEmpty then
       LResultJSONObj.S[DJ_VALUE] := LValueQualifiedTypeName;
     LResultJSONObj.A['items'] := LJSONArray;
@@ -933,8 +908,6 @@ begin
   end
   else
     AResult.ArrayValue := LJSONArray;
-  // If everething OK!
-  Result := True;
 end;
 
 class function TdjEngineJDO.SerializeObject(const AInterfacedObject: IInterface;
@@ -1083,18 +1056,13 @@ begin
   end;
 end;
 
-class function TdjEngineJDO.SerializeStream(const AResult:PJsonDataValue; const AStream: TObject;
-  const APropField: TRttiNamedObject): Boolean;
+class procedure TdjEngineJDO.SerializeStream(const AResult:PJsonDataValue; const AStream: TObject;
+  const APropField: TRttiNamedObject);
 var
   LdsonEncodingAttribute: djEncodingAttribute;
   LEncoding: TEncoding;
   LStringStream: TStringStream;
 begin
-  // Checks
-  if not (Assigned(AStream) and (AStream is TStream)) then
-    Exit(False);
-  // Init
-  Result := False;
   // If the "dsonEncodingAtribute" is specified then use that encoding
   if TdjRTTI.HasAttribute<djEncodingAttribute>(APropField, LdsonEncodingAttribute) then
   begin
@@ -1124,26 +1092,19 @@ begin
     end;
     // -------------------------------------------------------------------------
   end;
-  // If everething OK!
-  Result := True;
 end;
 
-class function TdjEngineJDO.SerializeStreamableObject(const AResult:PJsonDataValue; const AObj: TObject;
-  const APropField: TRttiNamedObject): Boolean;
+class procedure TdjEngineJDO.SerializeStreamableObject(const AResult:PJsonDataValue; const ADuckStreamable:IdjDuckStreamable;
+  const APropField: TRttiNamedObject);
 var
-  LDuckStreamable: IdjDuckStreamable;
   LMemoryStream: TMemoryStream;
   LStringStream: TStringStream;
 begin
-  // Wrap the dictionary in the DuckObject
-  if not TdjFactory.TryWrapAsDuckStreamable(AObj, LDuckStreamable) then
-    Exit(False);
   // Init
-  Result := False;
   LMemoryStream := TMemoryStream.Create;
   LStringStream := TStringStream.Create;
   try
-    LDuckStreamable.SaveToStream(LMemoryStream);
+    ADuckStreamable.SaveToStream(LMemoryStream);
     LMemoryStream.Position := 0;
     EncodeStream(LMemoryStream, LStringStream);
     AResult.Value := LStringStream.DataString;
@@ -1151,8 +1112,6 @@ begin
     LMemoryStream.Free;
     LStringStream.Free;
   end;
-  // If everething OK!
-  Result := True;
 end;
 
 class procedure TdjEngineJDO.SerializeTValue(const AResult:PJsonDataValue; const AValue: TValue;

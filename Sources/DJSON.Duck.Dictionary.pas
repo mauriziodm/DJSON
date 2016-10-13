@@ -73,6 +73,7 @@ type
     function GetCurrentValue: TValue;
     function MoveNext: Boolean;
     function Count: Integer;
+    function DuckObjQualifiedName: String;
   end;
 
 implementation
@@ -112,6 +113,11 @@ begin
   if assigned(FValuesEnumerator) then
     FValuesEnumerator.Free;
   inherited;
+end;
+
+function TdjDuckDictionary.DuckObjQualifiedName: String;
+begin
+  Result := FObjAsDuck.QualifiedClassName;
 end;
 
 function TdjDuckDictionary.GetCurrentKey: TValue;
