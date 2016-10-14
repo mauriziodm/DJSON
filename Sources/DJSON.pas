@@ -37,12 +37,14 @@ unit DJSON;
 interface
 
 uses
-  DJSON.Params, System.Rtti, System.JSON, System.TypInfo, DJSON.Serializers;
+  DJSON.Params, System.Rtti, System.JSON, System.TypInfo, DJSON.Serializers,
+  System.SysUtils, System.Classes;
 
 type
 
   TdjValueDestination = class;
   TdjJSONDestination  = class;
+  TdjBSONDestination  = class;
 
   dj = class
   public
@@ -54,7 +56,9 @@ type
     class function From(const AValue:TValue; const AParams:IdjParams=nil): TdjValueDestination; overload;
     class function From(const AObject:TObject; const AParams:IdjParams=nil): TdjValueDestination; overload;
     class function From(const AInterface:IInterface; const AParams:IdjParams=nil): TdjValueDestination; overload;
-    class function FromJSON(const AJSONText:String; const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    class function FromJson(const AJSONText:String; const AParams:IdjParams=nil): TdjJSONDestination;
+    class function FromBson(const ABytesStream:TStream; const AParams:IdjParams=nil): TdjBSONDestination; overload;
+    class function FromBson(const ABytes:TBytes; const AParams:IdjParams=nil): TdjBSONDestination; overload;
   end;
 
   TdjValueDestination = class
@@ -64,7 +68,9 @@ type
   public
     constructor Create(const AValue: TValue; const AParams:IdjParams);
     // Destinations
-    function ToJSON: String;
+    function ToJson: String;
+    function ToBsonAsStream: TBytesStream;
+    function ToBsonAsBytes: TBytes;
     // Params
     function Params(const AParams:IdjParams): TdjValueDestination;
     function ItemsOfType(const AValueType: PTypeInfo): TdjValueDestination; overload;
@@ -91,12 +97,13 @@ type
   TdjJSONDestination = class
   strict private
     FJSONText: String;
+  strict protected
     FParams: IdjParams;
   public
     constructor Create(const AJSONText:String; const AParams:IdjParams);
     // Destinations
-    function ToValue(const ATypeValue:PTypeInfo): TValue;
-    function ToObject: TObject;
+    function ToValue(const ATypeValue:PTypeInfo): TValue; virtual;
+    function ToObject: TObject; virtual;
     function &To<T>: T; overload;
     procedure &To(const AObject: TObject); overload;
     procedure &To(const AInterface: IInterface); overload;
@@ -121,11 +128,25 @@ type
     function Engine(const AEngine:TdjEngine): TdjJSONDestination;
   end;
 
+  TdjBSONDestination = class(TdjJSONDestination)
+  strict private
+    FBytesStream: TStream;
+    FOwnStream: Boolean;
+  public
+    constructor Create(const ABytesStream:TStream; const AParams:IdjParams); overload;
+    constructor Create(const ABytes:TBytes; const AParams:IdjParams); overload;
+    destructor Destroy; override;
+    // Destinations
+    function ToValue(const ATypeValue:PTypeInfo): TValue; override;
+    function ToObject: TObject; override;
+    procedure &To(const AObject: TObject); overload;
+  end;
+
 implementation
 
 uses
   DJSON.Factory, DJSON.Utils.RTTI, DJSON.Engine.DOM, DJSON.Constants, DJSON.Exceptions,
-  DJSON.Engine.Stream, DJSON.Engine.JDO;
+  DJSON.Engine.Stream, DJSON.Engine.JDO, DJSON.Engine.Stream.BSON;
 
 { dj }
 
@@ -171,7 +192,19 @@ begin
   Result := Self.From(AInterface as TObject, AParams);
 end;
 
-class function dj.FromJSON(const AJSONText: String;
+class function dj.FromBson(const ABytesStream: TStream;
+  const AParams: IdjParams): TdjBSONDestination;
+begin
+  Result := TdjBSONDestination.Create(ABytesStream, AParams);
+end;
+
+class function dj.FromBson(const ABytes: TBytes;
+  const AParams: IdjParams): TdjBSONDestination;
+begin
+  Result := TdjBSONDestination.Create(ABytes, AParams);
+end;
+
+class function dj.FromJson(const AJSONText: String;
   const AParams: IdjParams): TdjJSONDestination;
 begin
   Result := TdjJSONDestination.Create(AJSONText, AParams);
@@ -479,6 +512,28 @@ begin
   Result := Self;
 end;
 
+function TdjValueDestination.ToBsonAsBytes: TBytes;
+var
+  LBytesStream: TBytesStream;
+begin
+  LBytesStream := Self.ToBsonAsStream;
+  try
+    Result := LBytesStream.Bytes;
+    SetLength(Result, LBytesStream.Size);
+  finally
+    LBytesStream.Free;
+  end;
+end;
+
+function TdjValueDestination.ToBsonAsStream: TBytesStream;
+begin
+  try
+    Result := TdjEngineStreamBSON.Serialize(FValue, nil, FParams);
+  finally
+    Self.Free;
+  end;
+end;
+
 function TdjValueDestination.ToJSON: String;
 begin
   try
@@ -504,6 +559,68 @@ function TdjValueDestination.UpperCase: TdjValueDestination;
 begin
   Self.FParams.NameCase := TdjNameCase.ncLowerCase;
   Result := Self;
+end;
+
+{ TdjBSONDestination }
+
+constructor TdjBSONDestination.Create(const ABytesStream: TStream;
+  const AParams: IdjParams);
+begin
+  inherited Create('', AParams);
+  FBytesStream := ABytesStream;
+  FOwnStream := False;
+end;
+
+procedure TdjBSONDestination.&To(const AObject: TObject);
+var
+  LRttiType: TRttiType;
+begin
+  try
+    LRttiType := TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo);
+    TdjEngineStreamBSON.Deserialize(FBytesStream, LRttiType, nil, AObject, FParams);
+  finally
+    Self.Free;
+  end;
+end;
+
+constructor TdjBSONDestination.Create(const ABytes: TBytes;
+  const AParams: IdjParams);
+begin
+  inherited Create('', AParams);
+  FBytesStream := TBytesStream.Create(ABytes);
+  FOwnStream := True;
+end;
+
+destructor TdjBSONDestination.Destroy;
+begin
+  if FOwnStream and Assigned(FBytesStream) then
+    FBytesStream.Free;
+  inherited;
+end;
+
+function TdjBSONDestination.ToObject: TObject;
+var
+  ResultValue: TValue;
+begin
+  try
+    Result := nil;
+    ResultValue := TdjEngineStreamBSON.Deserialize(FBytesStream, nil, nil, nil, FParams);
+    Result := ResultValue.AsObject;
+  finally
+    Self.Free;
+  end;
+end;
+
+function TdjBSONDestination.ToValue(const ATypeValue: PTypeInfo): TValue;
+var
+  LRttiType: TRttiType;
+begin
+  try
+    LRttiType := TdjRTTI.TypeInfoToRttiType(ATypeValue);
+    Result := TdjEngineStreamBSON.Deserialize(FBytesStream, LRttiType, nil, nil, FParams);
+  finally
+    Self.Free;
+  end;
 end;
 
 end.

@@ -143,9 +143,9 @@ begin
   LParams := BuildMapperParams;
   // ---------------------
   if LParams.TypeAnnotations then
-    LPersonList := dj.FromJSON(Memo1.Lines.Text, LParams).&To<TList<IPerson>>
+    LPersonList := dj.FromJson(Memo1.Lines.Text, LParams).&To<TList<IPerson>>
   else
-    LPersonList := dj.FromJSON(Memo1.Lines.Text, LParams).ItemsOfType<TPerson>.&To<TList<IPerson>>;
+    LPersonList := dj.FromJson(Memo1.Lines.Text, LParams).ItemsOfType<TPerson>.&To<TList<IPerson>>;
   // ---------------------
   try
     ShowListData(LPersonList);
@@ -162,9 +162,9 @@ begin
   LParams := BuildMapperParams;
   // ---------------------
   if LParams.TypeAnnotations then
-    LPerson := dj.FromJSON(Memo1.Lines.Text, LParams).&To<IPerson>  // <--- Direct to interface
+    LPerson := dj.FromJson(Memo1.Lines.Text, LParams).&To<IPerson>  // <--- Direct to interface
   else
-    LPerson := dj.FromJSON(Memo1.Lines.Text, LParams).&To<TPerson>;
+    LPerson := dj.FromJson(Memo1.Lines.Text, LParams).&To<TPerson>;
   // ---------------------
   ShowSingleObjectData(LPerson);
 end;
@@ -177,7 +177,7 @@ begin
   // ---------------------
   // Questo è il modo più semplice di utilizzare il mapper.
   // Da usare se il comportamento di default del mapper è consono alle esigenze
-  dj.FromJSON(Memo1.Lines.Text).TypeAnnotationsON.&To(LPerson);
+  dj.FromJson(Memo1.Lines.Text).TypeAnnotationsON.&To(LPerson);
   // ---------------------
   ShowSingleObjectData(LPerson);
 end;
@@ -193,7 +193,7 @@ begin
   //  desiderati direttamente sulla chiamata.
   //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
   //  annotazione dei tipi nel JSON attivata e disabilita gli eventuali custom serializers.
-  dj.FromJSON(Memo1.Lines.Text).byFields.TypeAnnotationsON.CustomSerializersOFF.&To(LPersonList);
+  dj.FromJson(Memo1.Lines.Text).byFields.TypeAnnotationsON.CustomSerializersOFF.&To(LPersonList);
   // ---------------------
   try
     ShowListData(LPersonList);
@@ -215,7 +215,7 @@ begin
   //  NB: In questo caso non viene specificato il tipo del risultato nella chiamata, tale
   //       informazione viene presa direttamente dal JSON (TypeAnnotationsON), in questo
   //       caso il risultato ottenuto è un TObject.
-  LObj := dj.FromJSON(Memo1.Lines.Text).byFields.TypeAnnotationsON.CustomSerializersON.ToObject;
+  LObj := dj.FromJson(Memo1.Lines.Text).byFields.TypeAnnotationsON.CustomSerializersON.ToObject;
   // ---------------------
   Supports(LObj, IPerson, LPerson);  // Extract the interface
   ShowSingleObjectData(LPerson);

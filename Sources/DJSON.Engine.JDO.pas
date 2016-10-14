@@ -10,7 +10,7 @@ type
   TJSONBox = TJSONObject;
 
   TdjEngineJDO = class(TdjEngineIntf)
-  private
+  protected
     // Serializers
     class procedure SerializePropField(const AResult:PJsonDataValue; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True); static;
     class procedure SerializeFloat(const AResult:PJsonDataValue; const AValue: TValue); static;

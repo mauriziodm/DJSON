@@ -151,7 +151,7 @@ begin
     ResultList := TObjectList<TPerson>.Create;
     LStopWatch := TStopwatch.StartNew;
 
-    dj.FromJSON(FJSONText).ItemsOfType<TPerson>.Engine(eJDO).&To(ResultList);
+    dj.FromJson(FJSONText).ItemsOfType<TPerson>.Engine(eJDO).&To(ResultList);
 
     LStopWatch.Stop;
     LabelElapsedDeserializeJDO.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms   (' + IntToStr(ResultList.Count) + ' items)';
@@ -169,7 +169,7 @@ begin
     ResultList := TObjectList<TPerson>.Create;
     LStopWatch := TStopwatch.StartNew;
 
-    dj.FromJSON(FJSONText).ItemsOfType<TPerson>.Engine(eDelphiStream).&To(ResultList);
+    dj.FromJson(FJSONText).ItemsOfType<TPerson>.Engine(eDelphiStream).&To(ResultList);
 
     LStopWatch.Stop;
     LabelElapsedDeserializeStream.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms   (' + IntToStr(ResultList.Count) + ' items)';
@@ -187,7 +187,7 @@ begin
     ResultList := TObjectList<TPerson>.Create;
     LStopWatch := TStopwatch.StartNew;
 
-    dj.FromJSON(FJSONText).ItemsOfType<TPerson>.Engine(eDelphiDOM).&To(ResultList);
+    dj.FromJson(FJSONText).ItemsOfType<TPerson>.Engine(eDelphiDOM).&To(ResultList);
 
     LStopWatch.Stop;
     LabelElapsedDeserializeDOM.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms   (' + IntToStr(ResultList.Count) + ' items)';

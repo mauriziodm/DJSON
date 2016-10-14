@@ -43,6 +43,8 @@ type
     ButtonOtherSerialize3: TButton;
     ButtonOtherDeserialize3: TButton;
     Memo1: TMemo;
+    ButtonSerializeAsBSON: TButton;
+    ButtonDeserializeAsBSON: TButton;
     procedure ButtonSerializeSignleObjectClick(Sender: TObject);
     procedure ButtonDeserializeSignleObjectClick(Sender: TObject);
     procedure ButtonSerializeObjectListClick(Sender: TObject);
@@ -53,8 +55,11 @@ type
     procedure ButtonOtherDeserialize2Click(Sender: TObject);
     procedure ButtonOtherSerialize3Click(Sender: TObject);
     procedure ButtonOtherDeserialize3Click(Sender: TObject);
+    procedure ButtonSerializeAsBSONClick(Sender: TObject);
+    procedure ButtonDeserializeAsBSONClick(Sender: TObject);
   private
     { Private declarations }
+    FBytes: TBytes;
     function BuildMapperParams: IdjParams;
     function BuildSampleObject: TPerson;
     function BuildSampleList: TObjectList<TPerson>;
@@ -68,7 +73,7 @@ var
 implementation
 
 uses
-  DJSON, System.JSON, System.Rtti;
+  DJSON, System.JSON, System.Rtti, IdGlobal, DJSON.Utils;
 
 {$R *.dfm}
 
@@ -121,6 +126,22 @@ begin
   Result.NumTel.Add(   TNumTel.Create(1, '0541/605905', 1)   );
   Result.NumTel.Add(   TNumTel.Create(2, '329/0583381', 1)   );
   Result.NumTel.Add(   TNumTel.Create(3, '0541/694750', 1)   );
+end;
+
+procedure TMainForm.ButtonDeserializeAsBSONClick(Sender: TObject);
+var
+  LPerson: TPerson;
+  LParams: IdjParams;
+begin
+  LParams := BuildMapperParams;
+  // ---------------------
+  LPerson := dj.FromBson(FBytes).Params(LParams).&To<TPerson>;
+  // ---------------------
+  try
+    ShowSingleObjectData(LPerson);
+  finally
+    LPerson.Free;
+  end;
 end;
 
 procedure TMainForm.ButtonDeserializeObjectListClick(Sender: TObject);
@@ -264,6 +285,22 @@ begin
     //  annotazione dei tipi nel JSON attivata e disabilita gli eventuali custom serializers.
     Memo1.Clear;
     Memo1.Lines.Text := dj.From(LPerson).byFields.TypeAnnotationsON.CustomSerializersOFF.ToJSON;
+  finally
+    LPerson.Free;
+  end;
+end;
+
+procedure TMainForm.ButtonSerializeAsBSONClick(Sender: TObject);
+var
+  LPerson: TPerson;
+  LParams: IdjParams;
+begin
+  LParams := BuildMapperParams;
+  LPerson := BuildSampleObject;
+  try
+    FBytes := dj.From(LPerson, LParams).ToBsonAsBytes;
+    Memo1.Clear;
+    Memo1.Lines.Text := TdjUtils.Bytes2String(FBytes);
   finally
     LPerson.Free;
   end;

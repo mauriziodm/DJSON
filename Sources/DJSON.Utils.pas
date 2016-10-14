@@ -37,7 +37,7 @@ unit DJSON.Utils;
 interface
 
 uses
-  System.Rtti, DJSON.Params;
+  System.Rtti, DJSON.Params, System.SysUtils;
 
 type
 
@@ -45,6 +45,7 @@ type
   public
     class function IsPropertyToBeIgnored(const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
     class function GetKeyName(const ARttiMember: TRttiNamedObject; const AParams:IdjParams): string; static;
+    class function Bytes2String(const ABytes: TBytes): String;
     class procedure GetTypeNameIfEmpty(const APropField: TRttiNamedObject; const AParams:IdjParams; var ATypeName: String); static;
     class procedure GetItemsTypeNameIfEmpty(const APropField: TRttiNamedObject; const AParams:IdjParams; var AValueTypeName: String); overload; static;
     class procedure GetItemsTypeNameIfEmpty(const APropField: TRttiNamedObject; const AParams:IdjParams; var AKeyTypeName, AValueTypeName: String); overload; static;
@@ -61,7 +62,7 @@ type
 implementation
 
 uses
-  DJSON.Attributes, System.SysUtils, DJSON.Utils.RTTI, DJSON.Duck.PropField,
+  DJSON.Attributes, DJSON.Utils.RTTI, DJSON.Duck.PropField,
   System.DateUtils;
 
 { TdjUtils }
@@ -74,6 +75,20 @@ var
 begin
   LKeyTypeNameDummy := 'DummyKeyTypeName';
   GetItemsTypeNameIfEmpty(APropField, AParams, LKeyTypeNameDummy, AValueTypeName);
+end;
+
+class function TdjUtils.Bytes2String(const ABytes: TBytes): String;
+var
+  I: Integer;
+  Sep: String;
+begin
+  Result := EmptyStr;
+  Sep := EmptyStr;
+  for I:=low(ABytes) to high(ABytes) do
+  begin
+    Result := Result + Sep + IntToHex(ABytes[I], 2);
+    if I=0 then Sep := '-';
+  end;
 end;
 
 class procedure TdjUtils.GetItemsTypeNameIfEmpty(

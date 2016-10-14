@@ -44,7 +44,7 @@ type
   TJSONBox = TJSONObject;
 
   TdjEngineDOM = class(TdjEngineIntf)
-  private
+  protected
     // Serializers
     class function SerializePropField(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): TJSONValue; static;
     class function SerializeFloat(const AValue: TValue): TJSONValue; static;

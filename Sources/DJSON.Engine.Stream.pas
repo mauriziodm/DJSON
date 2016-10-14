@@ -4,12 +4,12 @@ interface
 
 uses
   System.Rtti, DJSON.Params, System.JSON.Readers, System.JSON.Writers,
-  DJSON.Duck.Interfaces;
+  DJSON.Duck.Interfaces, System.Classes;
 
 type
 
   TdjEngineStream = class(TdjEngineIntf)
-  private
+  protected
     // Serializers
     class procedure SerializePropField(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True); static;
     class procedure SerializeFloat(const AJSONWriter: TJSONWriter; const AValue: TValue); static;
@@ -51,9 +51,9 @@ type
 implementation
 
 uses
-  System.Classes, System.SysUtils, System.JSON.Types, DJSON.Constants,
+  System.SysUtils, System.JSON.Types, DJSON.Constants,
   DJSON.Duck.PropField, DJSON.Utils.RTTI, DJSON.Attributes, DJSON.Exceptions,
-  DJSON.Utils, DJSON.Factory, Soap.EncdDecd, DJSON.TypeInfoCache;
+  DJSON.Utils, DJSON.Factory, Soap.EncdDecd, DJSON.TypeInfoCache, System.JSON.BSON;
 
 { TdjEngineStream }
 

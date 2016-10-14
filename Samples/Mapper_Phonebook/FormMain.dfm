@@ -347,6 +347,24 @@ object MainForm: TMainForm
       TabOrder = 13
       OnClick = ButtonOtherDeserialize3Click
     end
+    object ButtonSerializeAsBSON: TButton
+      Left = 16
+      Top = 107
+      Width = 153
+      Height = 27
+      Caption = 'ButtonSerializeAsBSON'
+      TabOrder = 14
+      OnClick = ButtonSerializeAsBSONClick
+    end
+    object ButtonDeserializeAsBSON: TButton
+      Left = 915
+      Top = 107
+      Width = 153
+      Height = 27
+      Caption = 'ButtonDeserializeAsBSON'
+      TabOrder = 15
+      OnClick = ButtonDeserializeAsBSONClick
+    end
   end
   object Memo1: TMemo
     Left = 0

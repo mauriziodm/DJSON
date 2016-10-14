@@ -228,7 +228,8 @@ uses
 constructor TdjParams.Create;
 begin
   inherited;
-  SetEngine(TdjEngine.eDelphiStream);
+//  SetEngine(TdjEngine.eDelphiStream);
+  SetEngine(TdjEngine.eDelphiDOM);
   FTypeInfoCache := TdjTypeInfoCache.Create;
   FSerializers := TdjSerializersContainer.Create;
   FTypeAnnotations := False;
