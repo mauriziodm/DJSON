@@ -86,10 +86,21 @@ type
   // djSerializer
   djSerializerAttribute = class(TCustomAttribute)
   private
-    FSerializer: TdjCustomSerializerRef;
+    FDOMSerializer: TdjDOMCustomSerializerRef;
+    FJDOSerializer: TdjJDOCustomSerializerRef;
+    FXMLSerializer: TdjXMLCustomSerializerRef;
+    FStreamSerializer: TdjStreamCustomSerializerRef;
+  protected
+    constructor Create; overload;
   public
-    constructor Create(const ASerializer:TdjCustomSerializerRef);
-    property Serializer:TdjCustomSerializerRef read FSerializer;
+    constructor Create(const ASerializer:TdjDOMCustomSerializerRef); overload;
+    constructor Create(const ASerializer:TdjJDOCustomSerializerRef); overload;
+    constructor Create(const ASerializer:TdjXMLCustomSerializerRef); overload;
+    constructor Create(const ASerializer:TdjStreamCustomSerializerRef); overload;
+    property DOMSerializer:TdjDOMCustomSerializerRef read FDOMSerializer;
+    property JDOSerializer:TdjJDOCustomSerializerRef read FJDOSerializer;
+    property XMLSerializer:TdjXMLCustomSerializerRef read FXMLSerializer;
+    property StreamSerializer:TdjStreamCustomSerializerRef read FStreamSerializer;
   end;
 
   // djEncoding
@@ -209,10 +220,39 @@ end;
 { djSerializerAttribute }
 
 constructor djSerializerAttribute.Create(
-  const ASerializer: TdjCustomSerializerRef);
+  const ASerializer: TdjDOMCustomSerializerRef);
+begin
+  Self.Create;
+  FDOMSerializer := ASerializer;
+end;
+
+constructor djSerializerAttribute.Create(
+  const ASerializer: TdjJDOCustomSerializerRef);
+begin
+  Self.Create;
+  FJDOSerializer := ASerializer;
+end;
+
+constructor djSerializerAttribute.Create(
+  const ASerializer: TdjStreamCustomSerializerRef);
+begin
+  Self.Create;
+  FStreamSerializer := ASerializer;
+end;
+
+constructor djSerializerAttribute.Create;
 begin
   Inherited Create;
-  FSerializer := ASerializer;
+  FDOMSerializer := nil;
+  FJDOSerializer := nil;
+  FStreamSerializer := nil;
+end;
+
+constructor djSerializerAttribute.Create(
+  const ASerializer: TdjXMLCustomSerializerRef);
+begin
+  Self.Create;
+  FXMLSerializer := ASerializer;
 end;
 
 end.

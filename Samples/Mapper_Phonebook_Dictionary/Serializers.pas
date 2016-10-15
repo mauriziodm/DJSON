@@ -6,7 +6,7 @@ uses DJSON.Serializers, System.Rtti, System.JSON;
 
 type
 
-  TPhoneNumberCustomSerializer = class(TdjCustomSerializer)
+  TPhoneNumberCustomSerializer = class(TdjDOMCustomSerializer)
   public
     class function Serialize(const AValue:TValue; var ADone:Boolean): TJSONValue; override;
     class function Deserialize(const AJSONValue:TJSONValue; const AExistingValue:TValue; var ADone:Boolean): TValue; override;

@@ -37,15 +37,40 @@ unit DJSON.Serializers;
 interface
 
 uses
-  System.Rtti, System.JSON;
+  System.Rtti, System.JSON, System.JSON.Writers, System.JSON.Readers,
+  JsonDataObjects, MSXML;
 
 type
 
-  TdjCustomSerializerRef = class of TdjCustomSerializer;
-  TdjCustomSerializer = class abstract
+  TdjDOMCustomSerializerRef = class of TdjDOMCustomSerializer;
+  TdjDOMCustomSerializer = class abstract
   public
     class function Serialize(const AValue:TValue; var ADone:Boolean): TJSONValue; virtual;
     class function Deserialize(const AJSONValue:TJSONValue; const AExistingValue:TValue; var ADone:Boolean): TValue; virtual;
+    class function isTypeNotificationCompatible: Boolean; virtual;
+  end;
+
+  TdjJDOCustomSerializerRef = class of TdjJDOCustomSerializer;
+  TdjJDOCustomSerializer = class abstract
+  public
+    class procedure Serialize(const AResult:PJsonDataValue; const AValue:TValue; var ADone:Boolean); virtual;
+    class function Deserialize(const AJSONValue:PJsonDataValue; const AExistingValue:TValue; var ADone:Boolean): TValue; virtual;
+    class function isTypeNotificationCompatible: Boolean; virtual;
+  end;
+
+  TdjStreamCustomSerializerRef = class of TdjStreamCustomSerializer;
+  TdjStreamCustomSerializer = class abstract
+  public
+    class procedure Serialize(const AJSONWriter: TJSONWriter; const AValue:TValue; var ADone:Boolean); virtual;
+    class function Deserialize(const AJSONReader: TJSONReader; const AExistingValue:TValue; var ADone:Boolean): TValue; virtual;
+    class function isTypeNotificationCompatible: Boolean; virtual;
+  end;
+
+  TdjXMLCustomSerializerRef = class of TdjXMLCustomSerializer;
+  TdjXMLCustomSerializer = class abstract
+  public
+    class function Serialize(const AXMLNode:IXMLDOMNode; const AValue:TValue; var ADone:Boolean): TJSONValue; virtual;
+    class function Deserialize(const AXMLNode:IXMLDOMNode; const AExistingValue:TValue; var ADone:Boolean): TValue; virtual;
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
 
@@ -53,20 +78,82 @@ implementation
 
 { TdjCustomSerializer }
 
-class function TdjCustomSerializer.Deserialize(const AJSONValue: TJSONValue;
+class function TdjDOMCustomSerializer.Deserialize(const AJSONValue: TJSONValue;
   const AExistingValue: TValue; var ADone: Boolean): TValue;
 begin
   // None
 end;
 
-class function TdjCustomSerializer.isTypeNotificationCompatible: Boolean;
+class function TdjDOMCustomSerializer.isTypeNotificationCompatible: Boolean;
 begin
   // TypeNotification not compatible by default
   Result := False;
 end;
 
-class function TdjCustomSerializer.Serialize(const AValue: TValue;
+class function TdjDOMCustomSerializer.Serialize(const AValue: TValue;
   var ADone: Boolean): TJSONValue;
+begin
+  // None
+end;
+
+{ TdjStreamCustomSerializer }
+
+class function TdjStreamCustomSerializer.Deserialize(
+  const AJSONReader: TJSONReader; const AExistingValue: TValue;
+  var ADone: Boolean): TValue;
+begin
+  // None
+end;
+
+class function TdjStreamCustomSerializer.isTypeNotificationCompatible: Boolean;
+begin
+  // TypeNotification not compatible by default
+  Result := False;
+end;
+
+class procedure TdjStreamCustomSerializer.Serialize(
+  const AJSONWriter: TJSONWriter; const AValue: TValue; var ADone: Boolean);
+begin
+  // None
+end;
+
+{ TdjJDOCustomSerializer }
+
+class function TdjJDOCustomSerializer.Deserialize(
+  const AJSONValue: PJsonDataValue; const AExistingValue: TValue;
+  var ADone: Boolean): TValue;
+begin
+  // None
+end;
+
+class function TdjJDOCustomSerializer.isTypeNotificationCompatible: Boolean;
+begin
+  // TypeNotification not compatible by default
+  Result := False;
+end;
+
+class procedure TdjJDOCustomSerializer.Serialize(const AResult: PJsonDataValue;
+  const AValue: TValue; var ADone: Boolean);
+begin
+  // None
+end;
+
+{ TdjXMLCustomSerializer }
+
+class function TdjXMLCustomSerializer.Deserialize(const AXMLNode: IXMLDOMNode;
+  const AExistingValue: TValue; var ADone: Boolean): TValue;
+begin
+  // None
+end;
+
+class function TdjXMLCustomSerializer.isTypeNotificationCompatible: Boolean;
+begin
+  // TypeNotification not compatible by default
+  Result := False;
+end;
+
+class function TdjXMLCustomSerializer.Serialize(const AXMLNode: IXMLDOMNode;
+  const AValue: TValue; var ADone: Boolean): TJSONValue;
 begin
   // None
 end;

@@ -174,48 +174,17 @@ class function TdjEngineDOM.DeserializeCustom(const AJSONValue: TJSONValue;
   const AMasterObj: TObject; const AParams: IdjParams;
   out ResultValue: TValue): Boolean;
 var
-  LSerializerItem: TdjSerializersContainerItem;
-  LSerializer: TdjCustomSerializerRef;
+  LSerializer: TdjDOMCustomSerializerRef;
   LMapperCustomSerializer: djSerializerAttribute;
-  LParams: IdjParams;
   LDone: Boolean;
-  LValueType: TRttiType;
-  LJSONObj: TJSONObject;
   LQualifiedName: String;
   LExistingValue: TValue;
-  LTypeJSONValue: TJSONValue;
-  LJSONValue: TJSONValue;
-  LObj: TObject;
-  function DeserializeCustomByInternalClassMethod(const AJSONValue:TJSONValue; const AValueType:TRttiType; const AExistingValue:TValue; out ResultValue: TValue): Boolean;
-  var
-    LMethod: TRttiMethod;
-    LObj: TObject;
-  begin
-    Result := False;
-    LMethod := AValueType.GetMethod('FromJSON');
-    if not Assigned(LMethod) then
-      Exit;
-    if AExistingValue.IsEmpty then
-    begin
-      LObj := TdjRTTI.CreateObject(AValueType.QualifiedName);
-      TValue.Make(@LObj, LObj.ClassInfo, ResultValue);
-    end
-    else
-    begin
-      LObj := AExistingValue.AsObject;
-      ResultValue := AExistingValue;
-    end;
-    LMethod.Invoke(LObj, [AJSONValue]);
-    Result := True;
-  end;
 begin
   // Init
   Result := True;
   LDone := False;
-  LQualifiedName := '';
   LSerializer := nil;
   LExistingValue := nil;
-  LParams := AParams;
   // Check if CustomSerializers are enabled
   if not AParams.EnableCustomSerializers then
     Exit(False);
@@ -226,62 +195,25 @@ begin
       LExistingValue := TdjDuckPropField.GetValue(AMasterObj, APropField)
     else
       TValue.Make(@AMasterObj, AMasterObj.ClassInfo, LExistingValue);
-  // Check if a value type is embedded in the JSON and extract it (if exists)
-  //  else use the received value type.
-  //  If the value type is embedded in the JSON (TypeAnnotations = True) then extract
-  //   then contained value too as JSONValue and pass it to the custom serializer
-  LValueType := AValueType;
-  LJSONValue := AJSONValue;
-  if (AJSONValue is TJSONObject) then begin
-    // Retrieve the value type if embedded in JSON
-    LTypeJSONValue := TJSONObject(AJSONValue).GetValue(DJ_TYPENAME);
-    if Assigned(LTypeJSONValue) then
-      LValueType := TdjRTTI.QualifiedTypeNameToRttiType(LTypeJSONValue.Value);
-    if not Assigned(LValueType) then
-      LValueType := AValueType;
-    // Retreve the JSONValue to deserializa if embedded in JSON
-    LJSONValue := TJSONObject(AJSONValue).GetValue(DJ_VALUE);
-  end;
-  // ---------- Custom serialization method in the class ----------
-  // If the Value is an Interface type then convert it to real object class
-  //  type implementing the interface
-  if (LValueType.TypeKind = tkInterface) and not LExistingValue.IsEmpty then
-  begin
-    LObj := LExistingValue.AsInterface as TObject;
-    TValue.Make(@LObj, LObj.ClassInfo, LExistingValue);
-  end;
-  // If the value is an object and a Serializer method is present directly in the class
-  if (LValueType.TypeKind = tkClass)
-  and DeserializeCustomByInternalClassMethod(LJSONValue, LValueType, LExistingValue, ResultValue)
-  then
-    LDone := True
-  else
-  // ---------- End: Custom serialization method in the class ----------
   // Get custom serializer if exists
-  if AParams.Serializers._Exists(LValueType.Handle) then
-  begin
-    LSerializerItem := AParams.Serializers._GetSerializerItem(LValueType.Handle);
-    LSerializer := LSerializerItem.Serializer;
-    // Get the custom Params
-    if Assigned(LSerializerItem.Params) then
-      LParams := LSerializerItem.Params;
-  end
+  if AParams.Serializers.Exists_DOM(AValueType.Handle) then
+    LSerializer := AParams.Serializers._GetSerializerItem(AValueType.Handle).DOMSerializer
   else
-  if TdjRTTI.HasAttribute<djSerializerAttribute>(TdjRTTI.TypeInfoToRttiType(LValueType.Handle), LMapperCustomSerializer) then
-    LSerializer := LMapperCustomSerializer.Serializer
+  if TdjRTTI.HasAttribute<djSerializerAttribute>(TdjRTTI.TypeInfoToRttiType(AValueType.Handle), LMapperCustomSerializer) then
+    LSerializer := LMapperCustomSerializer.DOMSerializer
   else
     Exit(False);
   // Serialize (if a custom serializer exists)
   if Assigned(LSerializer) then
     ResultValue := LSerializer.Deserialize(
-      LJSONValue,
+      AJSONValue,
       LExistingValue,
       LDone
       );
   // if the work has not been done by the custom serializer then
   //  call the standard serializers with custom params (if exists)
   if not LDone then
-    ResultValue := DeserializePropField(LJSONValue, LValueType, APropField, AMasterObj, AParams);
+    ResultValue := DeserializePropField(AJSONValue, AValueType, APropField, AMasterObj, AParams);
 end;
 
 class procedure TdjEngineDOM.DeserializeDictionary(const ADuckDictionary: IdjDuckDictionary; const AJSONValue: TJSONValue;
@@ -942,7 +874,7 @@ class function TdjEngineDOM.SerializeCustom(AValue: TValue;
   out ResultJSONValue: TJSONValue): Boolean;
 var
   LSerializerItem: TdjSerializersContainerItem;
-  LSerializer: TdjCustomSerializerRef;
+  LSerializer: TdjDOMCustomSerializerRef;
   LMapperCustomSerializer: djSerializerAttribute;
   LJSONValue: TJSONValue;
   LJSONObj: TJSONObject;
@@ -992,14 +924,14 @@ begin
   if AParams.Serializers._Exists(AValue.TypeInfo) then
   begin
     LSerializerItem := AParams.Serializers._GetSerializerItem(AValue.TypeInfo);
-    LSerializer := LSerializerItem.Serializer;
+    LSerializer := LSerializerItem.DOMSerializer;
     // Get the custom Params
     if Assigned(LSerializerItem.Params) then
       LParams := LSerializerItem.Params;
   end
   else
   if TdjRTTI.HasAttribute<djSerializerAttribute>(TdjRTTI.TypeInfoToRttiType(AValue.TypeInfo), LMapperCustomSerializer) then
-    LSerializer := LMapperCustomSerializer.Serializer
+    LSerializer := LMapperCustomSerializer.DOMSerializer
   else
     Exit(False);
   // Serialize (if a custom serializer exists)

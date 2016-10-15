@@ -6,7 +6,7 @@ uses System.Rtti, System.JSON, DJSON.Serializers, DJSON.Params;
 
 type
 
-  TStringCustomSerializer = class(TdjCustomSerializer)
+  TStringCustomSerializer = class(TdjDOMCustomSerializer)
   private
     class function ReverseString(const AText:String): String;
   public

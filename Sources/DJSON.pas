@@ -85,10 +85,15 @@ type
     function TypeAnnotationsOFF: TdjValueDestination;
     function CustomSerializersON: TdjValueDestination;
     function CustomSerializersOFF: TdjValueDestination;
-    function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjCustomSerializerRef; const AParams:IdjParams=nil): TdjValueDestination; overload;
-    function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjCustomSerializerRef; const AParams:IdjParams=nil): TdjValueDestination; overload;
-    function CustomSerializer<Target>(const ASerializer:TdjCustomSerializerRef; const AParams:IdjParams=nil): TdjValueDestination; overload;
-    function CustomSerializer<Target; Serializer:TdjCustomSerializer>(const AParams:IdjParams=nil): TdjValueDestination; overload;
+    function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjDOMCustomSerializerRef; const AParams:IdjParams=nil): TdjValueDestination; overload;
+    function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjJDOCustomSerializerRef; const AParams:IdjParams=nil): TdjValueDestination; overload;
+    function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjXMLCustomSerializerRef; const AParams:IdjParams=nil): TdjValueDestination; overload;
+    function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjStreamCustomSerializerRef; const AParams:IdjParams=nil): TdjValueDestination; overload;
+    function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjDOMCustomSerializerRef; const AParams:IdjParams=nil): TdjValueDestination; overload;
+    function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjJDOCustomSerializerRef; const AParams:IdjParams=nil): TdjValueDestination; overload;
+    function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjXMLCustomSerializerRef; const AParams:IdjParams=nil): TdjValueDestination; overload;
+    function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjStreamCustomSerializerRef; const AParams:IdjParams=nil): TdjValueDestination; overload;
+    function CustomSerializer<Target; Serializer:TdjDOMCustomSerializer>(const AParams:IdjParams=nil): TdjValueDestination; overload;
     function UpperCase: TdjValueDestination;
     function LowerCase: TdjValueDestination;
     function Engine(const AEngine:TdjEngine): TdjValueDestination;
@@ -121,10 +126,15 @@ type
     function TypeAnnotationsOFF: TdjJSONDestination;
     function CustomSerializersON: TdjJSONDestination;
     function CustomSerializersOFF: TdjJSONDestination;
-    function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
-    function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
-    function CustomSerializer<Target>(const ASerializer:TdjCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
-    function CustomSerializer<Target; Serializer:TdjCustomSerializer>(const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjDOMCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjJDOCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjXMLCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjStreamCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjDOMCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjJDOCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjXMLCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    function CustomSerializer(const ATargetClass:TClass; const ASerializer:TdjStreamCustomSerializerRef; const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    function CustomSerializer<Target; Serializer:TdjDOMCustomSerializer>(const AParams:IdjParams=nil): TdjJSONDestination; overload;
     function Engine(const AEngine:TdjEngine): TdjJSONDestination;
   end;
 
@@ -283,7 +293,7 @@ begin
 end;
 
 function TdjJSONDestination.CustomSerializer(const ATargetTypeInfo: PTypeInfo;
-  const ASerializer: TdjCustomSerializerRef;
+  const ASerializer: TdjDOMCustomSerializerRef;
   const AParams: IdjParams): TdjJSONDestination;
 begin
   FParams.Serializers.Register(ATargetTypeInfo, ASerializer, AParams);
@@ -291,7 +301,55 @@ begin
 end;
 
 function TdjJSONDestination.CustomSerializer(const ATargetClass: TClass;
-  const ASerializer: TdjCustomSerializerRef;
+  const ASerializer: TdjDOMCustomSerializerRef;
+  const AParams: IdjParams): TdjJSONDestination;
+begin
+  FParams.Serializers.Register(ATargetClass, ASerializer, AParams);
+  Result := Self;
+end;
+
+function TdjJSONDestination.CustomSerializer(const ATargetTypeInfo: PTypeInfo;
+  const ASerializer: TdjStreamCustomSerializerRef;
+  const AParams: IdjParams): TdjJSONDestination;
+begin
+  FParams.Serializers.Register(ATargetTypeInfo, ASerializer, AParams);
+  Result := Self;
+end;
+
+function TdjJSONDestination.CustomSerializer(const ATargetTypeInfo: PTypeInfo;
+  const ASerializer: TdjXMLCustomSerializerRef;
+  const AParams: IdjParams): TdjJSONDestination;
+begin
+  FParams.Serializers.Register(ATargetTypeInfo, ASerializer, AParams);
+  Result := Self;
+end;
+
+function TdjJSONDestination.CustomSerializer(const ATargetTypeInfo: PTypeInfo;
+  const ASerializer: TdjJDOCustomSerializerRef;
+  const AParams: IdjParams): TdjJSONDestination;
+begin
+  FParams.Serializers.Register(ATargetTypeInfo, ASerializer, AParams);
+  Result := Self;
+end;
+
+function TdjJSONDestination.CustomSerializer(const ATargetClass: TClass;
+  const ASerializer: TdjStreamCustomSerializerRef;
+  const AParams: IdjParams): TdjJSONDestination;
+begin
+  FParams.Serializers.Register(ATargetClass, ASerializer, AParams);
+  Result := Self;
+end;
+
+function TdjJSONDestination.CustomSerializer(const ATargetClass: TClass;
+  const ASerializer: TdjXMLCustomSerializerRef;
+  const AParams: IdjParams): TdjJSONDestination;
+begin
+  FParams.Serializers.Register(ATargetClass, ASerializer, AParams);
+  Result := Self;
+end;
+
+function TdjJSONDestination.CustomSerializer(const ATargetClass: TClass;
+  const ASerializer: TdjJDOCustomSerializerRef;
   const AParams: IdjParams): TdjJSONDestination;
 begin
   FParams.Serializers.Register(ATargetClass, ASerializer, AParams);
@@ -302,14 +360,6 @@ function TdjJSONDestination.CustomSerializer<Target; Serializer>(
   const AParams: IdjParams): TdjJSONDestination;
 begin
   FParams.Serializers.Register<Target, Serializer>(AParams);
-  Result := Self;
-end;
-
-function TdjJSONDestination.CustomSerializer<Target>(
-  const ASerializer: TdjCustomSerializerRef;
-  const AParams: IdjParams): TdjJSONDestination;
-begin
-  FParams.Serializers.Register<Target>(ASerializer, AParams);
   Result := Self;
 end;
 
@@ -413,7 +463,7 @@ begin
 end;
 
 function TdjValueDestination.CustomSerializer(const ATargetClass: TClass;
-  const ASerializer: TdjCustomSerializerRef;
+  const ASerializer: TdjDOMCustomSerializerRef;
   const AParams: IdjParams): TdjValueDestination;
 begin
   FParams.Serializers.Register(ATargetClass, ASerializer, AParams);
@@ -421,7 +471,31 @@ begin
 end;
 
 function TdjValueDestination.CustomSerializer(const ATargetTypeInfo: PTypeInfo;
-  const ASerializer: TdjCustomSerializerRef;
+  const ASerializer: TdjDOMCustomSerializerRef;
+  const AParams: IdjParams): TdjValueDestination;
+begin
+  FParams.Serializers.Register(ATargetTypeInfo, ASerializer, AParams);
+  Result := Self;
+end;
+
+function TdjValueDestination.CustomSerializer(const ATargetTypeInfo: PTypeInfo;
+  const ASerializer: TdjJDOCustomSerializerRef;
+  const AParams: IdjParams): TdjValueDestination;
+begin
+  FParams.Serializers.Register(ATargetTypeInfo, ASerializer, AParams);
+  Result := Self;
+end;
+
+function TdjValueDestination.CustomSerializer(const ATargetTypeInfo: PTypeInfo;
+  const ASerializer: TdjXMLCustomSerializerRef;
+  const AParams: IdjParams): TdjValueDestination;
+begin
+  FParams.Serializers.Register(ATargetTypeInfo, ASerializer, AParams);
+  Result := Self;
+end;
+
+function TdjValueDestination.CustomSerializer(const ATargetTypeInfo: PTypeInfo;
+  const ASerializer: TdjStreamCustomSerializerRef;
   const AParams: IdjParams): TdjValueDestination;
 begin
   FParams.Serializers.Register(ATargetTypeInfo, ASerializer, AParams);
@@ -432,14 +506,6 @@ function TdjValueDestination.CustomSerializer<Target, Serializer>(
   const AParams: IdjParams): TdjValueDestination;
 begin
   FParams.Serializers.Register<Target, Serializer>(AParams);
-  Result := Self;
-end;
-
-function TdjValueDestination.CustomSerializer<Target>(
-  const ASerializer: TdjCustomSerializerRef;
-  const AParams: IdjParams): TdjValueDestination;
-begin
-  FParams.Serializers.Register<Target>(ASerializer, AParams);
   Result := Self;
 end;
 
@@ -558,6 +624,30 @@ end;
 function TdjValueDestination.UpperCase: TdjValueDestination;
 begin
   Self.FParams.NameCase := TdjNameCase.ncLowerCase;
+  Result := Self;
+end;
+
+function TdjValueDestination.CustomSerializer(const ATargetClass: TClass;
+  const ASerializer: TdjJDOCustomSerializerRef;
+  const AParams: IdjParams): TdjValueDestination;
+begin
+  FParams.Serializers.Register(ATargetClass, ASerializer, AParams);
+  Result := Self;
+end;
+
+function TdjValueDestination.CustomSerializer(const ATargetClass: TClass;
+  const ASerializer: TdjXMLCustomSerializerRef;
+  const AParams: IdjParams): TdjValueDestination;
+begin
+  FParams.Serializers.Register(ATargetClass, ASerializer, AParams);
+  Result := Self;
+end;
+
+function TdjValueDestination.CustomSerializer(const ATargetClass: TClass;
+  const ASerializer: TdjStreamCustomSerializerRef;
+  const AParams: IdjParams): TdjValueDestination;
+begin
+  FParams.Serializers.Register(ATargetClass, ASerializer, AParams);
   Result := Self;
 end;
 
