@@ -10,8 +10,8 @@ type
   private
     class function ReverseString(const AText:String): String;
   public
-    class function Serialize(const AValue:TValue; var ADone:Boolean): TJSONValue; override;
-    class function Deserialize(const AJSONValue:TJSONValue; const AExistingValue:TValue; var ADone:Boolean): TValue; override;
+    class function Serialize(const AValue:TValue): TJSONValue; override;
+    class function Deserialize(const AJSONValue:TJSONValue; const AExistingValue:TValue): TValue; override;
   end;
 
 implementation
@@ -22,7 +22,7 @@ uses
 { TNumTelCustomSerializer }
 
 class function TStringCustomSerializer.Deserialize(const AJSONValue: TJSONValue;
-  const AExistingValue: TValue; var ADone: Boolean): TValue;
+  const AExistingValue: TValue): TValue;
 var
   UnreversedText: String;
 begin
@@ -30,7 +30,6 @@ begin
     raise Exception.Create('Wrong serialization.');
   UnreversedText := ReverseString(AJSONValue.Value);
   Result := UnreversedText;
-  ADone := true;
 end;
 
 class function TStringCustomSerializer.ReverseString(
@@ -42,14 +41,12 @@ begin
     Result := Result + Atext[I];
 end;
 
-class function TStringCustomSerializer.Serialize(const AValue: TValue;
-  var ADone: Boolean): TJSONValue;
+class function TStringCustomSerializer.Serialize(const AValue: TValue): TJSONValue;
 var
   ReversedText: String;
 begin
   ReversedText := ReverseString(AValue.AsString);
   Result := TJSONString.Create(ReversedText);
-  ADone := True;
 end;
 
 end.

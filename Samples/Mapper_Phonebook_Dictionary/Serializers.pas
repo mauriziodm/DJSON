@@ -8,8 +8,8 @@ type
 
   TPhoneNumberCustomSerializer = class(TdjDOMCustomSerializer)
   public
-    class function Serialize(const AValue:TValue; var ADone:Boolean): TJSONValue; override;
-    class function Deserialize(const AJSONValue:TJSONValue; const AExistingValue:TValue; var ADone:Boolean): TValue; override;
+    class function Serialize(const AValue:TValue): TJSONValue; override;
+    class function Deserialize(const AJSONValue:TJSONValue; const AExistingValue:TValue): TValue; override;
     class function isTypeNotificationCompatible: Boolean; override;
   end;
 
@@ -21,7 +21,7 @@ uses
 { TPhoneNumberCustomSerializer }
 
 class function TPhoneNumberCustomSerializer.Deserialize(const AJSONValue: TJSONValue;
-  const AExistingValue: TValue; var ADone: Boolean): TValue;
+  const AExistingValue: TValue): TValue;
 var
   LStringList: TStrings;
   LPhoneNumber: IPhoneNumber;
@@ -31,7 +31,6 @@ begin
     LStringList.CommaText := AJSONValue.Value;
     LPhoneNumber := TPhoneNumber.Create(LStringList[0].ToInteger, LStringList[2], LStringList[1].ToInteger);
     Result := TValue.From<IPhoneNumber>(LPhoneNumber);
-    ADone := true;
   finally
     LStringList.Free;
   end;
@@ -42,8 +41,7 @@ begin
   Result := True;
 end;
 
-class function TPhoneNumberCustomSerializer.Serialize(const AValue: TValue;
-  var ADone: Boolean): TJSONValue;
+class function TPhoneNumberCustomSerializer.Serialize(const AValue: TValue): TJSONValue;
 var
   LStringList: TStrings;
   LPhoneNumber: IPhoneNumber;
@@ -55,7 +53,6 @@ begin
     LStringList.Add(LPhoneNumber.MasterID.ToString);
     LStringList.Add(LPhoneNumber.Number);
     Result := TJSONString.Create(LStringList.CommaText);
-    ADone := True;
   finally
     LStringList.Free;
   end;

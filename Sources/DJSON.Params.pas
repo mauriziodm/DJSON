@@ -404,7 +404,6 @@ end;
 constructor TdjSerializersContainerItem.Create;
 begin
   inherited Create;
-  FParams := nil;
   FDOMSerializer := nil;
   FJDOSerializer := nil;
   FXMLSerializer := nil;
@@ -547,7 +546,7 @@ end;
 procedure TdjSerializersContainer.Register(const ATargetTypeInfo: PTypeInfo;
   const ASerializer: TdjXMLCustomSerializerRef);
 begin
-  Self._GetOrCreateSerializersContainerItem(ATargetTypeInfo, AParams).XMLSerializer := ASerializer;
+  Self._GetOrCreateSerializersContainerItem(ATargetTypeInfo).XMLSerializer := ASerializer;
 end;
 
 procedure TdjSerializersContainer.Register(const ATargetClass: TClass;

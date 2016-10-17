@@ -45,32 +45,32 @@ type
   TdjDOMCustomSerializerRef = class of TdjDOMCustomSerializer;
   TdjDOMCustomSerializer = class abstract
   public
-    class function Serialize(const AValue:TValue; var ADone:Boolean): TJSONValue; virtual;
-    class function Deserialize(const AJSONValue:TJSONValue; const AExistingValue:TValue; var ADone:Boolean): TValue; virtual;
+    class function Serialize(const AValue:TValue): TJSONValue; virtual;
+    class function Deserialize(const AJSONValue:TJSONValue; const AExistingValue:TValue): TValue; virtual;
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
 
   TdjJDOCustomSerializerRef = class of TdjJDOCustomSerializer;
   TdjJDOCustomSerializer = class abstract
   public
-    class procedure Serialize(const AResult:PJsonDataValue; const AValue:TValue; var ADone:Boolean); virtual;
-    class function Deserialize(const AJSONValue:PJsonDataValue; const AExistingValue:TValue; var ADone:Boolean): TValue; virtual;
+    class procedure Serialize(const AJSONValue:PJsonDataValue; const AValue:TValue); virtual;
+    class function Deserialize(const AJSONValue:PJsonDataValue; const AExistingValue:TValue): TValue; virtual;
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
 
   TdjStreamCustomSerializerRef = class of TdjStreamCustomSerializer;
   TdjStreamCustomSerializer = class abstract
   public
-    class procedure Serialize(const AJSONWriter: TJSONWriter; const AValue:TValue; var ADone:Boolean); virtual;
-    class function Deserialize(const AJSONReader: TJSONReader; const AExistingValue:TValue; var ADone:Boolean): TValue; virtual;
+    class procedure Serialize(const AJSONWriter: TJSONWriter; const AValue:TValue); virtual;
+    class function Deserialize(const AJSONReader: TJSONReader; const AExistingValue:TValue): TValue; virtual;
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
 
   TdjXMLCustomSerializerRef = class of TdjXMLCustomSerializer;
   TdjXMLCustomSerializer = class abstract
   public
-    class function Serialize(const AXMLNode:IXMLDOMNode; const AValue:TValue; var ADone:Boolean): TJSONValue; virtual;
-    class function Deserialize(const AXMLNode:IXMLDOMNode; const AExistingValue:TValue; var ADone:Boolean): TValue; virtual;
+    class function Serialize(const AXMLNode:IXMLDOMNode; const AValue:TValue): TJSONValue; virtual;
+    class function Deserialize(const AXMLNode:IXMLDOMNode; const AExistingValue:TValue): TValue; virtual;
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
 
@@ -79,7 +79,7 @@ implementation
 { TdjCustomSerializer }
 
 class function TdjDOMCustomSerializer.Deserialize(const AJSONValue: TJSONValue;
-  const AExistingValue: TValue; var ADone: Boolean): TValue;
+  const AExistingValue: TValue): TValue;
 begin
   // None
 end;
@@ -90,8 +90,7 @@ begin
   Result := False;
 end;
 
-class function TdjDOMCustomSerializer.Serialize(const AValue: TValue;
-  var ADone: Boolean): TJSONValue;
+class function TdjDOMCustomSerializer.Serialize(const AValue: TValue): TJSONValue;
 begin
   // None
 end;
@@ -99,8 +98,7 @@ end;
 { TdjStreamCustomSerializer }
 
 class function TdjStreamCustomSerializer.Deserialize(
-  const AJSONReader: TJSONReader; const AExistingValue: TValue;
-  var ADone: Boolean): TValue;
+  const AJSONReader: TJSONReader; const AExistingValue: TValue): TValue;
 begin
   // None
 end;
@@ -112,7 +110,7 @@ begin
 end;
 
 class procedure TdjStreamCustomSerializer.Serialize(
-  const AJSONWriter: TJSONWriter; const AValue: TValue; var ADone: Boolean);
+  const AJSONWriter: TJSONWriter; const AValue: TValue);
 begin
   // None
 end;
@@ -120,8 +118,7 @@ end;
 { TdjJDOCustomSerializer }
 
 class function TdjJDOCustomSerializer.Deserialize(
-  const AJSONValue: PJsonDataValue; const AExistingValue: TValue;
-  var ADone: Boolean): TValue;
+  const AJSONValue: PJsonDataValue; const AExistingValue: TValue): TValue;
 begin
   // None
 end;
@@ -132,8 +129,7 @@ begin
   Result := False;
 end;
 
-class procedure TdjJDOCustomSerializer.Serialize(const AResult: PJsonDataValue;
-  const AValue: TValue; var ADone: Boolean);
+class procedure TdjJDOCustomSerializer.Serialize(const AJSONValue: PJsonDataValue; const AValue:TValue);
 begin
   // None
 end;
@@ -141,7 +137,7 @@ end;
 { TdjXMLCustomSerializer }
 
 class function TdjXMLCustomSerializer.Deserialize(const AXMLNode: IXMLDOMNode;
-  const AExistingValue: TValue; var ADone: Boolean): TValue;
+  const AExistingValue: TValue): TValue;
 begin
   // None
 end;
@@ -153,7 +149,7 @@ begin
 end;
 
 class function TdjXMLCustomSerializer.Serialize(const AXMLNode: IXMLDOMNode;
-  const AValue: TValue; var ADone: Boolean): TJSONValue;
+  const AValue: TValue): TJSONValue;
 begin
   // None
 end;
