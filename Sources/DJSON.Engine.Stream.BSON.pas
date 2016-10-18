@@ -16,7 +16,7 @@ type
 implementation
 
 uses
-  System.JSON.BSON;
+  System.JSON.BSON, Winapi.Windows, System.JSON.Types, DJSON.Exceptions;
 
 { TdjEngineStreamBSON }
 
@@ -29,6 +29,12 @@ begin
   AByteStream.Position := 0;
   LBSONReader := TBSONReader.Create(AByteStream);
   try
+    if AParams.BsonRoot then
+    begin
+      LBSONReader.Read;
+      if not (LBSONReader.Read and (LBSONReader.TokenType = TJsonToken.PropertyName) and (LBSONReader.Value.AsString = AParams.BsonRootLabel)) then
+        raise EdjEngineError.Create('BSON engine: Root object label expected (' + AParams.BsonRootLabel + ')');
+    end;
     if LBSONReader.Read then
       Result := DeserializePropField(LBSONReader, AValueType, APropField, AMasterObj, AParams);
   finally
@@ -45,7 +51,14 @@ begin
   Result := TBytesStream.Create;
   LBSONWriter := TBsonWriter.Create(Result);
   try
+    if AParams.BsonRoot then
+    begin
+      LBSONWriter.WriteStartObject;
+      LBSONWriter.WritePropertyName(AParams.BsonRootLabel);
+    end;
     SerializePropField(LBSONWriter, AValue, APropField, AParams, AEnableCustomSerializers);
+    if AParams.BsonRoot then
+      LBSONWriter.WriteEndObject;
     Result.Position := 0;
   finally
     LBSONWriter.Free;

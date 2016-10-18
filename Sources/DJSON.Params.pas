@@ -120,6 +120,14 @@ type
     procedure SetNameCase(const AValue:TdjNameCase);
     function GetNameCase: TdjNameCase;
     property NameCase: TdjNameCase read GetNameCase write SetNameCase;
+    // BsonRoot
+    procedure SetBsonRoot(const AValue:Boolean);
+    function GetBsonRoot: Boolean;
+    property BsonRoot: Boolean read GetBsonRoot write SetBsonRoot;
+    // BsonRootLabel
+    procedure SetBsonRootLabel(const AValue:String);
+    function GetBsonRootLabel: String;
+    property BsonRootLabel: String read GetBsonRootLabel write SetBsonRootLabel;
   end;
 
   TdjParams = class(TInterfacedObject, IdjParams)
@@ -137,6 +145,8 @@ type
     FOwnJSONValue: Boolean;
     FNameCase: TdjNameCase;
     FTypeInfoCache: TdjTypeInfoCache;
+    FBsonRoot: Boolean;
+    FBsonRootLabel: String;
     // Engine (No property)
     function GetEngineClass: TdjEngineRef;
     // EngineType
@@ -179,6 +189,12 @@ type
     // NameCase
     procedure SetNameCase(const AValue:TdjNameCase);
     function GetNameCase: TdjNameCase;
+    // BsonRoot
+    procedure SetBsonRoot(const AValue:Boolean);
+    function GetBsonRoot: Boolean;
+    // BsonRootLabel
+    procedure SetBsonRootLabel(const AValue:String);
+    function GetBsonRootLabel: String;
   public
     constructor Create;
     destructor Destroy; override;
@@ -243,8 +259,7 @@ uses
 constructor TdjParams.Create;
 begin
   inherited;
-//  SetEngine(TdjEngine.eDelphiStream);
-  SetEngine(TdjEngine.eDelphiDOM);
+  SetEngine(TdjEngine.eDelphiStream);
   FTypeInfoCache := TdjTypeInfoCache.Create;
   FSerializers := TdjSerializersContainer.Create;
   FTypeAnnotations := False;
@@ -253,6 +268,8 @@ begin
   FItemsValueDefaultQualifiedName := '';
   FOwnJSONValue := False; // JSONValue is not owned by default
   FNameCase := ncUndefinedCase;
+  FBsonRoot := True;
+  FBsonRootLabel := 'root';
 end;
 
 destructor TdjParams.Destroy;
@@ -265,6 +282,16 @@ end;
 function TdjParams.GetTypeAnnotations: Boolean;
 begin
   Result := FTypeAnnotations;
+end;
+
+function TdjParams.GetBsonRoot: Boolean;
+begin
+  Result := FBsonRoot;
+end;
+
+function TdjParams.GetBsonRootLabel: String;
+begin
+  Result := FBsonRootLabel;
 end;
 
 function TdjParams.GetEnableCustomSerializers: Boolean;
@@ -340,6 +367,16 @@ end;
 function TdjParams.TypeInfoCache: TdjTypeInfoCache;
 begin
   Result := FTypeInfoCache;
+end;
+
+procedure TdjParams.SetBsonRoot(const AValue: Boolean);
+begin
+  FBsonRoot := AValue;
+end;
+
+procedure TdjParams.SetBsonRootLabel(const AValue: String);
+begin
+  FBsonRootLabel := AValue;
 end;
 
 procedure TdjParams.SetEnableCustomSerializers(const AValue: Boolean);

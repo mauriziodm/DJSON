@@ -97,6 +97,8 @@ type
     function UpperCase: TdjValueDestination;
     function LowerCase: TdjValueDestination;
     function Engine(const AEngine:TdjEngine): TdjValueDestination;
+    function BsonRootOFF: TdjValueDestination;
+    function BsonRootLabel(const AValue:String): TdjValueDestination;
   end;
 
   TdjJSONDestination = class
@@ -150,6 +152,9 @@ type
     function ToValue(const ATypeValue:PTypeInfo): TValue; override;
     function ToObject: TObject; override;
     procedure &To(const AObject: TObject); overload;
+    // Params
+    function BsonRootOFF: TdjBSONDestination;
+    function BsonRootLabel(const AValue:String): TdjBSONDestination;
   end;
 
 implementation
@@ -430,6 +435,19 @@ end;
 
 { TdjValueDestination }
 
+function TdjValueDestination.BsonRootLabel(
+  const AValue: String): TdjValueDestination;
+begin
+  FParams.BsonRootLabel := AValue;
+  Result := Self;
+end;
+
+function TdjValueDestination.BsonRootOFF: TdjValueDestination;
+begin
+  FParams.BsonRoot := False;
+  Result := Self;
+end;
+
 function TdjValueDestination.byFields: TdjValueDestination;
 begin
   FParams.SerializationType := stFields;
@@ -569,6 +587,7 @@ var
 begin
   LBytesStream := Self.ToBsonAsStream;
   try
+    LBytesStream.Position := 0;
     Result := LBytesStream.Bytes;
     SetLength(Result, LBytesStream.Size);
   finally
@@ -653,6 +672,19 @@ begin
   finally
     Self.Free;
   end;
+end;
+
+function TdjBSONDestination.BsonRootLabel(
+  const AValue: String): TdjBSONDestination;
+begin
+  FParams.BsonRootLabel := AValue;
+  Result := Self;
+end;
+
+function TdjBSONDestination.BsonRootOFF: TdjBSONDestination;
+begin
+  FParams.BsonRoot := False;
+  Result := Self;
 end;
 
 constructor TdjBSONDestination.Create(const ABytes: TBytes;

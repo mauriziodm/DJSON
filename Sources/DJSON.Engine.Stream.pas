@@ -202,11 +202,9 @@ begin
   if AParams.TypeAnnotations then
   begin
     // Get the key type name (collection TypeName already retrieved by DeserializePropField)
-    if not TryGetTypeAnnotation(AJSONReader, DJ_KEY, LKeyQualifiedTypeName) then
-      raise EdjEngineError.Create('Key type annotation expected (TypeAnnotations enabled).');
+    TryGetTypeAnnotation(AJSONReader, DJ_KEY, LKeyQualifiedTypeName);
     // Get the value type name
-    if not TryGetTypeAnnotation(AJSONReader, DJ_VALUE, LValueQualifiedTypeName) then
-      raise EdjEngineError.Create('Value type annotation expected for (TypeAnnotations enabled).');
+    TryGetTypeAnnotation(AJSONReader, DJ_VALUE, LValueQualifiedTypeName);
     // The current token must be a property name named 'items'
     if not ((AJSONReader.TokenType = TJSONToken.PropertyName) and (AJSONReader.Value.AsString = 'items')) then
       raise EdjEngineError.Create('"items" property expected for (TypeAnnotations enabled).');
@@ -234,11 +232,7 @@ begin
   repeat
     // If the current JSONToken is an EndArray token then exit from the loop
     if AJSONReader.TokenType = TJSONToken.EndArray then
-    begin
-    { TODO : Risistemare }
-//      AJSONReader.Read;
       Break;
-    end;
     // Every item of the JSONDictionary must begin with a StartObject char
     if (AJSONReader.TokenType <> TJSONToken.StartObject) then
       raise EdjEngineError.Create('StartObject char expected deserializing an item.');
