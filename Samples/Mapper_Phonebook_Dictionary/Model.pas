@@ -8,7 +8,7 @@ uses
 type
 
   // Custom serializer for this class
-  [djSerializer(TPhoneNumberCustomSerializer)]  // Or register the custom serializer in a IomParams object or direct in the command
+  [djSerializer(TNumTelCustomSerializer)]  // Or register the custom serializer in a IomParams object or direct in the command
   TPhoneNumber = class(TInterfacedObject, IPhoneNumber)
   private
     FID: Integer;

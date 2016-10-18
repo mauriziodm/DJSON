@@ -3,7 +3,7 @@ object MainForm: TMainForm
   Top = 0
   Caption = 'MainForm'
   ClientHeight = 751
-  ClientWidth = 1148
+  ClientWidth = 1129
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,15 +16,14 @@ object MainForm: TMainForm
   object PanelTools: TPanel
     Left = 0
     Top = 0
-    Width = 1148
+    Width = 1129
     Height = 153
     Align = alTop
     BevelOuter = bvNone
     Color = 12895428
     ParentBackground = False
     TabOrder = 0
-    ExplicitLeft = 26
-    ExplicitTop = 32
+    ExplicitWidth = 1148
     object Shape1: TShape
       Left = 507
       Top = 27
@@ -143,7 +142,7 @@ object MainForm: TMainForm
     object Label6: TLabel
       Left = 0
       Top = 128
-      Width = 1148
+      Width = 1129
       Height = 25
       Align = alBottom
       Alignment = taCenter
@@ -474,14 +473,13 @@ object MainForm: TMainForm
   object Memo1: TMemo
     Left = 0
     Top = 153
-    Width = 1148
+    Width = 1129
     Height = 598
     Align = alClient
     Lines.Strings = (
       'Memo1')
     ScrollBars = ssVertical
     TabOrder = 1
-    ExplicitTop = 140
-    ExplicitHeight = 610
+    ExplicitWidth = 1148
   end
 end

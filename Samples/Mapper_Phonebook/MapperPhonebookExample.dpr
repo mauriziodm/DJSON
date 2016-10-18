@@ -3,7 +3,8 @@ program MapperPhonebookExample;
 uses
   Vcl.Forms,
   FormMain in 'FormMain.pas' {MainForm},
-  Model in 'Model.pas';
+  Model in 'Model.pas',
+  Serializers in 'Serializers.pas';
 
 {$R *.res}
 

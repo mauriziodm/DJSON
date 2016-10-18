@@ -3,10 +3,11 @@ unit Model;
 interface
 
 uses
-  System.Generics.Collections, DJSON.Attributes, System.JSON;
+  System.Generics.Collections, DJSON.Attributes, System.JSON, Serializers;
 
 type
 
+  [djSerializer(TNumTelCustomSerializer)]  // Or register the custom serializer in a IomParams object or direct in the command
   TNumTel = class
   private
     FID: Integer;
@@ -20,8 +21,6 @@ type
     procedure SetNumero(const Value: String);
   public
     constructor Create(AID:Integer; ANumero:String; AMasterID:Integer); overload;
-    function ToJSON: TJSONValue;  // Custom serializer declared as method of the class itself
-    procedure FromJSON(const AJSONValue:TJSONValue);  // Custom deserializer declared as method of the class itself
     property ID: Integer read GetID write SetID;
     property Numero:String read GetNumero write SetNumero;
     property MasterID:Integer read GetMasterID write SetMasterID;
@@ -109,21 +108,6 @@ begin
   FMasterID := AMasterID;
 end;
 
-procedure TNumTel.FromJSON(const AJSONValue: TJSONValue);
-var
-  LStringList: TStrings;
-begin
-  LStringList := TStringList.Create;
-  try
-    LStringList.CommaText := AJSONValue.Value;
-    FID := LStringList[0].ToInteger;
-    FMasterID := LStringList[1].ToInteger;
-    FNumero := LStringList[2];
-  finally
-    LStringList.Free;
-  end;
-end;
-
 function TNumTel.GetID: Integer;
 begin
   Result := FID;
@@ -152,21 +136,6 @@ end;
 procedure TNumTel.SetNumero(const Value: String);
 begin
   FNumero := Value;
-end;
-
-function TNumTel.ToJSON: TJSONValue;
-var
-  LStringList: TStrings;
-begin
-  LStringList := TStringList.Create;
-  try
-    LStringList.Add(FID.ToString);
-    LStringList.Add(FMasterID.ToString);
-    LStringList.Add(FNumero);
-    Result := TJSONString.Create(LStringList.CommaText);
-  finally
-    LStringList.Free;
-  end;
 end;
 
 end.

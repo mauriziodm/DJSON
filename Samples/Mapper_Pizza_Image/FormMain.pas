@@ -9,6 +9,10 @@ uses
 
 const
 
+  ENGINE_DOM = 0;
+  ENGINE_STREAM = 1;
+  ENGINE_JDO = 2;
+
   MODE_JAVASCRIPT = 0;
   MODE_DATACONTRACT = 1;
 
@@ -17,7 +21,6 @@ const
 
 type
   TMainForm = class(TForm)
-    Image1: TImage;
     PanelTools: TPanel;
     Shape1: TShape;
     Shape2: TShape;
@@ -31,22 +34,39 @@ type
     ButtonDeserializeSignleObject: TButton;
     ButtonSerializeObjectList: TButton;
     ButtonDeserializeObjectList: TButton;
-    Memo1: TMemo;
-    Image2: TImage;
-    Image3: TImage;
     Shape3: TShape;
     Label3: TLabel;
     ButtonOtherSerialize1: TButton;
     ButtonOtherDeserialize1: TButton;
     Label6: TLabel;
+    RadioGroupEngine: TRadioGroup;
+    Shape6: TShape;
+    Shape7: TShape;
+    Label7: TLabel;
+    Label8: TLabel;
+    ButtonSerializeBSONSingleObject: TButton;
+    ButtonDeserializeBSONSignleObject: TButton;
+    ButtonSerializeBSONObjectList: TButton;
+    ButtonDeserializeBSONObjectList: TButton;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    Memo1: TMemo;
+    Image1: TImage;
+    Image2: TImage;
+    Image3: TImage;
     procedure ButtonSerializeSignleObjectClick(Sender: TObject);
     procedure ButtonDeserializeSignleObjectClick(Sender: TObject);
     procedure ButtonSerializeObjectListClick(Sender: TObject);
     procedure ButtonDeserializeObjectListClick(Sender: TObject);
     procedure ButtonOtherSerialize1Click(Sender: TObject);
     procedure ButtonOtherDeserialize1Click(Sender: TObject);
+    procedure ButtonSerializeBSONSingleObjectClick(Sender: TObject);
+    procedure ButtonDeserializeBSONSignleObjectClick(Sender: TObject);
+    procedure ButtonSerializeBSONObjectListClick(Sender: TObject);
+    procedure ButtonDeserializeBSONObjectListClick(Sender: TObject);
   private
     { Private declarations }
+    FBytes: TBytes;
     function BuildMapperParams: IdjParams;
     function BuildSampleObject: TPizza;
     function BuildSampleList: TObjectList<TPizza>;
@@ -62,13 +82,20 @@ var
 implementation
 
 uses
-  System.JSON, DJSON, System.Rtti, Winapi.Windows, Serializers, DJSON.Utils.RTTI;
+  System.JSON, DJSON, System.Rtti, Winapi.Windows, Serializers, DJSON.Utils.RTTI,
+  DJSON.Utils;
 
 {$R *.dfm}
 
 function TMainForm.BuildMapperParams: IdjParams;
 begin
   Result := dj.Default;
+  // Serialization Engine
+  case RadioGroupEngine.ItemIndex of
+    ENGINE_DOM:    Result.Engine := eDelphiDOM;
+    ENGINE_STREAM: Result.Engine := eDelphiStream;
+    ENGINE_JDO:    Result.Engine := eJDO;
+  end;
   // Serialization Mode
   case RadioGroupSerializationMode.ItemIndex of
     MODE_JAVASCRIPT:   Result.SerializationMode := smJavaScript;
@@ -134,10 +161,43 @@ begin
   Image3.Picture.Graphic := nil;
 end;
 
+procedure TMainForm.ButtonDeserializeBSONObjectListClick(Sender: TObject);
+var
+  LPizzaList: TObjectList<TPizza>;
+  LParams: IdjParams;
+begin
+  LParams := BuildMapperParams;
+  // ---------------------
+  if LParams.TypeAnnotations then
+    LPizzaList := dj.FromBson(FBytes, LParams).&To<TObjectList<TPizza>>
+  else
+    LPizzaList := dj.FromBson(FBytes, LParams).ItemsOfType<TPizza>.&To<TObjectList<TPizza>>;
+  // ---------------------
+  try
+    LPizzaList.OwnsObjects := True;
+    ShowListData(LPizzaList);
+  finally
+    LPizzaList.Free;
+  end;
+end;
+
+procedure TMainForm.ButtonDeserializeBSONSignleObjectClick(Sender: TObject);
+var
+  LPizza: TPizza;
+  LParams: IdjParams;
+begin
+  LParams := BuildMapperParams;
+  LPizza := dj.FromBson(FBytes).Params(LParams).&To<TPizza>;
+  try
+    ShowSingleObjectData(LPizza);
+  finally
+    LPizza.Free;
+  end;
+end;
+
 procedure TMainForm.ButtonDeserializeObjectListClick(Sender: TObject);
 var
   LPizzaList: TObjectList<TPizza>;
-  LPerson: TPizza;
   LParams: IdjParams;
 begin
   LParams := BuildMapperParams;
@@ -208,6 +268,40 @@ begin
 //    FJSONText := StringReplace(FJSONText,#$D,'',[rfReplaceAll]);
     Memo1.Clear;
     Memo1.Lines.Text := FJSONText;
+  finally
+    LPizza.Free;
+  end;
+end;
+
+procedure TMainForm.ButtonSerializeBSONObjectListClick(Sender: TObject);
+var
+  LPizzaList: TObjectList<TPizza>;
+  LParams: IdjParams;
+  FJSONText: String;
+begin
+  LParams     := BuildMapperParams;
+  LPizzaList  := BuildSampleList;
+  try
+    FBytes := dj.From(LPizzaList, LParams).ToBsonAsBytes;
+    Memo1.Clear;
+    Memo1.Lines.Text := TdjUtils.Bytes2String(FBytes);
+  finally
+    LPizzaList.Free;
+  end;
+end;
+
+procedure TMainForm.ButtonSerializeBSONSingleObjectClick(Sender: TObject);
+var
+  LPizza: TPizza;
+  LParams: IdjParams;
+  FJSONText: String;
+begin
+  LParams := BuildMapperParams;
+  LPizza := BuildSampleObject;
+  try
+    FBytes := dj.From(LPizza, LParams).ToBsonAsBytes;
+    Memo1.Clear;
+    Memo1.Lines.Text := TdjUtils.Bytes2String(FBytes);
   finally
     LPizza.Free;
   end;

@@ -8,6 +8,10 @@ uses
   DJSON.Params;
 
 const
+  ENGINE_DOM = 0;
+  ENGINE_STREAM = 1;
+  ENGINE_JDO = 2;
+
   MODE_JAVASCRIPT = 0;
   MODE_DATACONTRACT = 1;
 
@@ -43,8 +47,15 @@ type
     ButtonOtherSerialize3: TButton;
     ButtonOtherDeserialize3: TButton;
     Memo1: TMemo;
-    ButtonSerializeAsBSON: TButton;
-    ButtonDeserializeAsBSON: TButton;
+    RadioGroupEngine: TRadioGroup;
+    Shape6: TShape;
+    Shape7: TShape;
+    Label7: TLabel;
+    Label8: TLabel;
+    ButtonSerializeBSONSingleObject: TButton;
+    ButtonDeserializeBSONSignleObject: TButton;
+    ButtonSerializeBSONObjectList: TButton;
+    ButtonDeserializeBSONObjectList: TButton;
     procedure ButtonSerializeSignleObjectClick(Sender: TObject);
     procedure ButtonDeserializeSignleObjectClick(Sender: TObject);
     procedure ButtonSerializeObjectListClick(Sender: TObject);
@@ -55,8 +66,10 @@ type
     procedure ButtonOtherDeserialize2Click(Sender: TObject);
     procedure ButtonOtherSerialize3Click(Sender: TObject);
     procedure ButtonOtherDeserialize3Click(Sender: TObject);
-    procedure ButtonSerializeAsBSONClick(Sender: TObject);
-    procedure ButtonDeserializeAsBSONClick(Sender: TObject);
+    procedure ButtonSerializeBSONSingleObjectClick(Sender: TObject);
+    procedure ButtonDeserializeBSONSignleObjectClick(Sender: TObject);
+    procedure ButtonSerializeBSONObjectListClick(Sender: TObject);
+    procedure ButtonDeserializeBSONObjectListClick(Sender: TObject);
   private
     { Private declarations }
     FBytes: TBytes;
@@ -80,6 +93,12 @@ uses
 function TMainForm.BuildMapperParams: IdjParams;
 begin
   Result := dj.Default;
+  // Serialization Engine
+  case RadioGroupEngine.ItemIndex of
+    ENGINE_DOM:    Result.Engine := eDelphiDOM;
+    ENGINE_STREAM: Result.Engine := eDelphiStream;
+    ENGINE_JDO:    Result.Engine := eJDO;
+  end;
   // Serialization Mode
   case RadioGroupSerializationMode.ItemIndex of
     MODE_JAVASCRIPT:   Result.SerializationMode := smJavaScript;
@@ -128,15 +147,33 @@ begin
   Result.NumTel.Add(   TNumTel.Create(3, '0541/694750', 1)   );
 end;
 
-procedure TMainForm.ButtonDeserializeAsBSONClick(Sender: TObject);
+procedure TMainForm.ButtonDeserializeBSONObjectListClick(Sender: TObject);
+var
+  LPersonList: TObjectList<TPerson>;
+  LParams: IdjParams;
+begin
+  LParams := BuildMapperParams;
+  // ---------------------
+  if LParams.TypeAnnotations then
+    LPersonList := dj.FromBson(FBytes, LParams).&To<TObjectList<TPerson>>
+  else
+    LPersonList := dj.FromBson(FBytes, LParams).ItemsOfType<TPerson>.&To<TObjectList<TPerson>>;
+  // ---------------------
+  try
+    ShowListData(LPersonList);
+  finally
+    LPersonList.OwnsObjects := True;
+    LPersonList.Free;
+  end;
+end;
+
+procedure TMainForm.ButtonDeserializeBSONSignleObjectClick(Sender: TObject);
 var
   LPerson: TPerson;
   LParams: IdjParams;
 begin
   LParams := BuildMapperParams;
-  // ---------------------
   LPerson := dj.FromBson(FBytes).Params(LParams).&To<TPerson>;
-  // ---------------------
   try
     ShowSingleObjectData(LPerson);
   finally
@@ -290,7 +327,24 @@ begin
   end;
 end;
 
-procedure TMainForm.ButtonSerializeAsBSONClick(Sender: TObject);
+procedure TMainForm.ButtonSerializeBSONObjectListClick(Sender: TObject);
+var
+  LPersonList: TObjectList<TPerson>;
+  LParams: IdjParams;
+begin
+  LParams     := BuildMapperParams;
+  LPersonList := BuildSampleList;
+  try
+    SetLength(FBytes, 0);
+    FBytes := dj.From(LPersonList, LParams).ToBsonAsBytes;
+    Memo1.Clear;
+    Memo1.Lines.Text := TdjUtils.Bytes2String(FBytes);
+  finally
+    LPersonList.Free;
+  end;
+end;
+
+procedure TMainForm.ButtonSerializeBSONSingleObjectClick(Sender: TObject);
 var
   LPerson: TPerson;
   LParams: IdjParams;
