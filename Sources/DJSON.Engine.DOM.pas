@@ -175,7 +175,7 @@ class function TdjEngineDOM.DeserializeCustom(const AJSONValue: TJSONValue;
   out ResultValue: TValue): Boolean;
 var
   LSerializer: TdjDOMCustomSerializerRef;
-  LMapperCustomSerializer: djSerializerAttribute;
+  LMapperCustomSerializer: djSerializerDOMAttribute;
   LExistingValue: TValue;
   LJSONValue: TJSONValue;
   LObj: TObject;
@@ -202,8 +202,8 @@ begin
   if AParams.Serializers.Exists_DOM(AValueType.Handle) then
     LSerializer := AParams.Serializers._GetSerializerItem(AValueType.Handle).DOMSerializer
   else
-  if TdjRTTI.HasAttribute<djSerializerAttribute>(TdjRTTI.TypeInfoToRttiType(AValueType.Handle), LMapperCustomSerializer) then
-    LSerializer := LMapperCustomSerializer.DOMSerializer
+  if TdjRTTI.HasAttribute<djSerializerDOMAttribute>(TdjRTTI.TypeInfoToRttiType(AValueType.Handle), LMapperCustomSerializer) then
+    LSerializer := LMapperCustomSerializer.Serializer
   else
     Exit;
   // If DataTypeAnnotation is enabled then wrap the resutling JSONValue
@@ -878,7 +878,7 @@ class function TdjEngineDOM.SerializeCustom(AValue: TValue;
   out ResultJSONValue: TJSONValue): Boolean;
 var
   LSerializer: TdjDOMCustomSerializerRef;
-  LMapperCustomSerializer: djSerializerAttribute;
+  LMapperCustomSerializer: djSerializerDOMAttribute;
   LJSONValue: TJSONValue;
   LJSONObj: TJSONObject;
   LObj: TObject;
@@ -894,11 +894,11 @@ begin
     TValue.Make(@LObj, LObj.ClassInfo, AValue);
   end;
   // Get custom serializer if exists else exit
-  if AParams.Serializers._Exists(AValue.TypeInfo) then
+  if AParams.Serializers.Exists_DOM(AValue.TypeInfo) then
     LSerializer := AParams.Serializers._GetSerializerItem(AValue.TypeInfo).DOMSerializer
   else
-  if TdjRTTI.HasAttribute<djSerializerAttribute>(TdjRTTI.TypeInfoToRttiType(AValue.TypeInfo), LMapperCustomSerializer) then
-    LSerializer := LMapperCustomSerializer.DOMSerializer
+  if TdjRTTI.HasAttribute<djSerializerDOMAttribute>(TdjRTTI.TypeInfoToRttiType(AValue.TypeInfo), LMapperCustomSerializer) then
+    LSerializer := LMapperCustomSerializer.Serializer
   else
     Exit;
   // Serialize

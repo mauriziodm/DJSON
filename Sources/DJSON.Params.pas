@@ -229,7 +229,10 @@ type
     procedure &Register(const ATargetClass:TClass; const ASerializer:TdjJDOCustomSerializerRef); overload;
     procedure &Register(const ATargetClass:TClass; const ASerializer:TdjXMLCustomSerializerRef); overload;
     procedure &Register(const ATargetClass:TClass; const ASerializer:TdjStreamCustomSerializerRef); overload;
-    procedure &Register<Target; Serializer:TdjDOMCustomSerializer>; overload;
+    procedure &Register<Target>(const ASerializer:TdjDOMCustomSerializerRef); overload;
+    procedure &Register<Target>(const ASerializer:TdjJDOCustomSerializerRef); overload;
+    procedure &Register<Target>(const ASerializer:TdjXMLCustomSerializerRef); overload;
+    procedure &Register<Target>(const ASerializer:TdjStreamCustomSerializerRef); overload;
     procedure Unregister(const ATargetTypeInfo:PTypeInfo); overload;
     procedure Unregister(const ATargetClass:TClass); overload;
     procedure Unregister<T>; overload;
@@ -540,11 +543,6 @@ begin
   Self.Register(ATargetClass.ClassInfo, ASerializer);
 end;
 
-procedure TdjSerializersContainer.Register<Target; Serializer>;
-begin
-  Self.Register(TypeInfo(Target), Serializer);
-end;
-
 procedure TdjSerializersContainer.Unregister(const ATargetTypeInfo: PTypeInfo);
 begin
   FSerializersContainer.Remove(TdjRTTI.TypeInfoToQualifiedTypeName(ATargetTypeInfo));
@@ -602,6 +600,30 @@ procedure TdjSerializersContainer.Register(const ATargetClass: TClass;
   const ASerializer: TdjStreamCustomSerializerRef);
 begin
   Self.Register(ATargetClass.ClassInfo, ASerializer);
+end;
+
+procedure TdjSerializersContainer.Register<Target>(
+  const ASerializer: TdjJDOCustomSerializerRef);
+begin
+  Self.Register(TypeInfo(Target), ASerializer);
+end;
+
+procedure TdjSerializersContainer.Register<Target>(
+  const ASerializer: TdjXMLCustomSerializerRef);
+begin
+  Self.Register(TypeInfo(Target), ASerializer);
+end;
+
+procedure TdjSerializersContainer.Register<Target>(
+  const ASerializer: TdjStreamCustomSerializerRef);
+begin
+  Self.Register(TypeInfo(Target), ASerializer);
+end;
+
+procedure TdjSerializersContainer.Register<Target>(
+  const ASerializer: TdjDOMCustomSerializerRef);
+begin
+  Self.Register(TypeInfo(Target), ASerializer);
 end;
 
 procedure TdjSerializersContainer.Register(const ATargetTypeInfo: PTypeInfo;

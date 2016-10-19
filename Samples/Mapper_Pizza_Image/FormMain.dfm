@@ -23,7 +23,6 @@ object MainForm: TMainForm
     Color = 12895428
     ParentBackground = False
     TabOrder = 0
-    ExplicitWidth = 1255
     object Shape1: TShape
       Left = 507
       Top = 27
@@ -374,8 +373,6 @@ object MainForm: TMainForm
     BevelOuter = bvNone
     Caption = '+'
     TabOrder = 1
-    ExplicitTop = 156
-    ExplicitWidth = 1255
     object Panel2: TPanel
       Left = 0
       Top = 0
@@ -426,10 +423,6 @@ object MainForm: TMainForm
         'Memo1')
       ScrollBars = ssVertical
       TabOrder = 1
-      ExplicitLeft = 415
-      ExplicitTop = 6
-      ExplicitWidth = 1048
-      ExplicitHeight = 657
     end
   end
 end

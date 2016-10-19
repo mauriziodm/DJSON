@@ -53,7 +53,8 @@ implementation
 uses
   System.SysUtils, System.JSON.Types, DJSON.Constants,
   DJSON.Duck.PropField, DJSON.Utils.RTTI, DJSON.Attributes, DJSON.Exceptions,
-  DJSON.Utils, DJSON.Factory, Soap.EncdDecd, DJSON.TypeInfoCache, System.JSON.BSON;
+  DJSON.Utils, DJSON.Factory, Soap.EncdDecd, DJSON.TypeInfoCache, System.JSON.BSON,
+  DJSON.Serializers;
 
 { TdjEngineStream }
 
@@ -159,31 +160,52 @@ class function TdjEngineStream.DeserializeCustom(const AJSONReader: TJSONReader;
   const AMasterObj: TObject; const AParams: IdjParams;
   out ResultValue: TValue): Boolean;
 var
+  LSerializer: TdjStreamCustomSerializerRef;
+  LMapperCustomSerializer: djSerializerStreamAttribute;
+  LExistingValue: TValue;
   LObj: TObject;
-  function DeserializeCustomByInternalClassMethod(const AJSONReader: TJSONReader; const AValueType:TRttiType; const AExistingValue:TValue; out ResultValue: TValue): Boolean;
-  var
-    LMethod: TRttiMethod;
-    LObj: TObject;
-  begin
-    Result := False;
-    LMethod := AValueType.GetMethod('FromJSON');
-    if not Assigned(LMethod) then
-      Exit;
-    if AExistingValue.IsEmpty then
-    begin
-      LObj := TdjRTTI.CreateObject(AValueType.QualifiedName);
-      TValue.Make(@LObj, LObj.ClassInfo, ResultValue);
-    end
-    else
-    begin
-      LObj := AExistingValue.AsObject;
-      ResultValue := AExistingValue;
-    end;
-    LMethod.Invoke(LObj, [AJSONReader]);
-    Result := True;
-  end;
 begin
-
+  // Init
+  Result := False;
+  LSerializer := nil;
+  LExistingValue := nil;
+  // If the Property/Field is valid then try to get the value (Object) from the
+  //  master object else the MasterObject itself is the destination of the deserialization
+  if Assigned(AMasterObj) then
+    if TdjDuckPropField.IsValidPropField(APropField) then
+      LExistingValue := TdjDuckPropField.GetValue(AMasterObj, APropField)
+    else
+      TValue.Make(@AMasterObj, AMasterObj.ClassInfo, LExistingValue);
+  // If the Value is an Interface type then convert it to real object class
+  //  type implementing the interface
+  if (AValueType.TypeKind = tkInterface) and not LExistingValue.IsEmpty then
+  begin
+    LObj := LExistingValue.AsInterface as TObject;
+    TValue.Make(@LObj, LObj.ClassInfo, LExistingValue);
+  end;
+  // Get custom serializer if exists
+  if AParams.Serializers.Exists_Stream(AValueType.Handle) then
+    LSerializer := AParams.Serializers._GetSerializerItem(AValueType.Handle).StreamSerializer
+  else
+  if TdjRTTI.HasAttribute<djSerializerStreamAttribute>(TdjRTTI.TypeInfoToRttiType(AValueType.Handle), LMapperCustomSerializer) then
+    LSerializer := LMapperCustomSerializer.Serializer
+  else
+    Exit;
+  // If DataTypeAnnotation is enabled then wrap the resutling JSONValue
+  //  in a JSONObject with the type information
+  if AParams.TypeAnnotations and LSerializer.isTypeNotificationCompatible then
+  begin
+    if not ((AJSONReader.TokenType = TJsonToken.PropertyName) and (AJSONReader.Value.AsString = DJ_VALUE) and AJSONReader.Read) then
+      raise EdjEngineError.Create('TdjEngineStream: "' + DJ_VALUE + '" property name expected (DeserializeCustom, TypesAnnotationsON).');
+  end;
+  // Deserialize
+  ResultValue := LSerializer.Deserialize(AJSONReader, LExistingValue);
+  // If DataTypeAnnotation is enabled then wrap the resutling JSONValue
+  //  in a JSONObject with the type information
+  if AParams.TypeAnnotations and LSerializer.isTypeNotificationCompatible then
+    AJSONReader.Read;  // Skip the EndObject
+  // All Ok
+  Result := True;
 end;
 
 class procedure TdjEngineStream.DeserializeDictionary(const ADuckDictionary: IdjDuckDictionary;
@@ -268,9 +290,6 @@ begin
         LValue := DeserializePropField(AJSONReader, LValueRTTIType, APropField, nil, AParams);
       end;
     end;
-    // Every item of the JSONDictionary must end with a EndObject char
-    if (AJSONReader.TokenType <> TJSONToken.EndObject) then
-      raise EdjEngineError.Create('EndObject char expected deserializing an item.');
     AJSONReader.Read;
     // Add to the dictionary
     ADuckDictionary.Add(LKey, LValue);
@@ -522,13 +541,11 @@ begin
   else
     LValueType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
   // ---------------------------------------------------------------------------
-
-{ TODO : Riattivare custom serializers }
   // If a custom serializer exists for the current type then use it
-//  if DeserializeCustom(AJSONValue, LValueType, APropField, AMasterObj, AParams, Result) then
-//    Exit;
-
-{ TODO : Controllare se è possibile assegnare AJSONReader.Value direttamente per più tipi possibile }
+  if  AParams.EnableCustomSerializers
+  and DeserializeCustom(AJSONReader, LValueType, APropField, AMasterObj, AParams, Result)
+  then
+    Exit;
   // Deserialize by TypeKind
   case LValueType.TypeKind of
     tkEnumeration:
@@ -741,8 +758,46 @@ end;
 class function TdjEngineStream.SerializeCustom(const AJSONWriter: TJSONWriter;
   AValue: TValue; const APropField: TRttiNamedObject;
   const AParams: IdjParams): Boolean;
+var
+  LSerializer: TdjStreamCustomSerializerRef;
+  LMapperCustomSerializer: djSerializerStreamAttribute;
+  LObj: TObject;
 begin
-
+  // Init
+  Result := False;
+  LSerializer := nil;
+  // If the Value is an Interface type then convert it to real object class
+  //  type implementing the interface
+  if AValue.Kind = tkInterface then
+  begin
+    LObj := AValue.AsInterface as TObject;
+    TValue.Make(@LObj, LObj.ClassInfo, AValue);
+  end;
+  // Get custom serializer if exists else exit
+  if AParams.Serializers.Exists_Stream(AValue.TypeInfo) then
+    LSerializer := AParams.Serializers._GetSerializerItem(AValue.TypeInfo).StreamSerializer
+  else
+  if TdjRTTI.HasAttribute<djSerializerStreamAttribute>(TdjRTTI.TypeInfoToRttiType(AValue.TypeInfo), LMapperCustomSerializer) then
+    LSerializer := LMapperCustomSerializer.Serializer
+  else
+    Exit;
+  // If DataTypeAnnotation is enabled then wrap the resutling JSONValue
+  //  in a JSONObject with the type information
+  if AParams.TypeAnnotations and LSerializer.isTypeNotificationCompatible then
+  begin
+    AJSONWriter.WriteStartObject;
+    AJSONWriter.WritePropertyName(DJ_TYPENAME);
+    AJSONWriter.WriteValue(TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo));
+    AJSONWriter.WritePropertyName(DJ_VALUE);
+  end;
+  // Serialize the value
+  LSerializer.Serialize(AJSONWriter, AValue);
+  // If DataTypeAnnotation is enabled then wrap the resutling JSONValue
+  //  in a JSONObject with the type information
+  if AParams.TypeAnnotations and LSerializer.isTypeNotificationCompatible then
+    AJSONWriter.WriteEndObject;
+  // All OK
+  Result := True;
 end;
 
 class procedure TdjEngineStream.SerializeDictionary(
@@ -996,8 +1051,8 @@ class procedure TdjEngineStream.SerializePropField(
   const AEnableCustomSerializers: Boolean);
 begin
   // If a custom serializer exists for the current type then use it
-//  if AEnableCustomSerializers and AParams.EnableCustomSerializers and SerializeCustom(AValue, APropField, AParams, Result) then
-//    Exit;
+  if AEnableCustomSerializers and AParams.EnableCustomSerializers and SerializeCustom(AJSONWriter, AValue, APropField, AParams) then
+    Exit;
   // Standard serialization by TypeKind
   case AValue.Kind of
     tkInteger, tkInt64:

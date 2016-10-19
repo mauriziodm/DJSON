@@ -111,7 +111,9 @@ begin
   // Custom serializers
   Result.EnableCustomSerializers := CheckBoxCustomSerializers.Checked;
   // Register the custom serializer sor string type
-  Result.Serializers.Register<String, TStringCustomSerializer>;
+  Result.Serializers.Register<String>(TStringCustomSerializerDOM);
+  Result.Serializers.Register<String>(TStringCustomSerializerJDO);
+  Result.Serializers.Register<String>(TStringCustomSerializerStream);
 end;
 
 function TMainForm.BuildSampleList: TObjectList<TPizza>;
@@ -241,7 +243,7 @@ begin
   //  "TStringCustomSerializer" per il tipo "String", inoltre viene indicato al mapper che la proprietà
   //  di tipo TValue contiene un tipo "String" altrimenti avendo optato per una serializzazione senza
   //  annotazione dei tipi non saprebbe che tipo deserializzare.
-  LPizza := dj.FromJSON(Memo1.Lines.Text).CustomSerializer<String,TStringCustomSerializer>.ItemsOfType<String>.&To<TPizza>;
+  LPizza := dj.FromJSON(Memo1.Lines.Text).CustomSerializer<String>(TStringCustomSerializerStream).ItemsOfType<String>.&To<TPizza>;
   // ---------------------
   try
     ShowSingleObjectData(LPizza);
@@ -262,7 +264,7 @@ begin
     // Esempio di come serializzare senza l'utilizzo di un oggetto "IomParams" ma specificando alcuni
     //  parametri direttamente sulla chiamata. In questo caso viene indicato di utilizzare il custom serializer
     //  "TStringCustomSerializer" per il tipo "String".
-    FJSONText := dj.From(LPizza).CustomSerializer<String,TStringCustomSerializer>.ToJSON;
+    FJSONText := dj.From(LPizza).CustomSerializer<String>(TStringCustomSerializerStream).ToJSON;
     // ---------------------
 //    FJSONText := StringReplace(FJSONText,#$A,'',[rfReplaceAll]);
 //    FJSONText := StringReplace(FJSONText,#$D,'',[rfReplaceAll]);

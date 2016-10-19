@@ -37,7 +37,7 @@ unit DJSON.Attributes;
 interface
 
 uses
-  System.TypInfo, DJSON.Serializers;
+  System.TypInfo, DJSON.Serializers, System.Rtti;
 
 type
 
@@ -83,24 +83,26 @@ type
     property ValueQualifiedName: String read FValueQualifiedName;
   end;
 
-  // djSerializer
-  djSerializerAttribute = class(TCustomAttribute)
+  // djSerializer attributes
+  djSerializerAttribute<T> = class(TCustomAttribute)
   private
-    FDOMSerializer: TdjDOMCustomSerializerRef;
-    FJDOSerializer: TdjJDOCustomSerializerRef;
-    FXMLSerializer: TdjXMLCustomSerializerRef;
-    FStreamSerializer: TdjStreamCustomSerializerRef;
-  protected
-    constructor Create; overload;
+    FSerializer: T;
   public
-    constructor Create(const ASerializer:TdjDOMCustomSerializerRef); overload;
-    constructor Create(const ASerializer:TdjJDOCustomSerializerRef); overload;
-    constructor Create(const ASerializer:TdjXMLCustomSerializerRef); overload;
-    constructor Create(const ASerializer:TdjStreamCustomSerializerRef); overload;
-    property DOMSerializer:TdjDOMCustomSerializerRef read FDOMSerializer;
-    property JDOSerializer:TdjJDOCustomSerializerRef read FJDOSerializer;
-    property XMLSerializer:TdjXMLCustomSerializerRef read FXMLSerializer;
-    property StreamSerializer:TdjStreamCustomSerializerRef read FStreamSerializer;
+    constructor Create(const ASerializer:T);
+    property Serializer:T read FSerializer;
+  end;
+  // djSerializerDOM
+  djSerializerDOMAttribute = class(djSerializerAttribute<TdjDOMCustomSerializerRef>)
+  end;
+  // djSerializerJDO
+  djSerializerJDOAttribute = class(djSerializerAttribute<TdjJDOCustomSerializerRef>)
+  end;
+  // djSerializerXML
+  djSerializerXMLAttribute = class(djSerializerAttribute<TdjXMLCustomSerializerRef>)
+  end;
+  // djSerializerStream
+  // djSerializerXML
+  djSerializerStreamAttribute = class(djSerializerAttribute<TdjStreamCustomSerializerRef>)
   end;
 
   // djEncoding
@@ -119,7 +121,7 @@ type
 implementation
 
 uses
-  System.SysUtils, DJSON.Utils.RTTI, System.Rtti;
+  System.SysUtils, DJSON.Utils.RTTI, System.Generics.Collections;
 
 { djEncodingAttribute }
 
@@ -217,42 +219,11 @@ begin
   FQualifiedName := TdjRTTI.TypeInfoToQualifiedTypeName(ATypeInfo);
 end;
 
-{ djSerializerAttribute }
+{ djSerializerAttribute<T> }
 
-constructor djSerializerAttribute.Create(
-  const ASerializer: TdjDOMCustomSerializerRef);
+constructor djSerializerAttribute<T>.Create(const ASerializer: T);
 begin
-  Self.Create;
-  FDOMSerializer := ASerializer;
-end;
-
-constructor djSerializerAttribute.Create(
-  const ASerializer: TdjJDOCustomSerializerRef);
-begin
-  Self.Create;
-  FJDOSerializer := ASerializer;
-end;
-
-constructor djSerializerAttribute.Create(
-  const ASerializer: TdjStreamCustomSerializerRef);
-begin
-  Self.Create;
-  FStreamSerializer := ASerializer;
-end;
-
-constructor djSerializerAttribute.Create;
-begin
-  Inherited Create;
-  FDOMSerializer := nil;
-  FJDOSerializer := nil;
-  FStreamSerializer := nil;
-end;
-
-constructor djSerializerAttribute.Create(
-  const ASerializer: TdjXMLCustomSerializerRef);
-begin
-  Self.Create;
-  FXMLSerializer := ASerializer;
+  FSerializer := ASerializer;
 end;
 
 end.

@@ -25,7 +25,7 @@ type
     class procedure SerializeDictionary(const AResult:PJsonDataValue; const ADuckDictionary: IdjDuckDictionary; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class procedure SerializeStreamableObject(const AResult:PJsonDataValue; const ADuckStreamable:IdjDuckStreamable; const APropField: TRttiNamedObject); static;
     class procedure SerializeStream(const AResult:PJsonDataValue; const AStream: TObject; const APropField: TRttiNamedObject); static;
-    class function SerializeCustom(AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; out ResultJSONValue:PJsonDataValue): Boolean; static;
+    class function SerializeCustom(const AResult:PJsonDataValue; AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
     // Deserializers
     class function DeserializePropField(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class function DeserializeFloat(const AJSONValue: PJsonDataValue; const AValueType: TRttiType): TValue; static;
@@ -136,8 +136,53 @@ class function TdjEngineJDO.DeserializeCustom(const AJSONValue: PJsonDataValue;
   const AValueType: TRttiType; const APropField: TRttiNamedObject;
   const AMasterObj: TObject; const AParams: IdjParams;
   out ResultValue: TValue): Boolean;
+var
+  LSerializer: TdjJDOCustomSerializerRef;
+  LMapperCustomSerializer: djSerializerJDOAttribute;
+  LExistingValue: TValue;
+  LJSONValue: PJsonDataValue;
+  LJSONObject: TJsonObject;
+  LObj: TObject;
 begin
-
+  // Init
+  Result := False;
+  LSerializer := nil;
+  LExistingValue := nil;
+  // If the Property/Field is valid then try to get the value (Object) from the
+  //  master object else the MasterObject itself is the destination of the deserialization
+  if Assigned(AMasterObj) then
+    if TdjDuckPropField.IsValidPropField(APropField) then
+      LExistingValue := TdjDuckPropField.GetValue(AMasterObj, APropField)
+    else
+      TValue.Make(@AMasterObj, AMasterObj.ClassInfo, LExistingValue);
+  // If the Value is an Interface type then convert it to real object class
+  //  type implementing the interface
+  if (AValueType.TypeKind = tkInterface) and not LExistingValue.IsEmpty then
+  begin
+    LObj := LExistingValue.AsInterface as TObject;
+    TValue.Make(@LObj, LObj.ClassInfo, LExistingValue);
+  end;
+  // Get custom serializer if exists
+  if AParams.Serializers.Exists_JDO(AValueType.Handle) then
+    LSerializer := AParams.Serializers._GetSerializerItem(AValueType.Handle).JDOSerializer
+  else
+  if TdjRTTI.HasAttribute<djSerializerJDOAttribute>(TdjRTTI.TypeInfoToRttiType(AValueType.Handle), LMapperCustomSerializer) then
+    LSerializer := LMapperCustomSerializer.Serializer
+  else
+    Exit;
+  // If DataTypeAnnotation is enabled then wrap the resutling JSONValue
+  //  in a JSONObject with the type information
+  if AParams.TypeAnnotations and LSerializer.isTypeNotificationCompatible then
+  begin
+    LJSONObject := AJSONValue.ObjectValue;
+    LJSONValue := LJSONObject.Items[LJSONObject.IndexOf(DJ_VALUE)];
+  end
+  else
+    LJSONValue := AJSONValue;
+  // Serialize (if a custom serializer exists)
+  ResultValue := LSerializer.Deserialize(LJSONValue, LExistingValue);
+  // All Ok
+  Result := True;
 end;
 
 class procedure TdjEngineJDO.DeserializeDictionary(const ADuckDictionary: IdjDuckDictionary; const AJSONValue: PJsonDataValue;
@@ -390,7 +435,9 @@ begin
     LValueType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
   // ---------------------------------------------------------------------------
   // If a custom serializer exists for the current type then use it
-  if DeserializeCustom(AJSONValue, LValueType, APropField, AMasterObj, AParams, Result) then
+  if  AParams.EnableCustomSerializers
+  and DeserializeCustom(AJSONValue, LValueType, APropField, AMasterObj, AParams, Result)
+  then
     Exit;
   // Deserialize by TypeKind
   case LValueType.TypeKind of
@@ -611,11 +658,54 @@ begin
   end;
 end;
 
-class function TdjEngineJDO.SerializeCustom(AValue: TValue;
-  const APropField: TRttiNamedObject; const AParams: IdjParams;
-  out ResultJSONValue: PJsonDataValue): Boolean;
+class function TdjEngineJDO.SerializeCustom(const AResult: PJsonDataValue;
+  AValue: TValue; const APropField: TRttiNamedObject;
+  const AParams: IdjParams): Boolean;
+var
+  LSerializer: TdjJDOCustomSerializerRef;
+  LMapperCustomSerializer: djSerializerJDOAttribute;
+  LJSONValue: PJsonDataValue;
+  LJSONObj: TJSONObject;
+  LObj: TObject;
 begin
-
+  // Init
+  Result := False;
+  LSerializer := nil;
+  // If the Value is an Interface type then convert it to real object class
+  //  type implementing the interface
+  if AValue.Kind = tkInterface then
+  begin
+    LObj := AValue.AsInterface as TObject;
+    TValue.Make(@LObj, LObj.ClassInfo, AValue);
+  end;
+  // Get custom serializer if exists else exit
+  if AParams.Serializers.Exists_JDO(AValue.TypeInfo) then
+    LSerializer := AParams.Serializers._GetSerializerItem(AValue.TypeInfo).JDOSerializer
+  else
+  if TdjRTTI.HasAttribute<djSerializerJDOAttribute>(TdjRTTI.TypeInfoToRttiType(AValue.TypeInfo), LMapperCustomSerializer) then
+    LSerializer := LMapperCustomSerializer.Serializer
+  else
+    Exit;
+  // If DataTypeAnnotation is enabled then wrap the resutling JSONValue
+  //  in a JSONObject with the type information
+  if AParams.TypeAnnotations and LSerializer.isTypeNotificationCompatible then
+  begin
+    LJSONObj := TJSONObject.Create;
+    // Create & set the TypeName
+    LJSONObj.S[DJ_TYPENAME] := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
+    // Create & get the value JSONValue
+    LJSONObj[DJ_VALUE] := nil;
+    LJSONValue := LJSONObj.Items[LJSONObj.IndexOf(DJ_VALUE)];
+    // Serialize value
+    LSerializer.Serialize(LJSONValue, AValue);
+    // Add the JSONObject to the result
+    AResult.ObjectValue := LJSONObj;
+  end
+  else
+    // Serialize
+    LSerializer.Serialize(AResult, AValue);
+  // All OK
+  Result := True;
 end;
 
 class procedure TdjEngineJDO.SerializeDictionary(const AResult:PJsonDataValue; const ADuckDictionary: IdjDuckDictionary;
@@ -810,8 +900,8 @@ class procedure TdjEngineJDO.SerializePropField(const AResult:PJsonDataValue; co
   const AEnableCustomSerializers: Boolean);
 begin
   // If a custom serializer exists for the current type then use it
-//  if AEnableCustomSerializers and AParams.EnableCustomSerializers and SerializeCustom(AValue, APropField, AParams, Result) then
-//    Exit;
+  if AEnableCustomSerializers and AParams.EnableCustomSerializers and SerializeCustom(AResult, AValue, APropField, AParams) then
+    Exit;
   // Standard serialization by TypeKind
   case AValue.Kind of
     tkInteger, tkInt64:
