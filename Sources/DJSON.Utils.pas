@@ -153,6 +153,11 @@ begin
     ncUpperCase: Result := UpperCase(ARttiMember.Name);
     ncLowerCase: Result := LowerCase(ARttiMember.Name);
   end;
+  // If SerializationType is by Fields then remove the first character if "F"
+  if (AParams.SerializationType = TdjSerializationType.stFields)
+  and (Result.StartsWith('F') or Result.StartsWith('f'))
+  then
+    Result := Result.Substring(1);
 end;
 
 class procedure TdjUtils.GetTypeNameIfEmpty(

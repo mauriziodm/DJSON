@@ -521,7 +521,10 @@ begin
     if (AJSONReader.TokenType <> TJSONToken.PropertyName) then
       raise EdjEngineError.Create('DeserializeObject: PropertyName token type expected.');
     // Get the current prop/field name
-    LPropFieldKey := AJSONReader.Value.AsString;
+    case AParams.SerializationType of
+      TdjSerializationType.stProperties: LPropFieldKey := AJSONReader.Value.AsString;
+      TdjSerializationType.stFields: LPropFieldKey := 'F' + AJSONReader.Value.AsString;
+    end;
     AJSONReader.Read;
     // Get the PropField by Key
 { TODO : Ottimizzazione: ho provato sulla richiesta nome chiave ma il risultato era nullo }
