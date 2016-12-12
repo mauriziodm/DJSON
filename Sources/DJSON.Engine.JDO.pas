@@ -69,7 +69,7 @@ type
     class procedure SerializeStream(const AResult:PJsonDataValue; const AStream: TObject; const APropField: TRttiNamedObject); static;
     class function SerializeCustom(const AResult:PJsonDataValue; AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
     // Deserializers
-    class function DeserializePropField(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
+    class function DeserializePropField(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: Tvalue; const AParams: IdjParams): TValue; static;
     class function DeserializeFloat(const AJSONValue: PJsonDataValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeEnumeration(const AJSONValue: PJsonDataValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeRecord(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
@@ -85,7 +85,7 @@ type
     class function DeserializeCustom(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams; out ResultValue:TValue): Boolean; static;
   public
     class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; override;
-    class function Deserialize(const AJSONText:String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; override;
+    class function Deserialize(const AJSONText:String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; override;
   end;
 
 implementation
@@ -98,7 +98,7 @@ uses
 
 class function TdjEngineJDO.Deserialize(const AJSONText: String;
   const AValueType: TRttiType; const APropField: TRttiNamedObject;
-  const AMasterObj: TObject; const AParams: IdjParams): TValue;
+  const AMaster: TValue; const AParams: IdjParams): TValue;
 var
   LTmpJSONArray: TJsonArray;
   LJSONValue: PJsonDataValue;
@@ -109,7 +109,7 @@ begin
   LTmpJSONArray := TJSONArray(TJSONArray.Parse(   '['+AJSONText+']'   ));
   try
     LJSONValue   := LTmpJSONArray.Items[0];
-    Result := DeserializePropField(LJSONValue, AValueType, APropField, AMasterObj, AParams);
+    Result := DeserializePropField(LJSONValue, AValueType, APropField, AMaster, AParams);
   finally
     LTmpJSONArray.Free;
   end;
@@ -440,7 +440,7 @@ begin
 end;
 
 class function TdjEngineJDO.DeserializePropField(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
-  const AMasterObj: TObject; const AParams: IdjParams): TValue;
+  const AMaster: TValue; const AParams: IdjParams): TValue;
 var
   LValueQualifiedTypeName: String;
   LValueType: TRttiType;
@@ -478,7 +478,7 @@ begin
   // ---------------------------------------------------------------------------
   // If a custom serializer exists for the current type then use it
   if  AParams.EnableCustomSerializers
-  and DeserializeCustom(AJSONValue, LValueType, APropField, AMasterObj, AParams, Result)
+  and DeserializeCustom(AJSONValue, LValueType, APropField, AMaster.AsObject, AParams, Result)
   then
     Exit;
   // Deserialize by TypeKind
@@ -498,7 +498,7 @@ begin
         AJSONValue,
         LValueType,
         APropField,
-        AMasterObj,
+        AMaster.AsObject,
         AParams
         );
     tkInterface:
@@ -506,7 +506,7 @@ begin
         AJSONValue,
         LValueType,
         APropField,
-        AMasterObj,
+        AMaster.AsObject,
         AParams
         );
   end;

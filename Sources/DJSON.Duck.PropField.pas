@@ -61,6 +61,7 @@ type
     class function IsWritable(const ARttiType: TRttiNamedObject): Boolean; static;
     class function QualifiedName(const ARttiType: TRttiNamedObject): String; static;
     class function TypeKind(const ARttiType: TRttiNamedObject): TTypeKind; static;
+    class function IsNotAnArray(const ARttiType: TRttiNamedObject): Boolean; static;
   end;
 
 implementation
@@ -92,6 +93,15 @@ begin
   else
       raise EdsonDuckException.CreateFmt('Invalid prop/field type $s', [ARttiType.Name]);
   end;
+end;
+
+class function TdjDuckPropField.IsNotAnArray(
+  const ARttiType: TRttiNamedObject): Boolean;
+var
+  LTypeKind: TTypeKind;
+begin
+  LTypeKind := RttiType(ARttiType).TypeKind;
+  Result := (LTypeKind <> tkArray) and (LTypeKind <> tkDynArray);
 end;
 
 class function TdjDuckPropField.IsValidPropField(

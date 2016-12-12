@@ -68,7 +68,7 @@ type
     class procedure SerializeStream(const AJSONWriter: TJSONWriter; const AStream: TObject; const APropField: TRttiNamedObject); static;
     class function SerializeCustom(const AJSONWriter: TJSONWriter; AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
     // Deserializers
-    class function DeserializePropField(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
+    class function DeserializePropField(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
     class function DeserializeFloat(const AJSONReader: TJSONReader; const AValueType: TRttiType): TValue; static;
     class function DeserializeEnumeration(const AJSONReader: TJSONReader; const AValueType: TRttiType): TValue; static;
     class function DeserializeRecord(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
@@ -87,7 +87,7 @@ type
     class function CheckForEndObjectCharIfTypeAnnotations(const AJSONReader: TJSONReader; const AParams: IdjParams): Boolean;
   public
     class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; override;
-    class function Deserialize(const AJSONText:String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; override;
+    class function Deserialize(const AJSONText:String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; override;
   end;
 
 implementation
@@ -117,7 +117,7 @@ end;
 
 class function TdjEngineStream.Deserialize(const AJSONText: String;
   const AValueType: TRttiType; const APropField: TRttiNamedObject;
-  const AMasterObj: TObject; const AParams: IdjParams): TValue;
+  const AMaster: TValue; const AParams: IdjParams): TValue;
 var
   LStringReader: TStringReader;
   LJSONReader: TJSONTextReader;
@@ -127,7 +127,7 @@ begin
   LJSONReader := TJsonTextReader.Create(LStringReader);
   try
     if LJSONReader.Read then
-      Result := DeserializePropField(LJSONReader, AValueType, APropField, AMasterObj, AParams);
+      Result := DeserializePropField(LJSONReader, AValueType, APropField, AMaster, AParams);
   finally
     LJSONReader.Free;
     LStringReader.Free;
@@ -548,7 +548,7 @@ end;
 
 class function TdjEngineStream.DeserializePropField(
   const AJSONReader: TJSONReader; const AValueType: TRttiType;
-  const APropField: TRttiNamedObject; const AMasterObj: TObject;
+  const APropField: TRttiNamedObject; const AMaster: TValue;
   const AParams: IdjParams): TValue;
 var
   LValueQualifiedTypeName: String;
@@ -588,7 +588,7 @@ begin
   // ---------------------------------------------------------------------------
   // If a custom serializer exists for the current type then use it
   if  AParams.EnableCustomSerializers
-  and DeserializeCustom(AJSONReader, LValueType, APropField, AMasterObj, AParams, Result)
+  and DeserializeCustom(AJSONReader, LValueType, APropField, AMaster.AsObject, AParams, Result)
   then
     Exit;
   // Deserialize by TypeKind
@@ -608,7 +608,7 @@ begin
         AJSONReader,
         LValueType,
         APropField,
-        AMasterObj,
+        AMaster.AsObject,
         AParams
         );
     tkInterface:
@@ -616,7 +616,7 @@ begin
         AJSONReader,
         LValueType,
         APropField,
-        AMasterObj,
+        AMaster.AsObject,
         AParams
         );
   end;

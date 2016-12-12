@@ -60,6 +60,7 @@ type
     class function SerializeInteger(const AValue: TValue): TJSONValue; static;
     class function SerializeString(const AValue: TValue): TJSONValue; static;
     class function SerializeRecord(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue; static;
+    class function SerializeArray(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONArray; static;
     class function SerializeClass(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue; static;
     class function SerializeInterface(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue; static;
     class function SerializeObject(const AObject: TObject; const AParams: IdjParams): TJSONBox; overload; static;
@@ -71,12 +72,13 @@ type
     class procedure SerializeStream(const AStream: TObject; const APropField: TRttiNamedObject; out ResultJSONValue:TJSONValue); static;
     class function SerializeCustom(AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; out ResultJSONValue:TJSONValue): Boolean; static;
     // Deserializers
-    class function DeserializePropField(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
+    class function DeserializePropField(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
     class function DeserializeFloat(const AJSONValue: TJSONValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeEnumeration(const AJSONValue: TJSONValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeInteger(const AJSONValue: TJSONValue): TValue; static;
     class function DeserializeString(const AJSONValue: TJSONValue): TValue; static;
     class function DeserializeRecord(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
+    class procedure DeserializeArray(const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams); static;
     class procedure DeserializeClassCommon(var AChildObj: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class function DeserializeClass(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class function DeserializeInterface(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; AMasterObj: TObject; const AParams: IdjParams): TValue; static;
@@ -86,10 +88,10 @@ type
     class procedure DeserializeDictionary(const ADuckDictionary: IdjDuckDictionary; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class procedure DeserializeStreamableObject(const ADuckStreamable:IdjDuckStreamable; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject); static;
     class procedure DeserializeStream(AStream: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject); static;
-    class function DeserializeCustom(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams; out ResultValue:TValue): Boolean; static;
+    class function DeserializeCustom(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams; out ResultValue:TValue): Boolean; static;
   public
     class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; override;
-    class function Deserialize(const AJSONText: String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; override;
+    class function Deserialize(const AJSONText: String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; override;
   end;
 
 implementation
@@ -102,7 +104,7 @@ uses
 
 class function TdjEngineDOM.Deserialize(const AJSONText: String;
   const AValueType: TRttiType; const APropField: TRttiNamedObject;
-  const AMasterObj: TObject; const AParams: IdjParams): TValue;
+  const AMaster: TValue; const AParams: IdjParams): TValue;
 var
   LJSONValue: TJSONValue;
 begin
@@ -110,10 +112,93 @@ begin
   if not Assigned(LJSONValue) then
     raise EdjEngineError.Create('Wrong JSON text.');
   try
-    Result := DeserializePropField(LJSONValue, AValueType, APropField, AMasterObj, AParams);
+    Result := DeserializePropField(LJSONValue, AValueType, APropField, AMaster, AParams);
   finally
     LJSONValue.Free;
   end;
+end;
+
+class procedure TdjEngineDOM.DeserializeArray(const AJSONValue: TJSONValue;
+  const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams);
+var
+  LValueQualifiedTypeName: String;
+  LJSONValue, LValueJSONValue: TJSONValue;
+  LJSONArray: TJSONArray;
+  LValueRTTIType: TRttiType;
+  I: Integer;
+  LValue: TValue;
+  PArray: Pointer;
+  LArrayLen: Longint;
+  LMaster: TValue;
+begin
+  // Checks
+  if (not Assigned(AJSONValue))
+  or (AJSONValue is TJSONNull)
+  then
+    Exit;
+  // Defaults
+  LValueRTTIType          := nil;
+  LValueQualifiedTypeName := '';
+  // If the Property/Field is valid then try to get the value (Object) from the
+  //  master object else the MasterObject itself is the destination of the deserialization
+  LMaster := nil;
+  if (not AMaster.IsEmpty)
+  and AMaster.IsObject
+  and TdjDuckPropField.IsValidPropField(APropField) then
+    LMaster := TdjDuckPropField.GetValue(AMaster.AsObject, APropField)
+  else
+    LMaster := AMaster;
+  // If TypeAnnotations is true then get the "items" JSONArray containing che containing the list items
+  //  else AJSONValue is the JSONArray containing che containing the list items
+{
+  if AParams.TypeAnnotations then
+  begin
+    if not (AJSONValue is TJSONObject) then
+      raise EdjEngineError.Create('Wrong serialization for the array.');
+    // Get the value type name
+    LJSONValue := TJSONObject(AJSONValue).GetValue(DJ_VALUE);
+    if Assigned(LJSONValue) then
+      LValueQualifiedTypeName := LJSONValue.Value;
+    // Get the items array
+    LJSONValue := TJSONObject(AJSONValue).Get('items').JsonValue;
+  end
+  else
+}
+    LJSONValue := AJSONValue;
+  // Check and extract the JSONArray
+  if not (LJSONValue is TJSONArray) then
+    raise EdjEngineError.Create('Cannot restore the list because the related JSONValue is not an array');
+  LJSONArray := TJSONArray(LJSONValue);
+  // Get values RttiType, if the RttiType is not found then check for
+  //  "djItemsType" attribute or from PARAMS
+  TdjUtils.GetItemsTypeNameIfEmpty(APropField, AParams, LValueQualifiedTypeName);
+  LValueRTTIType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
+  if (not Assigned(LValueRTTIType)) and (LJSONArray.Count > 0) then
+    raise EdjEngineError.Create('Value type not found deserializing an array');
+  // If it is a dynamic array set the length
+  if LMaster.Kind = tkDynArray then
+  begin
+    PArray := LMaster.GetReferenceToRawData;
+    LArrayLen := LJSONArray.Count;
+    DynArraySetLength(PPointer(PArray)^, LMaster.TypeInfo, 1, @LArrayLen);  // Monodimensional array only (1)
+  end;
+  // Loop
+  for I := 0 to LJSONArray.Count - 1 do
+  begin
+    // Extract the current element
+    LValueJSONValue := LJSONArray.Get(I);
+    // Deserialize the current element
+    LValue := DeserializePropField(LValueJSONValue, LValueRttiType, APropField, nil, AParams);
+    // Add to the array
+    LMaster.SetArrayElement(I, LValue);
+  end;
+  // Siccome LMaster in realtà contiene una copia dell'array originario è
+  //  necessario sostituirlo all'originale stesso.
+  //  NB: Sicuramente perchè gli array si assegnano per valore e non per riferimento.
+  if (not AMaster.IsEmpty)
+  and AMaster.IsObject
+  and TdjDuckPropField.IsValidPropField(APropField) then
+    TdjDuckPropField.SetValue(AMaster.AsObject, APropField, LMaster);
 end;
 
 class function TdjEngineDOM.DeserializeClass(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
@@ -179,7 +264,7 @@ end;
 
 class function TdjEngineDOM.DeserializeCustom(const AJSONValue: TJSONValue;
   const AValueType: TRttiType; const APropField: TRttiNamedObject;
-  const AMasterObj: TObject; const AParams: IdjParams;
+  const AMaster: TValue; const AParams: IdjParams;
   out ResultValue: TValue): Boolean;
 var
   LSerializer: TdjDOMCustomSerializerRef;
@@ -193,12 +278,15 @@ begin
   LSerializer := nil;
   LExistingValue := nil;
   // If the Property/Field is valid then try to get the value (Object) from the
-  //  master object else the MasterObject itself is the destination of the deserialization
-  if Assigned(AMasterObj) then
-    if TdjDuckPropField.IsValidPropField(APropField) then
-      LExistingValue := TdjDuckPropField.GetValue(AMasterObj, APropField)
+  //  master object else the MasterObject (or the array) itself is the destination
+  //  of the deserialization
+  if not AMaster.IsEmpty then
+  begin
+    if AMaster.IsObject and TdjDuckPropField.IsValidPropField(APropField) then
+      LExistingValue := TdjDuckPropField.GetValue(AMaster.AsObject, APropField)
     else
-      TValue.Make(@AMasterObj, AMasterObj.ClassInfo, LExistingValue);
+      LExistingValue := AMaster;
+  end;
   // If the Value is an Interface type then convert it to real object class
   //  type implementing the interface
   if (AValueType.TypeKind = tkInterface) and not LExistingValue.IsEmpty then
@@ -461,7 +549,7 @@ begin
     raise EdjEngineError.Create('Cannot restore the list because the related JSONValue is not an array');
   LJSONArray := TJSONArray(LJSONValue);
   // Get values RttiType, if the RttiType is not found then check for
-  //  "MapperItemsClassType"  or "MapperItemsType" attribute or from PARAMS
+  //  "djItemsType" attribute or from PARAMS
   TdjUtils.GetItemsTypeNameIfEmpty(APropField, AParams, LValueQualifiedTypeName);
   LValueRTTIType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
   if (not Assigned(LValueRTTIType)) and (LJSONArray.Count > 0) then
@@ -479,7 +567,7 @@ begin
 end;
 
 class function TdjEngineDOM.DeserializePropField(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
-  const AMasterObj: TObject; const AParams: IdjParams): TValue;
+  const AMaster: TValue; const AParams: IdjParams): TValue;
 var
   LJSONValue: TJSONValue;
   LValueQualifiedTypeName: String;
@@ -509,6 +597,7 @@ begin
     // Se ancora non è stato determinato il ValueType prova anche a vedere se  stato specificato
     //  l'attributo dsonTypeAttribute
     if LValueQualifiedTypeName.IsEmpty and Assigned(APropField)
+    and TdjDuckPropField.IsNotAnArray(APropField)  // Evita gli array altrimenti da un errore la condizione successiva perchà il qualified degli array non va bene
     and (TdjDuckPropField.QualifiedName(APropField) = AValueType.QualifiedName)  // Questo per evitare che nel caso delle liste anche le items vedano l'attributo dsonTypeAttribute della proprietà a cui ri riferisce la lista stessa
     and TdjRTTI.HasAttribute<djTypeAttribute>(APropField, LdsonTypeAttribute)
     then
@@ -522,7 +611,7 @@ begin
   // ---------------------------------------------------------------------------
   // If a custom serializer exists for the current type then use it
   if  AParams.EnableCustomSerializers
-  and DeserializeCustom(AJSONValue, LValueType, APropField, AMasterObj, AParams, Result)
+  and DeserializeCustom(AJSONValue, LValueType, APropField, AMaster, AParams, Result)
   then
     Exit;
   // Deserialize by TypeKind
@@ -542,7 +631,7 @@ begin
         AJSONValue,
         LValueType,
         APropField,
-        AMasterObj,
+        AMaster.AsObject,
         AParams
         );
     tkInterface:
@@ -550,9 +639,11 @@ begin
         AJSONValue,
         LValueType,
         APropField,
-        AMasterObj,
+        AMaster.AsObject,
         AParams
         );
+    tkArray, tkDynArray:
+      DeserializeArray(AJSONValue, APropField, AMaster, AParams);
   end;
 end;
 
@@ -854,6 +945,20 @@ begin
   end;
 end;
 
+class function TdjEngineDOM.SerializeArray(const AValue: TValue;
+  const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONArray;
+var
+  LIndex: Integer;
+begin
+  Result := TJSONArray.Create;
+  for LIndex := 0 to AValue.GetArrayLength - 1 do
+  begin
+    (Result as TJSONArray).AddElement(
+      SerializePropField(AValue.GetArrayElement(LIndex), APropField, AParams)
+    );
+  end;
+end;
+
 class function TdjEngineDOM.SerializeClass(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue;
 var
   AChildObj: TObject;
@@ -1113,6 +1218,8 @@ begin
       Result := SerializeClass(AValue, APropField, AParams);
     tkInterface:
       Result := SerializeInterface(AValue, APropField, AParams);
+    tkArray, tkDynArray:
+      Result := SerializeArray(AValue, APropField, AParams);
   end;
 end;
 
