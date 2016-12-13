@@ -63,9 +63,13 @@ type
     class function CreateObject(AQualifiedClassName: string): TObject; overload; static;
     class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject): boolean; overload;
     class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject; out AAttribute: T): boolean; overload; static;
+    class function GetItemsQualifiedTypeNameFromArrayTypeInfo(const ATypeInfo:PTypeInfo): String; static;
   end;
 
 implementation
+
+uses
+  DJSON.Exceptions;
 
 class function TdjRTTI.CreateObject(ARttiType: TRttiType): TObject;
 var
@@ -102,6 +106,22 @@ begin
     Result := CreateObject(rttitype)
   else
     raise Exception.Create('Cannot find RTTI for ' + AQualifiedClassName);
+end;
+
+class function TdjRTTI.GetItemsQualifiedTypeNameFromArrayTypeInfo(
+  const ATypeInfo: PTypeInfo): String;
+var
+  LType: TRttiType;
+begin
+  // Get RttiType
+  LType := Ctx.GetType(ATypeInfo);
+  // If it is a dynamic or static array...
+  if LType is TRttiDynamicArrayType then
+    Result := TRttiDynamicArrayType(LType).ElementType.QualifiedName
+  else if LType is TRttiArrayType then
+    Result := TRttiArrayType(LType).ElementType.QualifiedName
+  else
+    raise EdjException.Create('TdjRTTI.GetItemsQualifiedTypeNameFromArrayTypeInfo: It is not an array.');
 end;
 
 class procedure TdjRTTI.Initialize;

@@ -64,6 +64,8 @@ type
     class function From(const AValue:TValue; const AParams:IdjParams=nil): TdjValueDestination; overload;
     class function From(const AObject:TObject; const AParams:IdjParams=nil): TdjValueDestination; overload;
     class function From(const AInterface:IInterface; const AParams:IdjParams=nil): TdjValueDestination; overload;
+    class function From(const APointer: Pointer; const ATypeInfo: PTypeInfo; const AParams:IdjParams=nil): TdjValueDestination; overload;
+    class function From<T>(const APointer: Pointer; const AParams:IdjParams=nil): TdjValueDestination; overload;
     class function FromJson(const AJSONText:String; const AParams:IdjParams=nil): TdjJSONDestination;
     class function FromBson(const ABytesStream:TStream; const AParams:IdjParams=nil): TdjBSONDestination; overload;
     class function FromBson(const ABytes:TBytes; const AParams:IdjParams=nil): TdjBSONDestination; overload;
@@ -120,7 +122,7 @@ type
   public
     constructor Create(const AJSONText:String; const AParams:IdjParams);
     // Destinations
-    function ToValue(const ATypeValue:PTypeInfo): TValue; virtual;
+    function ToValue(const ATypeInfo:PTypeInfo): TValue; virtual;
     function ToObject: TObject; virtual;
     function &To<T>: T; overload;
     procedure &To(const AObject: TObject); overload;
@@ -239,6 +241,21 @@ begin
   Result := TdjJSONDestination.Create(AJSONText, AParams);
 end;
 
+class function dj.From(const APointer: Pointer;
+  const ATypeInfo: PTypeInfo; const AParams:IdjParams): TdjValueDestination;
+var
+  LValue: TValue;
+begin
+  TValue.Make(APointer, ATypeInfo, LValue);
+  Result := Self.From(LValue, AParams);
+end;
+
+class function dj.From<T>(const APointer: Pointer;
+  const AParams: IdjParams): TdjValueDestination;
+begin
+  Result := Self.From(APointer, TypeInfo(T), AParams);
+end;
+
 { TdjJSONDestination }
 
 procedure TdjJSONDestination.&To(const AObject: TObject);
@@ -280,13 +297,15 @@ begin
     FParams := dj.Default;
 end;
 
-function TdjJSONDestination.ToValue(const ATypeValue: PTypeInfo): TValue;
+function TdjJSONDestination.ToValue(const ATypeInfo: PTypeInfo): TValue;
 var
   LRttiType: TRttiType;
+  LMaster: TValue;
 begin
   try
-    LRttiType := TdjRTTI.TypeInfoToRttiType(ATypeValue);
-    Result := FParams.GetEngineClass.Deserialize(FJSONText, LRttiType, nil, nil, FParams);
+    LRttiType := TdjRTTI.TypeInfoToRttiType(ATypeInfo);
+    TValue.Make(nil, ATypeInfo, LMaster);
+    Result := FParams.GetEngineClass.Deserialize(FJSONText, LRttiType, nil, LMaster, FParams);
   finally
     Self.Free;
   end;

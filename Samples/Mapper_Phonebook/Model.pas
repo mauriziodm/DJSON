@@ -32,7 +32,6 @@ type
   private
     FID: Integer;
     FDescrizione: String;
-    [djItemsType(TNumTel)]  // Not needed if "TypeAnnnotations" = True or "ItemsType" is specified
     FNumTel: TObjectList<TNumTel>;
     function GetDescrizione: String;
     function GetID: Integer;
@@ -45,7 +44,6 @@ type
     destructor Destroy; override;
     property ID:Integer read GetID write SetID;
     property Descrizione:String read GetDescrizione write SetDescrizione;
-    [djItemsType(TNumTel)]  // Not needed if "TypeAnnnotations" = True or "ItemsType" is specified
     property NumTel:TObjectList<TNumTel> read GetNumTel;
   end;
 

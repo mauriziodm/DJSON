@@ -45,7 +45,7 @@ unit DJSON.Duck.List;
 interface
 
 uses
-  DJSON.Duck.Interfaces, System.Rtti;
+  DJSON.Duck.Interfaces, System.Rtti, System.TypInfo;
 
 type
 
@@ -70,7 +70,9 @@ type
     function Count: Integer;
     function GetItem(Index: Integer): TObject;
     function GetItemValue(const index: Integer): TValue;
-    function GetGenericTypeName: String;
+    function GetItemTypeName: String;
+    function GetItemQualifiedTypeName: String;
+    function GetItemTypeInfo: PTypeInfo;
     function GetEnumerator: IEnumerator;
     function DuckObjQualifiedName: String;
     property OwnsObjects:Boolean read GetOwnsObjects write SetOwnsObjects;
@@ -91,7 +93,7 @@ type
 implementation
 
 uses
-  DJSON.Utils.RTTI, DJSON.Exceptions, System.TypInfo,
+  DJSON.Utils.RTTI, DJSON.Exceptions,
   System.Generics.Collections;
 
 { TdjDuckList }
@@ -154,15 +156,25 @@ begin
   end;
 end;
 
+function TdjDuckList.GetItemQualifiedTypeName: String;
+begin
+  Result := TdjRTTI.TypeInfoToQualifiedTypeName(Self.GetItemTypeInfo);
+end;
+
 function TdjDuckList.GetItemValue(const index: Integer): TValue;
 begin
 { TODO : Possibile ottimizzazione se si trova il modo di richiamare il metodo Add più direttamente (noR RTTI) }
   Result := FGetItemMethod.Invoke(FObjAsDuck, [index]);
 end;
 
-function TdjDuckList.GetGenericTypeName: String;
+function TdjDuckList.GetItemTypeInfo: PTypeInfo;
 begin
-  result := FGetItemMethod.ReturnType.ToString;
+  Result := FGetItemMethod.ReturnType.Handle;
+end;
+
+function TdjDuckList.GetItemTypeName: String;
+begin
+  Result := FGetItemMethod.ReturnType.ToString;
 end;
 
 function TdjDuckList.GetOwnsObjects: Boolean;

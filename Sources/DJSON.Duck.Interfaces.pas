@@ -45,7 +45,7 @@ unit DJSON.Duck.Interfaces;
 interface
 
 uses
-  System.Classes, System.Rtti;
+  System.Classes, System.Rtti, System.TypInfo;
 
 type
 
@@ -68,7 +68,9 @@ type
     function GetEnumerator: IEnumerator;
     function GetItem(Index: Integer): TObject;
     function GetItemValue(const index: Integer): TValue;
-    function GetGenericTypeName: String;
+    function GetItemTypeName: String;
+    function GetItemQualifiedTypeName: String;
+    function GetItemTypeInfo: PTypeInfo;
     function DuckObjQualifiedName: String;
     // OwnsObjects property
     procedure SetOwnsObjects(AValue:Boolean);
@@ -85,6 +87,12 @@ type
     function DuckObjQualifiedName: String;
     procedure Add(const AKey, AValue: TValue);
     procedure SetObject(const AObj:TObject);
+    function GetKeyTypeInfo: PTypeInfo;
+    function GetKeyTypeName: String;
+    function GetKeyQualifiedTypeName: String;
+    function GetValueTypeInfo: PTypeInfo;
+    function GetValueTypeName: String;
+    function GetValueQualifiedTypeName: String;
   end;
 
 implementation

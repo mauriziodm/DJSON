@@ -189,12 +189,7 @@ var
   LParams: IdjParams;
 begin
   LParams := BuildMapperParams;
-  // ---------------------
-  if LParams.TypeAnnotations then
-    LPersonList := dj.FromJSON(Memo1.Lines.Text, LParams).&To<TObjectList<TPerson>>
-  else
-    LPersonList := dj.FromJSON(Memo1.Lines.Text, LParams).ItemsOfType<TPerson>.&To<TObjectList<TPerson>>;
-  // ---------------------
+  LPersonList := dj.FromJSON(Memo1.Lines.Text, LParams).&To<TObjectList<TPerson>>;
   try
     LPersonList.OwnsObjects := True;
     ShowListData(LPersonList);

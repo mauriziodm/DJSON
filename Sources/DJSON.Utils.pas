@@ -45,7 +45,7 @@ unit DJSON.Utils;
 interface
 
 uses
-  System.Rtti, DJSON.Params, System.SysUtils;
+  System.Rtti, DJSON.Params, System.SysUtils, DJSON.Duck.PropField;
 
 type
 
@@ -70,7 +70,7 @@ type
 implementation
 
 uses
-  DJSON.Attributes, DJSON.Utils.RTTI, DJSON.Duck.PropField,
+  DJSON.Attributes, DJSON.Utils.RTTI,
   System.DateUtils;
 
 { TdjUtils }
@@ -103,34 +103,40 @@ class procedure TdjUtils.GetItemsTypeNameIfEmpty(
   const APropField: TRttiNamedObject; const AParams: IdjParams;
   var AKeyTypeName, AValueTypeName: String);
 var
-  LdsonItemsTypeAttribute: djItemsTypeAttribute;
+  LdjsonItemsTypeAttribute: djItemsTypeAttribute;
 begin
   // init
-  LdsonItemsTypeAttribute := nil;
+  LdjsonItemsTypeAttribute := nil;
   // Only if needed
-  if (not AKeyTypeName.IsEmpty) and (not AValueTypeName.IsEmpty) then
+  if not (AKeyTypeName.IsEmpty or AValueTypeName.IsEmpty) then
     Exit;
   // Get the attribute if exists (On the property or in the RttiType)
-  if not TdjRTTI.HasAttribute<djItemsTypeAttribute>(APropField, LdsonItemsTypeAttribute) then
-    TdjRTTI.HasAttribute<djItemsTypeAttribute>(TdjDuckPropField.RttiType(APropField), LdsonItemsTypeAttribute);
+  if not TdjRTTI.HasAttribute<djItemsTypeAttribute>(APropField, LdjsonItemsTypeAttribute) then
+    TdjRTTI.HasAttribute<djItemsTypeAttribute>(TdjDuckPropField.RttiType(APropField), LdjsonItemsTypeAttribute);
   // If the KeyType received as parameter is empty then get the type from
   //  the attribute and if also the attribute key type name is empty then
   //  get the default specified in the params
+  //  NB: Solo se APropField non è assegnato (lista deserializzata direttamente e non come
+  //       proprietà di un oggetto) e se non ha trovato ancora il tipo allora ritorna
+  //       il tipo specificato nell'oggetto dei prametri.
   if AKeyTypeName.IsEmpty then
   begin
-    if Assigned(LdsonItemsTypeAttribute) and not LdsonItemsTypeAttribute.KeyQualifiedName.IsEmpty then
-      AKeyTypeName := LdsonItemsTypeAttribute.KeyQualifiedName
-    else
+    if Assigned(LdjsonItemsTypeAttribute) and not LdjsonItemsTypeAttribute.KeyQualifiedName.IsEmpty then
+      AKeyTypeName := LdjsonItemsTypeAttribute.KeyQualifiedName
+    else if not TdjDuckPropField.IsValidPropField(APropField) then
       AKeyTypeName := AParams.ItemsKeyDefaultQualifiedName;
   end;
   // If the ValueType received as parameter is empty then get the type from
   //  the attribute and if also the attribute value type name is empty then
   //  get the default specified in the params
+  //  NB: Solo se APropField non è assegnato (lista deserializzata direttamente e non come
+  //       proprietà di un oggetto) e se non ha trovato ancora il tipo allora ritorna
+  //       il tipo specificato nell'oggetto dei prametri.
   if AValueTypeName.IsEmpty then
   begin
-    if Assigned(LdsonItemsTypeAttribute) and not LdsonItemsTypeAttribute.ValueQualifiedName.IsEmpty then
-      AValueTypeName := LdsonItemsTypeAttribute.ValueQualifiedName
-    else
+    if Assigned(LdjsonItemsTypeAttribute) and not LdjsonItemsTypeAttribute.ValueQualifiedName.IsEmpty then
+      AValueTypeName := LdjsonItemsTypeAttribute.ValueQualifiedName
+    else if not TdjDuckPropField.IsValidPropField(APropField) then
       AValueTypeName := AParams.ItemsValueDefaultQualifiedName;
   end;
 end;

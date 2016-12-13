@@ -45,7 +45,7 @@ unit DJSON.Duck.Dictionary;
 interface
 
 uses
-  System.Rtti, DJSON.Duck.Interfaces;
+  System.Rtti, DJSON.Duck.Interfaces, System.TypInfo;
 
 type
 
@@ -82,6 +82,12 @@ type
     function MoveNext: Boolean;
     function Count: Integer;
     function DuckObjQualifiedName: String;
+    function GetKeyTypeInfo: PTypeInfo;
+    function GetKeyTypeName: String;
+    function GetKeyQualifiedTypeName: String;
+    function GetValueTypeInfo: PTypeInfo;
+    function GetValueTypeName: String;
+    function GetValueQualifiedTypeName: String;
   end;
 
 implementation
@@ -136,6 +142,44 @@ end;
 function TdjDuckDictionary.GetCurrentValue: TValue;
 begin
   Result := FValuesEnumerator.Current;
+end;
+
+function TdjDuckDictionary.GetKeyQualifiedTypeName: String;
+begin
+  Result := TdjRTTI.TypeInfoToQualifiedTypeName(Self.GetKeyTypeInfo);
+end;
+
+function TdjDuckDictionary.GetKeyTypeInfo: PTypeInfo;
+begin
+  // Get the parameters array of the "Add" method
+  // NB: The "Add" method of a TDictionary has 2 parameters,
+  //      The first parameter (Index=0) is the "Key" parameters
+  //      The second parameter (Index=1) is the "Value" parameters
+  Result := FAddMethod.GetParameters[0].ParamType.Handle;
+end;
+
+function TdjDuckDictionary.GetKeyTypeName: String;
+begin
+  Result := Self.GetKeyTypeInfo.Name;
+end;
+
+function TdjDuckDictionary.GetValueQualifiedTypeName: String;
+begin
+  Result := TdjRTTI.TypeInfoToQualifiedTypeName(Self.GetValueTypeInfo);
+end;
+
+function TdjDuckDictionary.GetValueTypeInfo: PTypeInfo;
+begin
+  // Get the parameters array of the "Add" method
+  // NB: The "Add" method of a TDictionary has 2 parameters,
+  //      The first parameter (Index=0) is the "Key" parameters
+  //      The second parameter (Index=1) is the "Value" parameters
+  Result := FAddMethod.GetParameters[1].ParamType.Handle;
+end;
+
+function TdjDuckDictionary.GetValueTypeName: String;
+begin
+  Result := Self.GetValueTypeInfo.Name;
 end;
 
 function TdjDuckDictionary.MoveNext: Boolean;

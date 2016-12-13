@@ -78,7 +78,7 @@ type
     class function DeserializeInteger(const AJSONValue: TJSONValue): TValue; static;
     class function DeserializeString(const AJSONValue: TJSONValue): TValue; static;
     class function DeserializeRecord(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
-    class procedure DeserializeArray(const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams); static;
+    class function DeserializeArray(const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
     class procedure DeserializeClassCommon(var AChildObj: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class function DeserializeClass(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class function DeserializeInterface(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; AMasterObj: TObject; const AParams: IdjParams): TValue; static;
@@ -118,8 +118,8 @@ begin
   end;
 end;
 
-class procedure TdjEngineDOM.DeserializeArray(const AJSONValue: TJSONValue;
-  const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams);
+class function TdjEngineDOM.DeserializeArray(const AJSONValue: TJSONValue;
+  const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue;
 var
   LValueQualifiedTypeName: String;
   LJSONValue, LValueJSONValue: TJSONValue;
@@ -129,7 +129,6 @@ var
   LValue: TValue;
   PArray: Pointer;
   LArrayLen: Longint;
-  LMaster: TValue;
 begin
   // Checks
   if (not Assigned(AJSONValue))
@@ -141,13 +140,13 @@ begin
   LValueQualifiedTypeName := '';
   // If the Property/Field is valid then try to get the value (Object) from the
   //  master object else the MasterObject itself is the destination of the deserialization
-  LMaster := nil;
+  Result := nil;
   if (not AMaster.IsEmpty)
   and AMaster.IsObject
   and TdjDuckPropField.IsValidPropField(APropField) then
-    LMaster := TdjDuckPropField.GetValue(AMaster.AsObject, APropField)
+    Result := TdjDuckPropField.GetValue(AMaster.AsObject, APropField)
   else
-    LMaster := AMaster;
+    Result := AMaster;
   // If TypeAnnotations is true then get the "items" JSONArray containing che containing the list items
   //  else AJSONValue is the JSONArray containing che containing the list items
 {
@@ -170,17 +169,24 @@ begin
     raise EdjEngineError.Create('Cannot restore the list because the related JSONValue is not an array');
   LJSONArray := TJSONArray(LJSONValue);
   // Get values RttiType, if the RttiType is not found then check for
-  //  "djItemsType" attribute or from PARAMS
+  //  "djItemsType" attribute or from PARAMS, If it still has not been found
+  //  then get the type directly from the DuckTypedList
+  // ------------
   TdjUtils.GetItemsTypeNameIfEmpty(APropField, AParams, LValueQualifiedTypeName);
+
+  if LValueQualifiedTypeName.IsEmpty then
+    LValueQualifiedTypeName := TdjRTTI.GetItemsQualifiedTypeNameFromArrayTypeInfo(Result.TypeInfo);
+
   LValueRTTIType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
   if (not Assigned(LValueRTTIType)) and (LJSONArray.Count > 0) then
     raise EdjEngineError.Create('Value type not found deserializing an array');
+  // ------------
   // If it is a dynamic array set the length
-  if LMaster.Kind = tkDynArray then
+  if Result.Kind = tkDynArray then
   begin
-    PArray := LMaster.GetReferenceToRawData;
+    PArray := Result.GetReferenceToRawData;
     LArrayLen := LJSONArray.Count;
-    DynArraySetLength(PPointer(PArray)^, LMaster.TypeInfo, 1, @LArrayLen);  // Monodimensional array only (1)
+    DynArraySetLength(PPointer(PArray)^, Result.TypeInfo, 1, @LArrayLen);  // Monodimensional array only (1)
   end;
   // Loop
   for I := 0 to LJSONArray.Count - 1 do
@@ -190,15 +196,8 @@ begin
     // Deserialize the current element
     LValue := DeserializePropField(LValueJSONValue, LValueRttiType, APropField, nil, AParams);
     // Add to the array
-    LMaster.SetArrayElement(I, LValue);
+    Result.SetArrayElement(I, LValue);
   end;
-  // Siccome LMaster in realtà contiene una copia dell'array originario è
-  //  necessario sostituirlo all'originale stesso.
-  //  NB: Sicuramente perchè gli array si assegnano per valore e non per riferimento.
-  if (not AMaster.IsEmpty)
-  and AMaster.IsObject
-  and TdjDuckPropField.IsValidPropField(APropField) then
-    TdjDuckPropField.SetValue(AMaster.AsObject, APropField, LMaster);
 end;
 
 class function TdjEngineDOM.DeserializeClass(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
@@ -363,9 +362,19 @@ begin
     raise EdjEngineError.Create('Cannot restore the dictionary because the related JSONValue is not an array');
   LJSONArray := TJSONArray(LJSONValue);
   // Get values RttiType, if the RttiType is not found then check for dsonTypeAttribute
+  //  or get from the Dictionary as last chance, If it still has not been found
+  //  then get the type directly from the DuckTypedList
+  // ------------
   TdjUtils.GetItemsTypeNameIfEmpty(APropField, AParams, LKeyQualifiedTypeName, LValueQualifiedTypeName);
+
+  if LKeyQualifiedTypeName.IsEmpty then
+    LKeyQualifiedTypeName := ADuckDictionary.GetKeyQualifiedTypeName;
+  if LValueQualifiedTypeName.IsEmpty then
+    LValueQualifiedTypeName := ADuckDictionary.GetValueQualifiedTypeName;
+
   LKeyRttiType   := TdjRTTI.QualifiedTypeNameToRttiType(LKeyQualifiedTypeName);
   LValueRTTIType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
+
   if LJSONArray.Count > 0 then
   begin
     if not Assigned(LKeyRttiType) then
@@ -373,6 +382,7 @@ begin
     if not Assigned(LValueRTTIType) then
       raise EdjEngineError.Create('Value type not found deserializing a Dictionary');
   end;
+  // ------------
   // Loop
   for I := 0 to LJSONArray.Count - 1 do
   begin
@@ -549,11 +559,19 @@ begin
     raise EdjEngineError.Create('Cannot restore the list because the related JSONValue is not an array');
   LJSONArray := TJSONArray(LJSONValue);
   // Get values RttiType, if the RttiType is not found then check for
-  //  "djItemsType" attribute or from PARAMS
+  //  "djItemsType" attribute or from PARAMS, If it still has not been found
+  //  then get the type directly from the DuckTypedList
+  // ------------
   TdjUtils.GetItemsTypeNameIfEmpty(APropField, AParams, LValueQualifiedTypeName);
+
+  if LValueQualifiedTypeName.IsEmpty then
+    LValueQualifiedTypeName := ADuckList.GetItemQualifiedTypeName;
+
   LValueRTTIType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
+
   if (not Assigned(LValueRTTIType)) and (LJSONArray.Count > 0) then
     raise EdjEngineError.Create('Value type not found deserializing a List');
+  // ------------
   // Loop
   for I := 0 to LJSONArray.Count - 1 do
   begin
@@ -643,7 +661,7 @@ begin
         AParams
         );
     tkArray, tkDynArray:
-      DeserializeArray(AJSONValue, APropField, AMaster, AParams);
+      Result := DeserializeArray(AJSONValue, APropField, AMaster, AParams);
   end;
 end;
 

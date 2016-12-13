@@ -75,9 +75,10 @@ type
     FBytes: TBytes;
     function BuildMapperParams: IdjParams;
     function BuildSampleObject: TPerson;
-    function BuildSampleList: TArray<TPerson>;
+    function BuildSampleArray: TArray<TPerson>;
     procedure ShowSingleObjectData(APerson: TPerson);
-    procedure ShowListData(APersonList: TObjectList<TPerson>);
+    procedure ShowArrayData(APersons: TArray<TPerson>);
+    procedure FreeArrayData(APersons: TArray<TPerson>);
   end;
 
 var
@@ -115,7 +116,7 @@ begin
   Result.EnableCustomSerializers := CheckBoxCustomSerializers.Checked;
 end;
 
-function TMainForm.BuildSampleList: TArray<TPerson>;
+function TMainForm.BuildSampleArray: TArray<TPerson>;
 var
   NewPerson: TPerson;
 begin
@@ -130,13 +131,13 @@ begin
   NewPerson := TPerson.Create(2, 'Daniele Teti');
   NewPerson.AddNumTel(   TNumTel.Create(4, '06/1122334',  2)   );
   NewPerson.AddNumTel(   TNumTel.Create(5, '333/23456346',2)   );
-  Result[2] := NewPerson;
+  Result[1] := NewPerson;
 
   NewPerson := TPerson.Create(3, 'Omar Bossoni');
   NewPerson.AddNumTel(   TNumTel.Create(6, '02/673927',   3)   );
   NewPerson.AddNumTel(   TNumTel.Create(7, '347/3459276', 3)   );
   NewPerson.AddNumTel(   TNumTel.Create(8, '332/6714399', 3)   );
-  Result[3] := NewPerson;
+  Result[2] := NewPerson;
 end;
 
 function TMainForm.BuildSampleObject: TPerson;
@@ -153,14 +154,14 @@ var
   LParams: IdjParams;
 begin
   LParams := BuildMapperParams;
-  // ---------------------
+// ---------------------------------------------------------------------------
   if LParams.TypeAnnotations then
     LPersonList := dj.FromBson(FBytes, LParams).&To<TObjectList<TPerson>>
   else
     LPersonList := dj.FromBson(FBytes, LParams).ItemsOfType<TPerson>.&To<TObjectList<TPerson>>;
-  // ---------------------
+// ---------------------------------------------------------------------------
   try
-    ShowListData(LPersonList);
+//    ShowListData(LPersonList);
   finally
     LPersonList.OwnsObjects := True;
     LPersonList.Free;
@@ -173,7 +174,9 @@ var
   LParams: IdjParams;
 begin
   LParams := BuildMapperParams;
+// ---------------------------------------------------------------------------
   LPerson := dj.FromBson(FBytes).Params(LParams).&To<TPerson>;
+// ---------------------------------------------------------------------------
   try
     ShowSingleObjectData(LPerson);
   finally
@@ -183,24 +186,18 @@ end;
 
 procedure TMainForm.ButtonDeserializeObjectListClick(Sender: TObject);
 var
-  LPersonList: TObjectList<TPerson>;
+  LPersons: TArray<TPerson>;
   LPerson: TPerson;
   LNumtel: TNumTel;
   LParams: IdjParams;
+  LValue: TValue;
 begin
   LParams := BuildMapperParams;
-  // ---------------------
-  if LParams.TypeAnnotations then
-    LPersonList := dj.FromJSON(Memo1.Lines.Text, LParams).&To<TObjectList<TPerson>>
-  else
-    LPersonList := dj.FromJSON(Memo1.Lines.Text, LParams).ItemsOfType<TPerson>.&To<TObjectList<TPerson>>;
-  // ---------------------
-  try
-    LPersonList.OwnsObjects := True;
-    ShowListData(LPersonList);
-  finally
-    LPersonList.Free;
-  end;
+// ---------------------------------------------------------------------------
+  LPersons := dj.FromJSON(Memo1.Lines.Text, LParams).&To<TArray<TPerson>>;
+// ---------------------------------------------------------------------------
+  ShowArrayData(LPersons);
+  FreeArrayData(LPersons);
 end;
 
 procedure TMainForm.ButtonDeserializeSignleObjectClick(Sender: TObject);
@@ -209,16 +206,13 @@ var
   LParams: IdjParams;
 begin
   LParams := BuildMapperParams;
-  // ---------------------
+// ---------------------------------------------------------------------------
   LPerson := dj.FromJSON(Memo1.Lines.Text).Params(LParams).&To<TPerson>;
   // Oppure: LPerson := om.FromJSON(Memo1.Lines.Text, LParams).&To<TPerson>;
   // Oppure: LPerson := om.FromJSON(Memo1.Lines.Text).&To<TPerson>;
-  // ---------------------
-  try
-    ShowSingleObjectData(LPerson);
-  finally
-    LPerson.Free;
-  end;
+// ---------------------------------------------------------------------------
+  ShowSingleObjectData(LPerson);
+  LPerson.Free;
 end;
 
 procedure TMainForm.ButtonOtherDeserialize1Click(Sender: TObject);
@@ -227,11 +221,11 @@ var
 begin
   LPerson := TPerson.Create;
   try
-    // ---------------------
+// ---------------------------------------------------------------------------
     // Questo è il modo più semplice di utilizzare il mapper.
     // Da usare se il comportamento di default del mapper è consono alle esigenze
     dj.FromJSON(Memo1.Lines.Text).&To(LPerson);
-    // ---------------------
+// ---------------------------------------------------------------------------
     ShowSingleObjectData(LPerson);
   finally
     LPerson.Free;
@@ -244,15 +238,15 @@ var
   LPerson: TPerson;
 begin
   LPersonList := TObjectList<TPerson>.Create(True);
-  // ---------------------
+// ---------------------------------------------------------------------------
   // Utilizzo del mapper senza un oggetto "Params" ma specificando gli eventuali parametri
   //  desiderati direttamente sulla chiamata.
   //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
   //  annotazione dei tipi nel JSON attivata e disabilita gli eventuali custom serializers.
   dj.FromJSON(Memo1.Lines.Text).byFields.TypeAnnotationsON.CustomSerializersOFF.&To(LPersonList);
-  // ---------------------
+// ---------------------------------------------------------------------------
   try
-    ShowListData(LPersonList);
+//    ShowListData(LPersonList);
   finally
     LPersonList.Free;
   end;
@@ -262,7 +256,7 @@ procedure TMainForm.ButtonOtherDeserialize3Click(Sender: TObject);
 var
   LObj: TObject;
 begin
-  // ---------------------
+// ---------------------------------------------------------------------------
   // Utilizzo del mapper senza un oggetto "Params" ma specificando gli eventuali parametri
   //  desiderati direttamente sulla chiamata.
   //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
@@ -271,7 +265,7 @@ begin
   //       informazione viene presa direttamente dal JSON (TypeAnnotationsON), in questo
   //       caso il risultato ottenuto è un TObject.
   LObj := dj.FromJSON(Memo1.Lines.Text).byFields.TypeAnnotationsON.CustomSerializersOFF.ToObject;
-  // ---------------------
+// ---------------------------------------------------------------------------
   try
     ShowSingleObjectData(LObj as TPerson);
   finally
@@ -286,7 +280,9 @@ begin
   LPerson := BuildSampleObject;
   try
     Memo1.Clear;
+// ---------------------------------------------------------------------------
     Memo1.Lines.Text := dj.From(LPerson).ToJSON;
+// ---------------------------------------------------------------------------
   finally
     LPerson.Free;
   end;
@@ -294,16 +290,18 @@ end;
 
 procedure TMainForm.ButtonOtherSerialize2Click(Sender: TObject);
 var
-  LPersonList: TArray<TPerson>;
+  LPersons: TArray<TPerson>;
 begin
-  LPersonList := BuildSampleList;
-  // ---------------------
+  LPersons := BuildSampleArray;
   // Utilizzo del mapper senza un oggetto "Params" ma specificando gli eventuali parametri
   //  desiderati direttamente sulla chiamata.
   //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
   //  annotazione dei tipi nel JSON attivata e disabilita gli eventuali custom serializers.
   Memo1.Clear;
-//  Memo1.Lines.Text := dj.From(LPersonList).byFields.TypeAnnotationsON.CustomSerializersOFF.ToJSON;
+// ---------------------------------------------------------------------------
+//  Memo1.Lines.Text := dj.From(LPersons).byFields.TypeAnnotationsON.CustomSerializersOFF.ToJSON;
+// ---------------------------------------------------------------------------
+  FreeArrayData(LPersons);
 end;
 
 procedure TMainForm.ButtonOtherSerialize3Click(Sender: TObject);
@@ -317,7 +315,9 @@ begin
     //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
     //  annotazione dei tipi nel JSON attivata e disabilita gli eventuali custom serializers.
     Memo1.Clear;
+// ---------------------------------------------------------------------------
     Memo1.Lines.Text := dj.From(LPerson).byFields.TypeAnnotationsON.CustomSerializersOFF.ToJSON;
+// ---------------------------------------------------------------------------
   finally
     LPerson.Free;
   end;
@@ -325,13 +325,15 @@ end;
 
 procedure TMainForm.ButtonSerializeBSONObjectListClick(Sender: TObject);
 var
-  LPersonList: TArray<TPerson>;
+//  LPersonList: TArray<TPerson>;
   LParams: IdjParams;
 begin
   LParams     := BuildMapperParams;
-  LPersonList := BuildSampleList;
+//  LPersonList := BuildSampleList;
   SetLength(FBytes, 0);
+// ---------------------------------------------------------------------------
 //  FBytes := dj.From(LPersonList, LParams).ToBsonAsBytes;
+// ---------------------------------------------------------------------------
   Memo1.Clear;
   Memo1.Lines.Text := TdjUtils.Bytes2String(FBytes);
 end;
@@ -344,7 +346,9 @@ begin
   LParams := BuildMapperParams;
   LPerson := BuildSampleObject;
   try
+// ---------------------------------------------------------------------------
     FBytes := dj.From(LPerson, LParams).ToBsonAsBytes;
+// ---------------------------------------------------------------------------
     Memo1.Clear;
     Memo1.Lines.Text := TdjUtils.Bytes2String(FBytes);
   finally
@@ -354,13 +358,17 @@ end;
 
 procedure TMainForm.ButtonSerializeObjectListClick(Sender: TObject);
 var
-  LPersonList: TArray<TPerson>;
+  LPersons: TArray<TPerson>;
   LParams: IdjParams;
 begin
-  LParams     := BuildMapperParams;
-  LPersonList := BuildSampleList;
+  LParams := BuildMapperParams;
+  LPersons := BuildSampleArray;
   Memo1.Clear;
-//  Memo1.Lines.Text := dj.From(LPersonList, LParams).ToJSON;
+// ---------------------------------------------------------------------------
+  Memo1.Lines.Text := dj.From<TArray<TPerson>>(@LPersons, LParams).ToJSON;
+//  Memo1.Lines.Text := dj.From(@LPersons, TypeInfo(TArray<TPerson>), LParams).ToJSON;
+// ---------------------------------------------------------------------------
+  FreeArrayData(LPersons);
 end;
 
 procedure TMainForm.ButtonSerializeSignleObjectClick(Sender: TObject);
@@ -370,19 +378,26 @@ var
 begin
   LParams := BuildMapperParams;
   LPerson := BuildSampleObject;
-  try
-    Memo1.Clear;
-    Memo1.Lines.Text := dj.From(LPerson, LParams).ToJSON;
-  finally
-    LPerson.Free;
-  end;
+  Memo1.Clear;
+// ---------------------------------------------------------------------------
+  Memo1.Lines.Text := dj.From(LPerson, LParams).ToJSON;
+// ---------------------------------------------------------------------------
+  LPerson.Free;
 end;
 
-procedure TMainForm.ShowListData(APersonList: TObjectList<TPerson>);
+procedure TMainForm.FreeArrayData(APersons: TArray<TPerson>);
+var
+  I: Integer;
+begin
+  for I := Low(APersons) to High(APersons) do
+    APersons[I].Free;
+end;
+
+procedure TMainForm.ShowArrayData(APersons: TArray<TPerson>);
 var
   LPerson: TPerson;
   LNumtel: TNumTel;
-  I: Integer;
+  P, I: Integer;
 begin
   Memo1.Lines.BeginUpdate;
   try
@@ -390,8 +405,9 @@ begin
     Memo1.Lines.Add('');
     Memo1.Lines.Add('');
     Memo1.Lines.Add('---------- Start deserialized --------------');
-    for LPerson in APersonList do
+    for P := Low(APersons) to High(APersons) do
     begin
+      LPerson := APersons[P];
       Memo1.Lines.Add('');
       Memo1.Lines.Add('Class: ' + TPerson.ClassName);
       Memo1.Lines.Add('ID = ' +  LPerson.ID.ToString);

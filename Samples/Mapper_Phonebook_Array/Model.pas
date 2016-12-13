@@ -32,13 +32,11 @@ type
   private
     FID: Integer;
     FDescrizione: String;
-    [djItemsType(TNumTel)]  // Not needed if "TypeAnnnotations" = True or "ItemsType" is specified
-    FNumTel: array of TNumTel;
+    FNumTel: TArray<TNumtel>;
     function GetDescrizione: String;
     function GetID: Integer;
     procedure SetDescrizione(const Value: String);
     procedure SetID(const Value: Integer);
-    function GetNumTel(Index: Integer): TNumTel;
     function GetCount: Integer;
   public
     constructor Create(AID:Integer; ADescrizione:String); overload;
@@ -46,8 +44,7 @@ type
     procedure AddNumTel(ANumTel: TNumTel);
     property ID:Integer read GetID write SetID;
     property Descrizione:String read GetDescrizione write SetDescrizione;
-    [djItemsType(TNumTel)]  // Not needed if "TypeAnnnotations" = True or "ItemsType" is specified
-    property NumTel[Index:Integer]: TNumTel read GetNumTel;
+    property NumTel: TArray<TNumTel> read FNumTel write FNumTel;
     property Count:Integer read GetCount;
   end;
 
@@ -60,8 +57,8 @@ uses
 
 procedure TPerson.AddNumTel(ANumTel: TNumTel);
 begin
-  SetLength(FNumtel, Length(FNumtel)+1);
-  FNumtel[Length(FNumtel)-1] := ANumTel;
+  SetLength(FNumTel, Length(FNumTel)+1);
+  FNumTel[Length(FNumTel)-1] := ANumTel;
 end;
 
 constructor TPerson.Create(AID:Integer; ADescrizione:String);
@@ -82,7 +79,7 @@ end;
 
 function TPerson.GetCount: Integer;
 begin
-  Result := Length(FNumtel);
+  Result := Length(FNumTel);
 end;
 
 function TPerson.GetDescrizione: String;
@@ -93,11 +90,6 @@ end;
 function TPerson.GetID: Integer;
 begin
   Result := FID;
-end;
-
-function TPerson.GetNumTel(Index: Integer): TNumTel;
-begin
-  Result := FNumTel[Index];
 end;
 
 procedure TPerson.SetDescrizione(const Value: String);
