@@ -60,7 +60,7 @@ type
     class function SerializeInteger(const AValue: TValue): TJSONValue; static;
     class function SerializeString(const AValue: TValue): TJSONValue; static;
     class function SerializeRecord(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue; static;
-    class function SerializeArray(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONArray; static;
+    class function SerializeArray(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue; static;
     class function SerializeClass(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue; static;
     class function SerializeInterface(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue; static;
     class function SerializeObject(const AObject: TObject; const AParams: IdjParams): TJSONBox; overload; static;
@@ -149,7 +149,6 @@ begin
     Result := AMaster;
   // If TypeAnnotations is true then get the "items" JSONArray containing che containing the list items
   //  else AJSONValue is the JSONArray containing che containing the list items
-{
   if AParams.TypeAnnotations then
   begin
     if not (AJSONValue is TJSONObject) then
@@ -162,7 +161,6 @@ begin
     LJSONValue := TJSONObject(AJSONValue).Get('items').JsonValue;
   end
   else
-}
     LJSONValue := AJSONValue;
   // Check and extract the JSONArray
   if not (LJSONValue is TJSONArray) then
@@ -964,17 +962,48 @@ begin
 end;
 
 class function TdjEngineDOM.SerializeArray(const AValue: TValue;
-  const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONArray;
+  const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue;
 var
+  LValueQualifiedTypeName: String;
   LIndex: Integer;
+  LValue: TValue;
+  LJSONValue: TJSONValue;
+  LJSONArray: TJSONArray;
+  LFirst: Boolean;
+  LResultJSONObj: TJSONObject;
 begin
-  Result := TJSONArray.Create;
+  // Init
+  Result := nil;
+  LJSONArray := TJSONArray.Create;
+  // Loop for all array elements
+  LFirst := True;
   for LIndex := 0 to AValue.GetArrayLength - 1 do
   begin
-    (Result as TJSONArray).AddElement(
-      SerializePropField(AValue.GetArrayElement(LIndex), APropField, AParams)
-    );
+    // Get the current elemente of the array as TValue
+    LValue := AValue.GetArrayElement(LIndex);
+    // Serialize the current elemente
+    LJSONValue := SerializePropField(LValue, APropField, AParams);
+    // If first loop then add the type infos
+    if AParams.TypeAnnotations and LFirst then
+    begin
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
+      LFirst := False;
+    end;
+    // Add the current element to the JSONArray
+    LJSONArray.AddElement(LJSONValue);
   end;
+  // If TypeAnnotations is enabled then return a JSONObject with ClassName and a JSONArray containing the list items
+  //  else return only the JSONArray containing the list items
+  if AParams.TypeAnnotations then
+  begin
+    LResultJSONObj := TJSONObject.Create;
+    if not LValueQualifiedTypeName.IsEmpty then
+      LResultJSONObj.AddPair(DJ_VALUE, LValueQualifiedTypeName);
+    LResultJSONObj.AddPair('items', LJSONArray);
+    Result := LResultJSONObj;
+  end
+  else
+    Result := LJSONArray;
 end;
 
 class function TdjEngineDOM.SerializeClass(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue;
