@@ -52,7 +52,7 @@ type
   TdjEngineStreamBSON = class(TdjEngineStream)
   public
     class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): TBytesStream; static;
-    class function Deserialize(const AByteStream:TStream; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMasterObj: TObject; const AParams: IdjParams): TValue; static;
+    class function Deserialize(const AByteStream:TStream; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
   end;
 
 implementation
@@ -64,7 +64,7 @@ uses
 
 class function TdjEngineStreamBSON.Deserialize(const AByteStream: TStream;
   const AValueType: TRttiType; const APropField: TRttiNamedObject;
-  const AMasterObj: TObject; const AParams: IdjParams): TValue;
+  const AMaster: TValue; const AParams: IdjParams): TValue;
 var
   LBSONReader: TBSONReader;
 begin
@@ -78,7 +78,7 @@ begin
         raise EdjEngineError.Create('BSON engine: Root object label expected (' + AParams.BsonRootLabel + ')');
     end;
     if LBSONReader.Read then
-      Result := DeserializePropField(LBSONReader, AValueType, APropField, AMasterObj, AParams);
+      Result := DeserializePropField(LBSONReader, AValueType, APropField, AMaster, AParams);
   finally
     LBSONReader.Free;
   end;

@@ -150,22 +150,15 @@ end;
 
 procedure TMainForm.ButtonDeserializeBSONObjectListClick(Sender: TObject);
 var
-  LPersonList: TObjectList<TPerson>;
+  LPersonArray: TArray<TPerson>;
   LParams: IdjParams;
 begin
   LParams := BuildMapperParams;
 // ---------------------------------------------------------------------------
-  if LParams.TypeAnnotations then
-    LPersonList := dj.FromBson(FBytes, LParams).&To<TObjectList<TPerson>>
-  else
-    LPersonList := dj.FromBson(FBytes, LParams).ItemsOfType<TPerson>.&To<TObjectList<TPerson>>;
+  LPersonArray := dj.FromBson(FBytes, LParams).&To<TArray<TPerson>>;
 // ---------------------------------------------------------------------------
-  try
-//    ShowListData(LPersonList);
-  finally
-    LPersonList.OwnsObjects := True;
-    LPersonList.Free;
-  end;
+  ShowArrayData(LPersonArray);
+  FreeArrayData(LPersonArray);
 end;
 
 procedure TMainForm.ButtonDeserializeBSONSignleObjectClick(Sender: TObject);
@@ -234,22 +227,18 @@ end;
 
 procedure TMainForm.ButtonOtherDeserialize2Click(Sender: TObject);
 var
-  LPersonList: TObjectList<TPerson>;
+  LPersonArray: TArray<TPerson>;
   LPerson: TPerson;
 begin
-  LPersonList := TObjectList<TPerson>.Create(True);
 // ---------------------------------------------------------------------------
   // Utilizzo del mapper senza un oggetto "Params" ma specificando gli eventuali parametri
   //  desiderati direttamente sulla chiamata.
   //  IN questo caso si chiede la serializzazione per Fields (normalmente avviene per proprietà),
   //  annotazione dei tipi nel JSON attivata e disabilita gli eventuali custom serializers.
-  dj.FromJSON(Memo1.Lines.Text).byFields.TypeAnnotationsON.CustomSerializersOFF.&To(LPersonList);
+  LPersonArray := dj.FromJSON(Memo1.Lines.Text).byFields.TypeAnnotationsON.CustomSerializersOFF.&To<TArray<TPerson>>;
 // ---------------------------------------------------------------------------
-  try
-//    ShowListData(LPersonList);
-  finally
-    LPersonList.Free;
-  end;
+  ShowArrayData(LPersonArray);
+  FreeArrayData(LPersonArray);
 end;
 
 procedure TMainForm.ButtonOtherDeserialize3Click(Sender: TObject);
@@ -299,7 +288,7 @@ begin
   //  annotazione dei tipi nel JSON attivata e disabilita gli eventuali custom serializers.
   Memo1.Clear;
 // ---------------------------------------------------------------------------
-//  Memo1.Lines.Text := dj.From(LPersons).byFields.TypeAnnotationsON.CustomSerializersOFF.ToJSON;
+  Memo1.Lines.Text := dj.From(@LPersons, TypeInfo(TArray<TPerson>)).byFields.TypeAnnotationsON.CustomSerializersOFF.ToJSON;
 // ---------------------------------------------------------------------------
   FreeArrayData(LPersons);
 end;
@@ -325,17 +314,18 @@ end;
 
 procedure TMainForm.ButtonSerializeBSONObjectListClick(Sender: TObject);
 var
-//  LPersonList: TArray<TPerson>;
+  LPersonArray: TArray<TPerson>;
   LParams: IdjParams;
 begin
   LParams     := BuildMapperParams;
-//  LPersonList := BuildSampleList;
+  LPersonArray := BuildSampleArray;
   SetLength(FBytes, 0);
 // ---------------------------------------------------------------------------
-//  FBytes := dj.From(LPersonList, LParams).ToBsonAsBytes;
+  FBytes := dj.From<TArray<TPerson>>(@LPersonArray, LParams).ToBsonAsBytes;
 // ---------------------------------------------------------------------------
   Memo1.Clear;
   Memo1.Lines.Text := TdjUtils.Bytes2String(FBytes);
+  FreeArrayData(LPersonArray);
 end;
 
 procedure TMainForm.ButtonSerializeBSONSingleObjectClick(Sender: TObject);

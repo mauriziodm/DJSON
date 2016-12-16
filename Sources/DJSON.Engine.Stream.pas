@@ -57,6 +57,7 @@ type
     class procedure SerializeFloat(const AJSONWriter: TJSONWriter; const AValue: TValue); static;
     class procedure SerializeEnumeration(const AJSONWriter: TJSONWriter; const AValue: TValue); static;
     class procedure SerializeRecord(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
+    class procedure SerializeArray(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class procedure SerializeClass(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class procedure SerializeInterface(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class procedure SerializeObject(const AJSONWriter: TJSONWriter; const AObject: TObject; const AParams: IdjParams); overload; static;
@@ -72,6 +73,7 @@ type
     class function DeserializeFloat(const AJSONReader: TJSONReader; const AValueType: TRttiType): TValue; static;
     class function DeserializeEnumeration(const AJSONReader: TJSONReader; const AValueType: TRttiType): TValue; static;
     class function DeserializeRecord(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
+    class function DeserializeArray(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
     class procedure DeserializeClassCommon(var AChildObj: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class function DeserializeClass(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; AMasterObj: TObject; const AParams: IdjParams): TValue; static;
     class function DeserializeInterface(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; AMasterObj: TObject; const AParams: IdjParams): TValue; static;
@@ -132,6 +134,83 @@ begin
     LJSONReader.Free;
     LStringReader.Free;
   end;
+end;
+
+class function TdjEngineStream.DeserializeArray(const AJSONReader: TJSONReader;
+  const AValueType: TRttiType; const APropField: TRttiNamedObject;
+  const AMaster: TValue; const AParams: IdjParams): TValue;
+var
+  LValueQualifiedTypeName: String;
+  LValueRTTIType: TRttiType;
+  LValue: TValue;
+  I: Integer;
+  IsDynArray: Boolean;
+  PArray: Pointer;
+begin
+  // Defaults
+  LValueRTTIType          := nil;
+  LValueQualifiedTypeName := '';
+  // If the Property/Field is valid then try to get the value (Object) from the
+  //  master object else the MasterObject itself is the destination of the deserialization
+  Result := nil;
+  if (not AMaster.IsEmpty)
+  and AMaster.IsObject
+  and TdjDuckPropField.IsValidPropField(APropField) then
+    Result := TdjDuckPropField.GetValue(AMaster.AsObject, APropField)
+  else
+    Result := AMaster;
+  // If TypeAnnotations is enabled then get the "items" JSONArray containing the list items
+  //  else AJSONValue is the JSONArray containing che containing the list items
+  if AParams.TypeAnnotations then
+  begin
+    // Get the value type name (collection TypeName already retrieved by DeserializePropField)
+    if not TryGetTypeAnnotation(AJSONReader, DJ_VALUE, LValueQualifiedTypeName) then
+      raise EdjEngineError.Create('Value type annotation expected (TypeAnnotations enabled).');
+    // The current token must be a property name named 'items'
+    if not ((AJSONReader.TokenType = TJSONToken.PropertyName) and (AJSONReader.Value.AsString = 'items')) then
+      raise EdjEngineError.Create('"items" property expected(TypeAnnotations enabled).');
+    AJSONReader.Read;
+  end;
+  // Now a JSONArray must be present
+  if AJSONReader.TokenType <> TJsonToken.StartArray then
+    raise EdjEngineError.Create('JSONArray expected.');
+  AJSONReader.Read;
+  // Get values RttiType, if the RttiType is not found then check for
+  //  "djItemsType" attribute or from PARAMS, If it still has not been found
+  //  then get the type directly from the DuckTypedList
+  // ------------
+  TdjUtils.GetItemsTypeNameIfEmpty(APropField, AParams, LValueQualifiedTypeName);
+
+  if LValueQualifiedTypeName.IsEmpty then
+    LValueQualifiedTypeName := TdjRTTI.GetItemsQualifiedTypeNameFromArrayTypeInfo(Result.TypeInfo);
+
+  LValueRTTIType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
+  if (not Assigned(LValueRTTIType)) and (AJSONReader.TokenType <> TJsonToken.EndArray) then
+    raise EdjEngineError.Create('Value type not found deserializing an array');
+  // ------------
+  // Loop
+  IsDynArray := (Result.Kind = tkDynArray);
+  I := 1;
+  repeat
+    // If the current JSONToken is an EndArray token then exit from the loop
+    if (AJSONReader.TokenType = TJSONToken.EndArray) then
+      Break;
+    // Deserialize the current element
+    LValue := DeserializePropField(AJSONReader, LValueRttiType, APropField, nil, AParams);
+    // If it is a dynamic array set the length (one by one)
+    if IsDynArray then
+    begin
+      PArray := Result.GetReferenceToRawData;
+      DynArraySetLength(PPointer(PArray)^, Result.TypeInfo, 1, @I);  // Monodimensional array only (1)
+    end;
+    // Add to the array
+    Result.SetArrayElement(I-1, LValue);
+    // Increment the index
+    inc(I);
+  until not AJSONReader.Read;
+  // If TypeAnnotations is enabled then e "CloseObject" char is expected
+  if CheckForEndObjectCharIfTypeAnnotations(AJSONReader, AParams) then
+    raise EdjEngineError.Create('EndObject char expected (TypeAnnotations enabled).');
 end;
 
 class function TdjEngineStream.DeserializeClass(const AJSONReader: TJSONReader;
@@ -619,6 +698,8 @@ begin
         AMaster.AsObject,
         AParams
         );
+    tkArray, tkDynArray:
+      Result := DeserializeArray(AJSONReader, LValueType, APropField, AMaster, AParams);
   end;
 end;
 
@@ -769,6 +850,56 @@ begin
     LJSONWriter.Free;
     LStringWriter.Free;
   end;
+end;
+
+class procedure TdjEngineStream.SerializeArray(const AJSONWriter: TJSONWriter;
+  const AValue: TValue; const APropField: TRttiNamedObject;
+  const AParams: IdjParams);
+var
+  LValueQualifiedTypeName: String;
+  LIndex: Integer;
+  LValue: TValue;
+begin
+  // Init
+  LValueQualifiedTypeName := '';
+
+  // If TypeAnnotations enabled...
+  if AParams.TypeAnnotations then
+  begin
+    AJSONWriter.WriteStartObject;
+    // Get the first element type name (for non class/interface list contents)
+    if AValue.GetArrayLength > 0 then
+    begin
+      LValue := AValue.GetArrayElement(0);
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
+    end;
+    // Add the items TypeName (base on the first element of the list only
+    if  (not LValueQualifiedTypeName.IsEmpty) then
+    begin
+      AJSONWriter.WritePropertyName(DJ_VALUE);
+      AJSONWriter.WriteValue(LValueQualifiedTypeName);
+    end;
+    // Add the "items" property
+    AJSONWriter.WritePropertyName('items');
+  end;
+
+  // Items array start
+  AJSONWriter.WriteStartArray;
+
+  // Loop for all items in the list and serialize it
+  for LIndex := 0 to AValue.GetArrayLength-1 do
+  begin
+    // Read values
+    LValue := AValue.GetArrayElement(LIndex);
+    // Serialize values
+    SerializePropField(AJSONWriter, LValue, APropField, AParams);
+  end;
+
+  // Items array end
+  AJSONWriter.WriteEndArray;
+  // If TypeAnnotations enabled...
+  if AParams.TypeAnnotations then
+    AJSONWriter.WriteEndObject;
 end;
 
 class procedure TdjEngineStream.SerializeClass(const AJSONWriter: TJSONWriter;
@@ -1114,6 +1245,8 @@ begin
       SerializeClass(AJSONWriter, AValue, APropField, AParams);
     tkInterface:
       SerializeInterface(AJSONWriter, AValue, APropField, AParams);
+    tkArray, tkDynArray:
+      SerializeArray(AJSONWriter, AValue, APropField, AParams);
   end;
 end;
 

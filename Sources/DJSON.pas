@@ -165,7 +165,7 @@ type
     constructor Create(const ABytes:TBytes; const AParams:IdjParams); overload;
     destructor Destroy; override;
     // Destinations
-    function ToValue(const ATypeValue:PTypeInfo): TValue; override;
+    function ToValue(const ATypeInfo:PTypeInfo): TValue; override;
     function ToObject: TObject; override;
     procedure &To(const AObject: TObject); overload;
     // Params
@@ -792,13 +792,15 @@ begin
   end;
 end;
 
-function TdjBSONDestination.ToValue(const ATypeValue: PTypeInfo): TValue;
+function TdjBSONDestination.ToValue(const ATypeInfo: PTypeInfo): TValue;
 var
   LRttiType: TRttiType;
+  LMaster: TValue;
 begin
   try
-    LRttiType := TdjRTTI.TypeInfoToRttiType(ATypeValue);
-    Result := TdjEngineStreamBSON.Deserialize(FBytesStream, LRttiType, nil, nil, FParams);
+    LRttiType := TdjRTTI.TypeInfoToRttiType(ATypeInfo);
+    TValue.Make(nil, ATypeInfo, LMaster);
+    Result := TdjEngineStreamBSON.Deserialize(FBytesStream, LRttiType, nil, LMaster, FParams);
   finally
     Self.Free;
   end;
