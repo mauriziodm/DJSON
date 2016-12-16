@@ -361,16 +361,25 @@ begin
   //  "MapperItemsClassType"  or "MapperItemsType" attribute or from PARAMS
   //  PS: If the current JSONToken is EndArray then the collection is empty
   //       and then then ValueTypeChecknot is not necessary.
+  // ------------
   TdjUtils.GetItemsTypeNameIfEmpty(APropField, AParams, LKeyQualifiedTypeName, LValueQualifiedTypeName);
+
+  if LKeyQualifiedTypeName.IsEmpty then
+    LKeyQualifiedTypeName := ADuckDictionary.GetKeyQualifiedTypeName;
+  if LValueQualifiedTypeName.IsEmpty then
+    LValueQualifiedTypeName := ADuckDictionary.GetValueQualifiedTypeName;
+
   LKeyRttiType   := TdjRTTI.QualifiedTypeNameToRttiType(LKeyQualifiedTypeName);
   LValueRTTIType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
+
   if AJSONReader.TokenType <> TJsonToken.EndArray then
   begin
     if not Assigned(LKeyRttiType) then
-      raise EdjEngineError.Create('Key type not found deserializing.');
+      raise EdjEngineError.Create('Key type not found deserializing a Dictionary');
     if not Assigned(LValueRTTIType) then
-      raise EdjEngineError.Create('Value type not found deserializing.');
+      raise EdjEngineError.Create('Value type not found deserializing a Dictionary');
   end;
+  // ------------
   // Loop
   repeat
     // If the current JSONToken is an EndArray token then exit from the loop
@@ -528,10 +537,17 @@ begin
   //  "MapperItemsClassType"  or "MapperItemsType" attribute or from PARAMS
   //  PS: If the current JSONToken is EndArray then the collection is empty
   //       and then then ValueTypeChecknot is not necessary.
+  // ------------
   TdjUtils.GetItemsTypeNameIfEmpty(APropField, AParams, LValueQualifiedTypeName);
+
+  if LValueQualifiedTypeName.IsEmpty then
+    LValueQualifiedTypeName := ADuckList.GetItemQualifiedTypeName;
+
   LValueRTTIType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
+
   if (not Assigned(LValueRTTIType)) and (AJSONReader.TokenType <> TJsonToken.EndArray) then
-    raise EdjEngineError.Create('Value type not found.');
+    raise EdjEngineError.Create('Value type not found deserializing a List');
+  // ------------
   // Loop
   repeat
     // If the current JSONToken is an EndArray token then exit from the loop
