@@ -33,6 +33,10 @@ type
     FID: Integer;
     FDescrizione: String;
     FNumTel: TObjectList<TNumTel>;
+    FSesso: Char;
+    FEta: Byte;
+    FViaggiEffettuati: Word;
+    FLuogoDiNascita: String;
     function GetDescrizione: String;
     function GetID: Integer;
     function GetNumTel: TObjectList<TNumTel>;
@@ -44,6 +48,10 @@ type
     destructor Destroy; override;
     property ID:Integer read GetID write SetID;
     property Descrizione:String read GetDescrizione write SetDescrizione;
+    property Sesso:Char read FSesso write FSesso;
+    property Eta:Byte read FEta write FEta;
+    property LuogoDiNascita: String read FLuogoDiNascita write FLuogoDiNascita;
+    property ViaggiEffettuati:Word read FViaggiEffettuati write FViaggiEffettuati;
     property NumTel:TObjectList<TNumTel> read GetNumTel;
   end;
 

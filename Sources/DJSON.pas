@@ -112,6 +112,8 @@ type
     function Engine(const AEngine:TdjEngine): TdjValueDestination;
     function BsonRootOFF: TdjValueDestination;
     function BsonRootLabel(const AValue:String): TdjValueDestination;
+    function EmptyStringAsNull: TdjValueDestination;
+    function EmptyCharAsNull: TdjValueDestination;
   end;
 
   TdjJSONDestination = class
@@ -154,6 +156,8 @@ type
     function CustomSerializer<Target>(const ASerializer:TdjXMLCustomSerializerRef): TdjJSONDestination; overload;
     function CustomSerializer<Target>(const ASerializer:TdjStreamCustomSerializerRef): TdjJSONDestination; overload;
     function Engine(const AEngine:TdjEngine): TdjJSONDestination;
+    function EmptyStringAsNull: TdjJSONDestination;
+    function EmptyCharAsNull: TdjJSONDestination;
   end;
 
   TdjBSONDestination = class(TdjJSONDestination)
@@ -432,6 +436,18 @@ begin
   Result := Self;
 end;
 
+function TdjJSONDestination.EmptyCharAsNull: TdjJSONDestination;
+begin
+  FParams.EmptyCharAsNull := True;
+  Result := Self;
+end;
+
+function TdjJSONDestination.EmptyStringAsNull: TdjJSONDestination;
+begin
+  FParams.EmptyStringAsNull := True;
+  Result := Self;
+end;
+
 function TdjJSONDestination.Engine(
   const AEngine: TdjEngine): TdjJSONDestination;
 begin
@@ -576,6 +592,18 @@ end;
 function TdjValueDestination.DataContractMode: TdjValueDestination;
 begin
   FParams.SerializationMode := smDataContract;
+  Result := Self;
+end;
+
+function TdjValueDestination.EmptyCharAsNull: TdjValueDestination;
+begin
+  FParams.EmptyCharAsNull := True;
+  Result := Self;
+end;
+
+function TdjValueDestination.EmptyStringAsNull: TdjValueDestination;
+begin
+  FParams.EmptyStringAsNull := True;
   Result := Self;
 end;
 

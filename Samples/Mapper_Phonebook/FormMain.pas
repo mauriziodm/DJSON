@@ -56,6 +56,8 @@ type
     ButtonDeserializeBSONSignleObject: TButton;
     ButtonSerializeBSONObjectList: TButton;
     ButtonDeserializeBSONObjectList: TButton;
+    CheckBoxEmptyStringAsNull: TCheckBox;
+    CheckBoxEmptyCharAsNull: TCheckBox;
     procedure ButtonSerializeSignleObjectClick(Sender: TObject);
     procedure ButtonDeserializeSignleObjectClick(Sender: TObject);
     procedure ButtonSerializeObjectListClick(Sender: TObject);
@@ -113,6 +115,9 @@ begin
   Result.TypeAnnotations := CheckBoxTypeAnnotations.Checked;
   // Custom serializers
   Result.EnableCustomSerializers := CheckBoxCustomSerializers.Checked;
+  // Empty string and char mode
+  Result.EmptyStringAsNull := CheckBoxEmptyStringAsNull.Checked;
+  Result.EmptyCharAsNull := CheckBoxEmptyCharAsNull.Checked;
 end;
 
 function TMainForm.BuildSampleList: TObjectList<TPerson>;
@@ -122,17 +127,29 @@ begin
   Result := TObjectList<TPerson>.Create;
 
   NewPerson := TPerson.Create(1, 'Maurizio Del Magno');
+  NewPerson.Sesso := 'M';
+  NewPerson.Eta := 18;
+  NewPerson.ViaggiEffettuati := 35;
+  NewPerson.LuogoDiNascita := 'Riccione';
   NewPerson.NumTel.Add(   TNumTel.Create(1, '0541/605905', 1)   );
   NewPerson.NumTel.Add(   TNumTel.Create(2, '329/0583381', 1)   );
   NewPerson.NumTel.Add(   TNumTel.Create(3, '0541/694750', 1)   );
   Result.Add(NewPerson);
 
   NewPerson := TPerson.Create(2, 'Daniele Teti');
+  NewPerson.Sesso := 'M';
+  NewPerson.Eta := 32;
+  NewPerson.ViaggiEffettuati := 12;
+  NewPerson.LuogoDiNascita := 'Roma';
   NewPerson.NumTel.Add(   TNumTel.Create(4, '06/1122334',  2)   );
   NewPerson.NumTel.Add(   TNumTel.Create(5, '333/23456346',2)   );
   Result.Add(NewPerson);
 
   NewPerson := TPerson.Create(3, 'Omar Bossoni');
+//  NewPerson.Sesso := #0;
+  NewPerson.Eta := 64;
+  NewPerson.ViaggiEffettuati := 15;
+//  NewPerson.LuogoDiNascita := 'Brescia';
   NewPerson.NumTel.Add(   TNumTel.Create(6, '02/673927',   3)   );
   NewPerson.NumTel.Add(   TNumTel.Create(7, '347/3459276', 3)   );
   NewPerson.NumTel.Add(   TNumTel.Create(8, '332/6714399', 3)   );
@@ -142,6 +159,10 @@ end;
 function TMainForm.BuildSampleObject: TPerson;
 begin
   Result := TPerson.Create(1, 'Maurizio Del Magno');
+//  Result.Sesso := 'M';
+  Result.Eta := 18;
+  Result.ViaggiEffettuati := 35;
+//  Result.LuogoDiNascita := 'Riccione';
   Result.NumTel.Add(   TNumTel.Create(1, '0541/605905', 1)   );
   Result.NumTel.Add(   TNumTel.Create(2, '329/0583381', 1)   );
   Result.NumTel.Add(   TNumTel.Create(3, '0541/694750', 1)   );
@@ -402,6 +423,10 @@ begin
       Memo1.Lines.Add('Class: ' + TPerson.ClassName);
       Memo1.Lines.Add('ID = ' +  LPerson.ID.ToString);
       Memo1.Lines.Add('Descrizione = ' +  LPerson.Descrizione);
+      Memo1.Lines.Add('Sesso = ' +  LPerson.Sesso);
+      Memo1.Lines.Add('Età = ' +  LPerson.Eta.ToString);
+      Memo1.Lines.Add('Viaggi effettuati = ' +  LPerson.ViaggiEffettuati.ToString);
+      Memo1.Lines.Add('Luogo di nascita = ' +  LPerson.LuogoDiNascita);
       for LNumtel in LPerson.NumTel do
       begin
         Memo1.Lines.Add('');
@@ -430,6 +455,10 @@ begin
     Memo1.Lines.Add('Class: ' + TPerson.ClassName);
     Memo1.Lines.Add('ID = ' +  APerson.ID.ToString);
     Memo1.Lines.Add('Descrizione = ' +  APerson.Descrizione);
+    Memo1.Lines.Add('Sesso = ' +  APerson.Sesso);
+    Memo1.Lines.Add('Età = ' +  APerson.Eta.ToString);
+    Memo1.Lines.Add('Viaggi effettuati = ' +  APerson.ViaggiEffettuati.ToString);
+    Memo1.Lines.Add('Luogo di nascita = ' +  APerson.LuogoDiNascita);
     for LNumtel in APerson.NumTel do
     begin
       Memo1.Lines.Add('');

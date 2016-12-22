@@ -136,6 +136,14 @@ type
     procedure SetBsonRootLabel(const AValue:String);
     function GetBsonRootLabel: String;
     property BsonRootLabel: String read GetBsonRootLabel write SetBsonRootLabel;
+    // EmptyStringAsNull
+    procedure SetEmptyStringAsNull(const AValue:Boolean);
+    function GetEmptyStringAsNull: Boolean;
+    property EmptyStringAsNull:Boolean read GetEmptyStringAsNull write SetEmptyStringAsNull;
+    // EmptyCharAsNull
+    procedure SetEmptyCharAsNull(const AValue:Boolean);
+    function GetEmptyCharAsNull: Boolean;
+    property EmptyCharAsNull:Boolean read GetEmptyCharAsNull write SetEmptyCharAsNull;
   end;
 
   TdjParams = class(TInterfacedObject, IdjParams)
@@ -155,6 +163,8 @@ type
     FTypeInfoCache: TdjTypeInfoCache;
     FBsonRoot: Boolean;
     FBsonRootLabel: String;
+    FEmptyStringAsNull: Boolean;
+    FEmptyCharAsNull: Boolean;
     // Engine (No property)
     function GetEngineClass: TdjEngineRef;
     // EngineType
@@ -203,6 +213,12 @@ type
     // BsonRootLabel
     procedure SetBsonRootLabel(const AValue:String);
     function GetBsonRootLabel: String;
+    // EmptyStringAsNull
+    procedure SetEmptyStringAsNull(const AValue:Boolean);
+    function GetEmptyStringAsNull: Boolean;
+    // EmptyCharAsNull
+    procedure SetEmptyCharAsNull(const AValue:Boolean);
+    function GetEmptyCharAsNull: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -281,6 +297,8 @@ begin
   FNameCase := ncUndefinedCase;
   FBsonRoot := True;
   FBsonRootLabel := 'root';
+  FEmptyStringAsNull := False;
+  FEmptyCharAsNull := False;
 end;
 
 destructor TdjParams.Destroy;
@@ -303,6 +321,16 @@ end;
 function TdjParams.GetBsonRootLabel: String;
 begin
   Result := FBsonRootLabel;
+end;
+
+function TdjParams.GetEmptyCharAsNull: Boolean;
+begin
+  Result := FEmptyCharAsNull;
+end;
+
+function TdjParams.GetEmptyStringAsNull: Boolean;
+begin
+  Result := FEmptyStringAsNull;
 end;
 
 function TdjParams.GetEnableCustomSerializers: Boolean;
@@ -388,6 +416,16 @@ end;
 procedure TdjParams.SetBsonRootLabel(const AValue: String);
 begin
   FBsonRootLabel := AValue;
+end;
+
+procedure TdjParams.SetEmptyCharAsNull(const AValue: Boolean);
+begin
+  FEmptyCharAsNull := AValue;
+end;
+
+procedure TdjParams.SetEmptyStringAsNull(const AValue: Boolean);
+begin
+  FEmptyStringAsNull := AValue;
 end;
 
 procedure TdjParams.SetEnableCustomSerializers(const AValue: Boolean);

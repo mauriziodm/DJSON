@@ -23,6 +23,8 @@ object MainForm: TMainForm
     Color = 12895428
     ParentBackground = False
     TabOrder = 0
+    ExplicitLeft = 3
+    ExplicitTop = 20
     object Shape1: TShape
       Left = 507
       Top = 27
@@ -229,17 +231,17 @@ object MainForm: TMainForm
       TabOrder = 1
     end
     object CheckBoxTypeAnnotations: TCheckBox
-      Left = 390
-      Top = 65
-      Width = 112
+      Left = 384
+      Top = 16
+      Width = 121
       Height = 17
       Caption = 'Type annotations'
       TabOrder = 2
     end
     object CheckBoxCustomSerializers: TCheckBox
-      Left = 390
-      Top = 93
-      Width = 112
+      Left = 384
+      Top = 44
+      Width = 121
       Height = 17
       Caption = 'Custom serializers'
       TabOrder = 3
@@ -467,6 +469,22 @@ object MainForm: TMainForm
       ParentFont = False
       TabOrder = 18
       OnClick = ButtonDeserializeBSONObjectListClick
+    end
+    object CheckBoxEmptyStringAsNull: TCheckBox
+      Left = 384
+      Top = 59
+      Width = 121
+      Height = 45
+      Caption = 'Empty string as NULL'
+      TabOrder = 19
+    end
+    object CheckBoxEmptyCharAsNull: TCheckBox
+      Left = 384
+      Top = 88
+      Width = 121
+      Height = 45
+      Caption = 'Empty char as NULL'
+      TabOrder = 20
     end
   end
   object Memo1: TMemo

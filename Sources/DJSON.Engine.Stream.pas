@@ -56,6 +56,8 @@ type
     class procedure SerializePropField(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True); static;
     class procedure SerializeFloat(const AJSONWriter: TJSONWriter; const AValue: TValue); static;
     class procedure SerializeEnumeration(const AJSONWriter: TJSONWriter; const AValue: TValue); static;
+    class procedure SerializeString(const AJSONWriter: TJSONWriter; const AValue: TValue; const AParams: IdjParams); static;
+    class procedure SerializeChar(const AJSONWriter: TJSONWriter; const AValue: TValue; const AParams: IdjParams); static;
     class procedure SerializeRecord(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class procedure SerializeArray(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class procedure SerializeClass(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
@@ -72,6 +74,7 @@ type
     class function DeserializePropField(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
     class function DeserializeFloat(const AJSONReader: TJSONReader; const AValueType: TRttiType): TValue; static;
     class function DeserializeEnumeration(const AJSONReader: TJSONReader; const AValueType: TRttiType): TValue; static;
+    class function DeserializeChar(const AJSONReader: TJSONReader): TValue; static;
     class function DeserializeRecord(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
     class function DeserializeArray(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
     class procedure DeserializeClassCommon(var AChildObj: TObject; const AJSONReader: TJSONReader; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
@@ -211,6 +214,18 @@ begin
   // If TypeAnnotations is enabled then e "CloseObject" char is expected
   if CheckForEndObjectCharIfTypeAnnotations(AJSONReader, AParams) then
     raise EdjEngineError.Create('EndObject char expected (TypeAnnotations enabled).');
+end;
+
+class function TdjEngineStream.DeserializeChar(
+  const AJSONReader: TJSONReader): TValue;
+begin
+  // If Null or empty value
+  if (AJSONReader.TokenType = TJsonToken.Null)
+  or (AJSONReader.Value.AsString.IsEmpty)
+  then
+    Result := #0
+  else
+    Result := AJSONReader.Value;
 end;
 
 class function TdjEngineStream.DeserializeClass(const AJSONReader: TJSONReader;
@@ -696,6 +711,8 @@ begin
       Result := DeserializeFloat(AJSONReader, AValueType);
     tkString, tkLString, tkWString, tkUString:
       Result := AJSONReader.Value;
+    tkChar, tkWChar:
+      Result := DeserializeChar(AJSONReader);
     tkRecord:
       Result := DeserializeRecord(AJSONReader, LValueType, APropField, AParams);
     tkClass:
@@ -916,6 +933,20 @@ begin
   // If TypeAnnotations enabled...
   if AParams.TypeAnnotations then
     AJSONWriter.WriteEndObject;
+end;
+
+class procedure TdjEngineStream.SerializeChar(const AJSONWriter: TJSONWriter;
+  const AValue: TValue; const AParams: IdjParams);
+begin
+  if AValue.AsString = #0 then
+  begin
+    if AParams.EmptyCharAsNull then
+      AJSONWriter.WriteNull
+    else
+      AJSONWriter.WriteValue('');
+  end
+  else
+    AJSONWriter.WriteValue(AValue.AsString);
 end;
 
 class procedure TdjEngineStream.SerializeClass(const AJSONWriter: TJSONWriter;
@@ -1252,7 +1283,9 @@ begin
     tkFloat:
       SerializeFloat(AJSONWriter, AValue);
     tkString, tkLString, tkWString, tkUString:
-      AJSONWriter.WriteValue(AValue.AsString);
+      SerializeString(AJSONWriter, AValue, AParams);
+    tkChar, tkWChar:
+      SerializeChar(AJSONWriter, AValue, AParams);
     tkEnumeration:
       SerializeEnumeration(AJSONWriter, AValue);
     tkRecord:
@@ -1342,6 +1375,15 @@ begin
     LMemoryStream.Free;
     LStringStream.Free;
   end;
+end;
+
+class procedure TdjEngineStream.SerializeString(const AJSONWriter: TJSONWriter;
+  const AValue: TValue; const AParams: IdjParams);
+begin
+  if AValue.AsString.IsEmpty and AParams.EmptyStringAsNull then
+    AJSONWriter.WriteNull
+  else
+    AJSONWriter.WriteValue(AValue.AsString);
 end;
 
 class procedure TdjEngineStream.SerializeTValue(const AJSONWriter: TJSONWriter;

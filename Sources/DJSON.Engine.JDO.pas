@@ -57,6 +57,8 @@ type
     class procedure SerializePropField(const AResult:PJsonDataValue; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True); static;
     class procedure SerializeFloat(const AResult:PJsonDataValue; const AValue: TValue); static;
     class procedure SerializeEnumeration(const AResult:PJsonDataValue; const AValue: TValue); static;
+    class procedure SerializeString(const AResult:PJsonDataValue; const AValue: TValue; const AParams: IdjParams); static;
+    class procedure SerializeChar(const AResult:PJsonDataValue; const AValue: TValue; const AParams: IdjParams); static;
     class procedure SerializeRecord(const AResult:PJsonDataValue; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class procedure SerializeArray(const AResult:PJsonDataValue; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
     class procedure SerializeClass(const AResult:PJsonDataValue; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
@@ -73,6 +75,8 @@ type
     class function DeserializePropField(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: Tvalue; const AParams: IdjParams): TValue; static;
     class function DeserializeFloat(const AJSONValue: PJsonDataValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeEnumeration(const AJSONValue: PJsonDataValue; const AValueType: TRttiType): TValue; static;
+    class function DeserializeString(const AJSONValue: PJsonDataValue): TValue; static;
+    class function DeserializeChar(const AJSONValue: PJsonDataValue): TValue; static;
     class function DeserializeRecord(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
     class function DeserializeArray(const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
     class procedure DeserializeClassCommon(var AChildObj: TObject; const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
@@ -196,6 +200,19 @@ begin
     // Add to the array
     Result.SetArrayElement(LIndex, LValue);
   end;
+end;
+
+class function TdjEngineJDO.DeserializeChar(
+  const AJSONValue: PJsonDataValue): TValue;
+begin
+  // If Null or empty value
+  if (AJSONValue.Typ = TJsonDataType.jdtNone)
+  or (AJSONValue.Typ = TJsonDataType.jdtObject)
+  or (AJSONValue.Value.IsEmpty)
+  then
+    Result := #0
+  else
+    Result := AJSONValue.Value;
 end;
 
 class function TdjEngineJDO.DeserializeClass(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
@@ -589,7 +606,10 @@ begin
     tkFloat:
       Result := DeserializeFloat(AJSONValue, LValueType);
     tkString, tkLString, tkWString, tkUString:
-      Result := AJSONValue.Value;
+      Result := DeserializeString(AJSONValue);
+//      Result := AJSONValue.Value;
+    tkChar, tkWChar:
+      Result := DeserializeChar(AJSONValue);
     tkRecord:
       Result := DeserializeRecord(AJSONValue, LValueType, APropField, AParams);
     tkClass:
@@ -704,6 +724,17 @@ begin
     LMemoryStream.Free;
     LStringStream.Free;
   end;
+end;
+
+class function TdjEngineJDO.DeserializeString(
+  const AJSONValue: PJsonDataValue): TValue;
+begin
+  if (AJSONValue.Typ = TJsonDataType.jdtNone)
+  or (AJSONValue.Typ = TJsonDataType.jdtObject)
+  then
+    Result := ''
+  else
+    Result := AJSONValue.Value;
 end;
 
 class function TdjEngineJDO.DeserializeTValue(const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject; const AParams:IdjParams): TValue;
@@ -823,6 +854,20 @@ begin
   end
   else
     AResult.ArrayValue := LJSONArray;
+end;
+
+class procedure TdjEngineJDO.SerializeChar(const AResult: PJsonDataValue;
+  const AValue: TValue; const AParams: IdjParams);
+begin
+  if AValue.AsString = #0 then
+  begin
+    if AParams.EmptyCharAsNull then
+      AResult.ObjectValue := nil  // Set as NULL
+    else
+      AResult.Value := '';
+  end
+  else
+    AResult.Value := AValue.AsString;
 end;
 
 class procedure TdjEngineJDO.SerializeClass(const AResult:PJsonDataValue; const AValue: TValue;
@@ -1100,7 +1145,9 @@ begin
     tkFloat:
       SerializeFloat(AResult, AValue);
     tkString, tkLString, tkWString, tkUString:
-      AResult.Value := AValue.AsString;
+      SerializeString(AResult, AValue, AParams);
+    tkChar, tkWChar:
+      SerializeChar(AResult, AValue, AParams);
     tkEnumeration:
       SerializeEnumeration(AResult, AValue);
     tkRecord:
@@ -1284,6 +1331,15 @@ begin
     LMemoryStream.Free;
     LStringStream.Free;
   end;
+end;
+
+class procedure TdjEngineJDO.SerializeString(const AResult: PJsonDataValue;
+  const AValue: TValue; const AParams: IdjParams);
+begin
+  if AValue.AsString.IsEmpty and AParams.EmptyStringAsNull then
+    AResult.ObjectValue := nil  // Set as NULL
+  else
+    AResult.Value := AValue.AsString;
 end;
 
 class procedure TdjEngineJDO.SerializeTValue(const AResult:PJsonDataValue; const AValue: TValue;

@@ -58,7 +58,8 @@ type
     class function SerializeFloat(const AValue: TValue): TJSONValue; static;
     class function SerializeEnumeration(const AValue: TValue): TJSONValue; static;
     class function SerializeInteger(const AValue: TValue): TJSONValue; static;
-    class function SerializeString(const AValue: TValue): TJSONValue; static;
+    class function SerializeString(const AValue: TValue; const AParams: IdjParams): TJSONValue; static;
+    class function SerializeChar(const AValue: TValue; const AParams: IdjParams): TJSONValue; static;
     class function SerializeRecord(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue; static;
     class function SerializeArray(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue; static;
     class function SerializeClass(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue; static;
@@ -77,6 +78,7 @@ type
     class function DeserializeEnumeration(const AJSONValue: TJSONValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeInteger(const AJSONValue: TJSONValue): TValue; static;
     class function DeserializeString(const AJSONValue: TJSONValue): TValue; static;
+    class function DeserializeChar(const AJSONValue: TJSONValue): TValue; static;
     class function DeserializeRecord(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
     class function DeserializeArray(const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
     class procedure DeserializeClassCommon(var AChildObj: TObject; const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AParams: IdjParams); static;
@@ -196,6 +198,19 @@ begin
     // Add to the array
     Result.SetArrayElement(I, LValue);
   end;
+end;
+
+class function TdjEngineDOM.DeserializeChar(
+  const AJSONValue: TJSONValue): TValue;
+begin
+  // If Null or empty value
+  if (not Assigned(AJSONValue))
+  or (AJSONValue is TJSONNull)
+  or (AJSONValue.Value.IsEmpty)
+  then
+    Result := #0
+  else
+    Result := AJSONValue.Value;
 end;
 
 class function TdjEngineDOM.DeserializeClass(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
@@ -640,6 +655,8 @@ begin
       Result := DeserializeFloat(AJSONValue, LValueType);
     tkString, tkLString, tkWString, tkUString:
       Result := DeserializeString(AJSONValue);
+    tkChar, tkWChar:
+      Result := DeserializeChar(AJSONValue);
     tkRecord:
       Result := DeserializeRecord(AJSONValue, LValueType, APropField, AParams);
     tkClass:
@@ -764,7 +781,9 @@ end;
 
 class function TdjEngineDOM.DeserializeString(const AJSONValue: TJSONValue): TValue;
 begin
-  if not Assigned(AJSONValue) then  // JSONKey not present
+  if (not Assigned(AJSONValue))
+  or (AJSONValue is TJSONNull)
+  then
     Result := ''
   else
     Result := AJSONValue.Value;
@@ -1004,6 +1023,20 @@ begin
   end
   else
     Result := LJSONArray;
+end;
+
+class function TdjEngineDOM.SerializeChar(const AValue: TValue;
+  const AParams: IdjParams): TJSONValue;
+begin
+  if AValue.AsString = #0 then
+  begin
+    if AParams.EmptyCharAsNull then
+      Result := TJSONNull.Create
+    else
+      Result := TJSONString.Create('');
+  end
+  else
+    Result := TJSONString.Create(AValue.AsString);
 end;
 
 class function TdjEngineDOM.SerializeClass(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue;
@@ -1256,7 +1289,9 @@ begin
     tkFloat:
       Result := SerializeFloat(AValue);
     tkString, tkLString, tkWString, tkUString:
-      Result := SerializeString(AValue);
+      Result := SerializeString(AValue, AParams);
+    tkChar, tkWChar:
+      Result := SerializeChar(AValue, AParams);
     tkEnumeration:
       Result := SerializeEnumeration(AValue);
     tkRecord:
@@ -1348,9 +1383,12 @@ begin
   end;
 end;
 
-class function TdjEngineDOM.SerializeString(const AValue: TValue): TJSONValue;
+class function TdjEngineDOM.SerializeString(const AValue: TValue; const AParams: IdjParams): TJSONValue;
 begin
-  Result := TJSONString.Create(AValue.AsString);
+  if AValue.AsString.IsEmpty and AParams.EmptyStringAsNull then
+    Result := TJSONNull.Create
+  else
+    Result := TJSONString.Create(AValue.AsString);
 end;
 
 
@@ -1379,7 +1417,7 @@ begin
     if (LRttiType.TypeKind = tkClass) or (LRttiType.TypeKind = tkInterface) then
       LTypeJSONValue := (LJSONValue as TJSONObject).RemovePair(DJ_TYPENAME).JsonValue
     else
-      LTypeJSONValue := SerializeString(LRttiType.QualifiedName);
+      LTypeJSONValue := SerializeString(LRttiType.QualifiedName, AParams);
     // Set the TValue qualified type name
     JObj.AddPair(DJ_TYPENAME, LTypeJSONValue);
     // Set the TValue value
