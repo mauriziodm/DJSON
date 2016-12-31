@@ -134,6 +134,8 @@ begin
   NewPerson.NumTel.Add(   TNumTel.Create(1, '0541/605905', 1)   );
   NewPerson.NumTel.Add(   TNumTel.Create(2, '329/0583381', 1)   );
   NewPerson.NumTel.Add(   TNumTel.Create(3, '0541/694750', 1)   );
+  NewPerson.Note.Add('Nota 1');
+  NewPerson.Note.Add('Nota 2');
   Result.Add(NewPerson);
 
   NewPerson := TPerson.Create(2, 'Daniele Teti');
@@ -143,6 +145,8 @@ begin
   NewPerson.LuogoDiNascita := 'Roma';
   NewPerson.NumTel.Add(   TNumTel.Create(4, '06/1122334',  2)   );
   NewPerson.NumTel.Add(   TNumTel.Create(5, '333/23456346',2)   );
+  NewPerson.Note.Add('Nota 1');
+  NewPerson.Note.Add('Nota 2');
   Result.Add(NewPerson);
 
   NewPerson := TPerson.Create(3, 'Omar Bossoni');
@@ -153,6 +157,8 @@ begin
   NewPerson.NumTel.Add(   TNumTel.Create(6, '02/673927',   3)   );
   NewPerson.NumTel.Add(   TNumTel.Create(7, '347/3459276', 3)   );
   NewPerson.NumTel.Add(   TNumTel.Create(8, '332/6714399', 3)   );
+  NewPerson.Note.Add('Nota 1');
+  NewPerson.Note.Add('Nota 2');
   Result.Add(NewPerson);
 end;
 
@@ -166,6 +172,9 @@ begin
   Result.NumTel.Add(   TNumTel.Create(1, '0541/605905', 1)   );
   Result.NumTel.Add(   TNumTel.Create(2, '329/0583381', 1)   );
   Result.NumTel.Add(   TNumTel.Create(3, '0541/694750', 1)   );
+
+  Result.Note.Add('Nota 1');
+  Result.Note.Add('Nota 2');
 end;
 
 procedure TMainForm.ButtonDeserializeBSONObjectListClick(Sender: TObject);
