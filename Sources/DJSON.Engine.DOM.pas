@@ -972,9 +972,13 @@ class function TdjEngineDOM.Serialize(const AValue: TValue;
 var
   LJSONValue: TJSONValue;
 begin
+  Result := '';
   LJSONValue := SerializePropField(AValue, APropField, AParams, AEnableCustomSerializers);
   try
-    Result := LJSONValue.ToJSON;
+    if Assigned(LJSONValue) then
+      Result := LJSONValue.ToJSON
+    else
+      raise Exception.Create('Record type not (yet) supported');
   finally
     LJSONValue.Free;
   end;
