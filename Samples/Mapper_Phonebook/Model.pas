@@ -3,6 +3,7 @@ unit Model;
 interface
 
 uses
+  System.Classes, System.SysUtils,
   System.Generics.Collections, DJSON.Attributes, System.JSON, Serializers;
 
 type
@@ -32,6 +33,7 @@ type
   private
     FID: Integer;
     FDescrizione: String;
+    FNote: TStringList;
     FNumTel: TObjectList<TNumTel>;
     FSesso: Char;
     FEta: Byte;
@@ -53,12 +55,11 @@ type
     property LuogoDiNascita: String read FLuogoDiNascita write FLuogoDiNascita;
     property ViaggiEffettuati:Word read FViaggiEffettuati write FViaggiEffettuati;
     property NumTel:TObjectList<TNumTel> read GetNumTel;
+    property Note: TStringList read FNote write FNote;
   end;
 
 implementation
 
-uses
-  System.Classes, System.SysUtils;
 
 { TMyClass }
 
@@ -73,10 +74,12 @@ constructor TPerson.Create;
 begin
   inherited;
   FNumTel := TObjectList<TNumTel>.Create;
+  FNote := TStringList.Create;
 end;
 
 destructor TPerson.Destroy;
 begin
+  FNote.Free;
   FNumTel.Free;
   inherited;
 end;

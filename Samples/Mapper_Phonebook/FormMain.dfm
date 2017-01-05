@@ -23,8 +23,6 @@ object MainForm: TMainForm
     Color = 12895428
     ParentBackground = False
     TabOrder = 0
-    ExplicitLeft = 3
-    ExplicitTop = 20
     object Shape1: TShape
       Left = 507
       Top = 27
