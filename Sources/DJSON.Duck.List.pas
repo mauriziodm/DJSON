@@ -198,6 +198,7 @@ end;
 class function TdjDuckList.TryCreate(const AObjAsDuck: TObject): IdjDuckList;
 var
   LType: TRttiType;
+  LItemsProp: TRttiIndexedProperty;
   LCountProperty: TRttiProperty;
   LOwnsObjectsProperty: TRttiProperty;
   LAddMethod: TRttiMethod;
@@ -220,10 +221,17 @@ begin
   if not Assigned(LClearMethod) then Exit(nil);
   // GetItem method
 {$IF CompilerVersion >= 23}
-  LGetItemMethod := LType.GetIndexedProperty('Items').ReadMethod;
+  LGetItemMethod := nil;
+  LItemsProp := LType.GetIndexedProperty('Items');
+  if not Assigned(LItemsProp) then
+    LItemsProp := LType.GetIndexedProperty('Strings'); // TStrings descendant classes
+  if Assigned(LItemsProp) then
+    LGetItemMethod := LItemsProp.ReadMethod;
 {$IFEND}
   if not Assigned(LGetItemMethod) then LGetItemMethod := LType.GetMethod('GetItem');
   if not Assigned(LGetItemMethod) then LGetItemMethod := LType.GetMethod('GetElement');
+  // TStrings descendant classes
+  if not Assigned(LGetItemMethod) then LGetItemMethod := LType.GetMethod('Get');
   if not Assigned(LGetItemMethod) then Exit(nil);
   // OwnsObjects Property (No exception if not exist)
   LOwnsObjectsProperty := nil;
