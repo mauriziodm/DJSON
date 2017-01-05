@@ -46,7 +46,7 @@ interface
 
 uses
   System.TypInfo, DJSON.Serializers, System.Generics.Collections, System.Rtti,
-  DJSON.TypeInfoCache;
+  DJSON.TypeInfoCache, DJSON.ISO8601Processor;
 
 type
 
@@ -61,6 +61,8 @@ type
   TdjIgnoredProperties = array of string;
 
   TdjSerializersContainer = class;
+
+  TdjDateTimeFormat = (dfISO8601, dfUnix, dfDMVCFramework);
 
   IdjParams = interface;
 
@@ -144,6 +146,13 @@ type
     procedure SetEmptyCharAsNull(const AValue:Boolean);
     function GetEmptyCharAsNull: Boolean;
     property EmptyCharAsNull:Boolean read GetEmptyCharAsNull write SetEmptyCharAsNull;
+    // DateTimeFormat
+    procedure SetDateTimeFormat(const AValue:TdjDateTimeFormat);
+    function GetDateTimeFormat: TdjDateTimeFormat;
+    property DateTimeFormat:TdjDateTimeFormat read GetDateTimeFormat write SetDateTimeFormat;
+    // ISO8601Params
+    function GetISO8601Params: PdjISO8601Processor;
+    property ISO8601Params:PdjISO8601Processor read GetISO8601Params;
   end;
 
   TdjParams = class(TInterfacedObject, IdjParams)
@@ -165,6 +174,8 @@ type
     FBsonRootLabel: String;
     FEmptyStringAsNull: Boolean;
     FEmptyCharAsNull: Boolean;
+    FDateTimeFormat: TdjDateTimeFormat;
+    FISO8601Params: TdjISO8601Processor;
     // Engine (No property)
     function GetEngineClass: TdjEngineRef;
     // EngineType
@@ -219,6 +230,11 @@ type
     // EmptyCharAsNull
     procedure SetEmptyCharAsNull(const AValue:Boolean);
     function GetEmptyCharAsNull: Boolean;
+    // DateTimeFormat
+    procedure SetDateTimeFormat(const AValue:TdjDateTimeFormat);
+    function GetDateTimeFormat: TdjDateTimeFormat;
+    // ISO8601Params
+    function GetISO8601Params: PdjISO8601Processor;
   public
     constructor Create;
     destructor Destroy; override;
@@ -299,6 +315,7 @@ begin
   FBsonRootLabel := 'root';
   FEmptyStringAsNull := False;
   FEmptyCharAsNull := False;
+  SetDateTimeFormat(TdjDateTimeFormat.dfISO8601);  // Use the setter
 end;
 
 destructor TdjParams.Destroy;
@@ -321,6 +338,11 @@ end;
 function TdjParams.GetBsonRootLabel: String;
 begin
   Result := FBsonRootLabel;
+end;
+
+function TdjParams.GetDateTimeFormat: TdjDateTimeFormat;
+begin
+  Result := FDateTimeFormat;
 end;
 
 function TdjParams.GetEmptyCharAsNull: Boolean;
@@ -351,6 +373,11 @@ end;
 function TdjParams.GetIgnoredProperties: TdjIgnoredProperties;
 begin
   Result := FIgnoredProperties;
+end;
+
+function TdjParams.GetISO8601Params: PdjISO8601Processor;
+begin
+  Result := @FISO8601Params;
 end;
 
 function TdjParams.GetItemsKeyDefaultQualifiedName: String;
@@ -416,6 +443,24 @@ end;
 procedure TdjParams.SetBsonRootLabel(const AValue: String);
 begin
   FBsonRootLabel := AValue;
+end;
+
+procedure TdjParams.SetDateTimeFormat(const AValue: TdjDateTimeFormat);
+begin
+  if AValue = FDateTimeFormat then
+    Exit;
+  FDateTimeFormat := AValue;
+  case FDateTimeFormat of
+    dfISO8601: FISO8601Params.ResetToDefault;
+    dfUnix:;
+    dfDMVCFramework:begin
+      FISO8601Params.ResetToDefault;
+      FISO8601Params.TimePrefix := ' ';
+      FISO8601Params.Seconds := False;
+      FISO8601Params.Millisec := False;
+      FISO8601Params.Zulu := '';
+    end;
+  end;
 end;
 
 procedure TdjParams.SetEmptyCharAsNull(const AValue: Boolean);
