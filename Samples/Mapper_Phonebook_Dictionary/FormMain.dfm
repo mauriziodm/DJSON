@@ -11,6 +11,7 @@ object MainForm: TMainForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poDesktopCenter
   PixelsPerInch = 96
   TextHeight = 13
   object PanelTools: TPanel
@@ -148,7 +149,7 @@ object MainForm: TMainForm
       AutoSize = False
       Caption = 
         'NOTE: Custom serializer defined in "TPhoneNumberCustomSerializer' +
-        '" and registered by "MapperCustomSerializer" attribute '
+        '" and registered by "djSerializer" attribute '
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
       Font.Height = -16
@@ -401,7 +402,7 @@ object MainForm: TMainForm
       Height = 32
       Caption = 'JSON serialization engine'
       Columns = 3
-      ItemIndex = 0
+      ItemIndex = 1
       Items.Strings = (
         'Delphi DOM'
         'Delphi Stream'

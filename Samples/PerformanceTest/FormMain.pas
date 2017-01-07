@@ -133,11 +133,11 @@ begin
   begin
     LNewPerson := TPerson.Create(LCurrPersonID, 'Maurizio Del Magno');
     Inc(LCurrNumberID);
-    LNewPerson.NumTel.Add(   TNumTel.Create(LCurrNumberID, '0541/605905', LCurrPersonID)   );
+    LNewPerson.NumTel.Add(   TPhoneNumber.Create(LCurrNumberID, '0541/605905', LCurrPersonID)   );
     Inc(LCurrNumberID);
-    LNewPerson.NumTel.Add(   TNumTel.Create(LCurrNumberID, '329/0583381', LCurrPersonID)   );
+    LNewPerson.NumTel.Add(   TPhoneNumber.Create(LCurrNumberID, '329/0583381', LCurrPersonID)   );
     Inc(LCurrNumberID);
-    LNewPerson.NumTel.Add(   TNumTel.Create(LCurrNumberID, '0541/694750', LCurrPersonID)   );
+    LNewPerson.NumTel.Add(   TPhoneNumber.Create(LCurrNumberID, '0541/694750', LCurrPersonID)   );
     FList.Add(LNewPerson);
   end;
 end;

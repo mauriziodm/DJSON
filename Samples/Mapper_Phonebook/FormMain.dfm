@@ -149,8 +149,8 @@ object MainForm: TMainForm
       Alignment = taCenter
       AutoSize = False
       Caption = 
-        'NOTE: Custom serializer defined in "TNumTelCustomSerializer" and' +
-        ' registered by "djSerializer" attribute '
+        'NOTE: Custom serializer defined in "TPhoneNumberCustomSerializer' +
+        '" and registered by "djSerializer" attribute '
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
       Font.Height = -16
@@ -497,8 +497,6 @@ object MainForm: TMainForm
       'Memo1')
     ScrollBars = ssVertical
     TabOrder = 1
-    ExplicitLeft = 168
-    ExplicitWidth = 963
   end
   object Panel1: TPanel
     Left = 0

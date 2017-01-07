@@ -11,6 +11,7 @@ object MainForm: TMainForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poDesktopCenter
   PixelsPerInch = 96
   TextHeight = 13
   object PanelTools: TPanel
@@ -401,7 +402,7 @@ object MainForm: TMainForm
       Height = 32
       Caption = 'JSON serialization engine'
       Columns = 3
-      ItemIndex = 0
+      ItemIndex = 1
       Items.Strings = (
         'Delphi DOM'
         'Delphi Stream'

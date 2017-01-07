@@ -7,9 +7,9 @@ uses
 
 type
 
-  [djSerializerDOM(TNumTelCustomSerializerDOM)]  // Or register the custom serializer in a IomParams object or direct in the command
-  [djSerializerJDO(TNumTelCustomSerializerJDO)]  // Or register the custom serializer in a IomParams object or direct in the command
-  [djSerializerStream(TNumTelCustomSerializerStream)]  // Or register the custom serializer in a IomParams object or direct in the command
+  [djSerializerDOM(TPhoneNumberCustomSerializerDOM)]  // Or register the custom serializer in a IomParams object or direct in the command
+  [djSerializerJDO(TPhoneNumberCustomSerializerJDO)]  // Or register the custom serializer in a IomParams object or direct in the command
+  [djSerializerStream(TPhoneNumberCustomSerializerStream)]  // Or register the custom serializer in a IomParams object or direct in the command
   TNumTel = class
   private
     FID: Integer;

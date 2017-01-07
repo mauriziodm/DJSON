@@ -8,7 +8,7 @@ uses DJSON.Serializers, System.Rtti, System.JSON, JsonDataObjects,
 type
 
   // DelphiDOM engine custom serializer
-  TNumTelCustomSerializerDOM = class(TdjDOMCustomSerializer)
+  TPhoneNumberCustomSerializerDOM = class(TdjDOMCustomSerializer)
   public
     class function Serialize(const AValue:TValue): TJSONValue; override;
     class function Deserialize(const AJSONValue:TJSONValue; const AExistingValue:TValue): TValue; override;
@@ -16,7 +16,7 @@ type
   end;
 
   // JDO engine custom serializer
-  TNumTelCustomSerializerJDO = class(TdjJDOCustomSerializer)
+  TPhoneNumberCustomSerializerJDO = class(TdjJDOCustomSerializer)
   public
     class procedure Serialize(const AJSONValue:PJsonDataValue; const AValue:TValue); override;
     class function Deserialize(const AJSONValue:PJsonDataValue; const AExistingValue:TValue): TValue; override;
@@ -24,7 +24,7 @@ type
   end;
 
   // DelphiStream engine custom serializer
-  TNumTelCustomSerializerStream = class(TdjStreamCustomSerializer)
+  TPhoneNUmberCustomSerializerStream = class(TdjStreamCustomSerializer)
   public
     class procedure Serialize(const AJSONWriter: TJSONWriter; const AValue:TValue); override;
     class function Deserialize(const AJSONReader: TJSONReader; const AExistingValue:TValue): TValue; override;
@@ -38,7 +38,7 @@ uses
 
 { TPhoneNumberCustomSerializer }
 
-class function TNumTelCustomSerializerDOM.Deserialize(const AJSONValue: TJSONValue;
+class function TPhoneNumberCustomSerializerDOM.Deserialize(const AJSONValue: TJSONValue;
   const AExistingValue: TValue): TValue;
 var
   LStringList: TStrings;
@@ -54,12 +54,12 @@ begin
   end;
 end;
 
-class function TNumTelCustomSerializerDOM.isTypeNotificationCompatible: Boolean;
+class function TPhoneNumberCustomSerializerDOM.isTypeNotificationCompatible: Boolean;
 begin
   Result := True;
 end;
 
-class function TNumTelCustomSerializerDOM.Serialize(const AValue: TValue): TJSONValue;
+class function TPhoneNumberCustomSerializerDOM.Serialize(const AValue: TValue): TJSONValue;
 var
   LStringList: TStrings;
   LNumTel: TNumTel;
@@ -78,7 +78,7 @@ end;
 
 { TNumTelCustomSerializerJDO }
 
-class function TNumTelCustomSerializerJDO.Deserialize(
+class function TPhoneNumberCustomSerializerJDO.Deserialize(
   const AJSONValue: PJsonDataValue; const AExistingValue: TValue): TValue;
 var
   LStringList: TStrings;
@@ -94,12 +94,12 @@ begin
   end;
 end;
 
-class function TNumTelCustomSerializerJDO.isTypeNotificationCompatible: Boolean;
+class function TPhoneNumberCustomSerializerJDO.isTypeNotificationCompatible: Boolean;
 begin
   Result := True;
 end;
 
-class procedure TNumTelCustomSerializerJDO.Serialize(
+class procedure TPhoneNumberCustomSerializerJDO.Serialize(
   const AJSONValue: PJsonDataValue; const AValue: TValue);
 var
   LStringList: TStrings;
@@ -119,7 +119,7 @@ end;
 
 { TNumTelCustomSerializerSTream }
 
-class function TNumTelCustomSerializerStream.Deserialize(
+class function TPhoneNUmberCustomSerializerStream.Deserialize(
   const AJSONReader: TJSONReader; const AExistingValue: TValue): TValue;
 var
   LStringList: TStrings;
@@ -135,12 +135,12 @@ begin
   end;
 end;
 
-class function TNumTelCustomSerializerStream.isTypeNotificationCompatible: Boolean;
+class function TPhoneNUmberCustomSerializerStream.isTypeNotificationCompatible: Boolean;
 begin
   Result := True;
 end;
 
-class procedure TNumTelCustomSerializerStream.Serialize(
+class procedure TPhoneNUmberCustomSerializerStream.Serialize(
   const AJSONWriter: TJSONWriter; const AValue: TValue);
 var
   LStringList: TStrings;
