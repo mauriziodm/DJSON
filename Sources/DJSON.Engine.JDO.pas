@@ -55,7 +55,7 @@ type
   protected
     // Serializers
     class procedure SerializePropField(const AResult:PJsonDataValue; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True); static;
-    class procedure SerializeFloat(const AResult:PJsonDataValue; const AValue: TValue); static;
+    class procedure SerializeFloat(const AResult:PJsonDataValue; const AValue: TValue; const AParams:IdjParams); static;
     class procedure SerializeEnumeration(const AResult:PJsonDataValue; const AValue: TValue); static;
     class procedure SerializeString(const AResult:PJsonDataValue; const AValue: TValue; const AParams: IdjParams); static;
     class procedure SerializeChar(const AResult:PJsonDataValue; const AValue: TValue; const AParams: IdjParams); static;
@@ -1040,7 +1040,7 @@ begin
 end;
 
 class procedure TdjEngineJDO.SerializeFloat(const AResult:PJsonDataValue;
-  const AValue: TValue);
+  const AValue: TValue; const AParams:IdjParams);
 var
   LQualifiedTypeName: String;
 begin
@@ -1050,17 +1050,17 @@ begin
   if LQualifiedTypeName = 'System.TDate' then
   begin
     if AValue.AsExtended <> 0 then
-      AResult.Value := TdjUtils.ISODateToString(AValue.AsExtended);
+      AResult.Value := TdjUtils.ISODateToString(AValue.AsExtended, AParams);
   end
   // TDateTime
   else if LQualifiedTypeName = 'System.TDateTime' then
   begin
     if AValue.AsExtended <> 0 then
-      AResult.Value := TdjUtils.ISODateTimeToString(AValue.AsExtended);
+      AResult.Value := TdjUtils.ISODateTimeToString(AValue.AsExtended, AParams);
   end
   // TTime
   else if LQualifiedTypeName = 'System.TTime' then
-   AResult.Value := TdjUtils.ISOTimeToString(AValue.AsExtended)
+   AResult.Value := TdjUtils.ISOTimeToString(AValue.AsExtended, AParams)
   // Float
   else
    AResult.FloatValue := AValue.AsExtended;
@@ -1143,7 +1143,7 @@ begin
     tkInteger, tkInt64:
       AResult.IntValue := AValue.AsInteger;
     tkFloat:
-      SerializeFloat(AResult, AValue);
+      SerializeFloat(AResult, AValue, AParams);
     tkString, tkLString, tkWString, tkUString:
       SerializeString(AResult, AValue, AParams);
     tkChar, tkWChar:

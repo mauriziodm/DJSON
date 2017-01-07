@@ -18,6 +18,10 @@ const
   TYPE_PROPERTIES = 0;
   TYPE_FIELDS = 1;
 
+  DF_ISO8601 = 0;
+  DF_UNIX = 1;
+  DF_DMVC = 2;
+
 type
   TMainForm = class(TForm)
     PanelTools: TPanel;
@@ -58,6 +62,23 @@ type
     ButtonDeserializeBSONObjectList: TButton;
     CheckBoxEmptyStringAsNull: TCheckBox;
     CheckBoxEmptyCharAsNull: TCheckBox;
+    Panel1: TPanel;
+    RadioGroupDateTimeFormat: TRadioGroup;
+    GroupBox1: TGroupBox;
+    EditDateSeparator: TLabeledEdit;
+    EditTimePrefix: TLabeledEdit;
+    EditTimeSeparator: TLabeledEdit;
+    EditMillisecSeparator: TLabeledEdit;
+    EditZulu: TLabeledEdit;
+    CheckBoxSeconds: TCheckBox;
+    CheckBoxMillisec: TCheckBox;
+    CheckBoxUTCTime: TCheckBox;
+    EditTimezonePrefix: TLabeledEdit;
+    EditTimezoneSeparator: TLabeledEdit;
+    CheckBoxTimezoneIgnore: TCheckBox;
+    Label9: TLabel;
+    Label10: TLabel;
+    Label11: TLabel;
     procedure ButtonSerializeSignleObjectClick(Sender: TObject);
     procedure ButtonDeserializeSignleObjectClick(Sender: TObject);
     procedure ButtonSerializeObjectListClick(Sender: TObject);
@@ -72,9 +93,12 @@ type
     procedure ButtonDeserializeBSONSignleObjectClick(Sender: TObject);
     procedure ButtonSerializeBSONObjectListClick(Sender: TObject);
     procedure ButtonDeserializeBSONObjectListClick(Sender: TObject);
+    procedure RadioGroupDateTimeFormatClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
     FBytes: TBytes;
+    procedure LoadISO8601ParamsToScreen;
     function BuildMapperParams: IdjParams;
     function BuildSampleObject: TPerson;
     function BuildSampleList: TObjectList<TPerson>;
@@ -118,6 +142,26 @@ begin
   // Empty string and char mode
   Result.EmptyStringAsNull := CheckBoxEmptyStringAsNull.Checked;
   Result.EmptyCharAsNull := CheckBoxEmptyCharAsNull.Checked;
+  // DateTime format
+  case RadioGroupDateTimeFormat.ItemIndex of
+    DF_ISO8601: Result.DateTimeFormat := TdjDateTimeFormat.dfISO8601;
+    DF_UNIX:    Result.DateTimeFormat := TdjDateTimeFormat.dfUnix;
+    DF_DMVC:    Result.DateTimeFormat := TdjDateTimeFormat.dfDMVCFramework;
+  end;
+  // Load ISO8601 params
+  Result.ISO8601Params.DateSeparator := EditDateSeparator.Text;
+
+  Result.ISO8601Params.TimePrefix := EditTimePrefix.Text;
+  Result.ISO8601Params.TimeSeparator := EditTimeSeparator.Text;
+  Result.ISO8601Params.MillisecSeparator := EditMillisecSeparator.Text;
+  Result.ISO8601Params.Zulu := EditZulu.Text;
+  Result.ISO8601Params.Seconds := CheckBoxSeconds.Checked;
+  Result.ISO8601Params.Millisec := CheckBoxMillisec.Checked;
+  Result.ISO8601Params.UTCTime := CheckBoxUTCTime.Checked;
+
+  Result.ISO8601Params.TimeZonePrefix := EditTimezonePrefix.Text;
+  Result.ISO8601Params.TimeZoneSeparator := EditTimezoneSeparator.Text;
+  Result.ISO8601Params.TimeZoneIgnore := CheckBoxTimezoneIgnore.Checked;
 end;
 
 function TMainForm.BuildSampleList: TObjectList<TPerson>;
@@ -127,36 +171,45 @@ begin
   Result := TObjectList<TPerson>.Create;
 
   NewPerson := TPerson.Create(1, 'Maurizio Del Magno');
-  NewPerson.Sesso := 'M';
-  NewPerson.Eta := 18;
-  NewPerson.ViaggiEffettuati := 35;
-  NewPerson.LuogoDiNascita := 'Riccione';
-  NewPerson.NumTel.Add(   TNumTel.Create(1, '0541/605905', 1)   );
-  NewPerson.NumTel.Add(   TNumTel.Create(2, '329/0583381', 1)   );
-  NewPerson.NumTel.Add(   TNumTel.Create(3, '0541/694750', 1)   );
+  NewPerson.Gender := 'M';
+  NewPerson.Age := 18;
+  NewPerson.NumberOfFriends := 35;
+  NewPerson.BirthPlace := 'Riccione';
+  NewPerson.BirthDate := StrToDate('22/10/1970');
+  NewPerson.BirthTime := StrToTime('20:31');
+  NewPerson.LastEdit := Now;
+  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(1, '0541/605905', 1)   );
+  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(2, '329/0583381', 1)   );
+  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(3, '0541/694750', 1)   );
   NewPerson.Note.Add('Nota 1');
   NewPerson.Note.Add('Nota 2');
   Result.Add(NewPerson);
 
   NewPerson := TPerson.Create(2, 'Daniele Teti');
-  NewPerson.Sesso := 'M';
-  NewPerson.Eta := 32;
-  NewPerson.ViaggiEffettuati := 12;
-  NewPerson.LuogoDiNascita := 'Roma';
-  NewPerson.NumTel.Add(   TNumTel.Create(4, '06/1122334',  2)   );
-  NewPerson.NumTel.Add(   TNumTel.Create(5, '333/23456346',2)   );
-  NewPerson.Note.Add('Nota 1');
-  NewPerson.Note.Add('Nota 2');
+  NewPerson.Gender := 'M';
+  NewPerson.Age := 32;
+  NewPerson.NumberOfFriends := 12;
+  NewPerson.BirthPlace := 'Roma';
+  NewPerson.BirthDate := StrToDate('01/06/1973');
+  NewPerson.BirthTime := StrToTime('09:16');
+  NewPerson.LastEdit := Now;
+  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(4, '06/1122334',  2)   );
+  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(5, '333/23456346',2)   );
+  NewPerson.Note.Add('Note 1');
+  NewPerson.Note.Add('Note 2');
   Result.Add(NewPerson);
 
   NewPerson := TPerson.Create(3, 'Omar Bossoni');
 //  NewPerson.Sesso := #0;
-  NewPerson.Eta := 64;
-  NewPerson.ViaggiEffettuati := 15;
+  NewPerson.Age := 64;
+  NewPerson.NumberOfFriends := 15;
 //  NewPerson.LuogoDiNascita := 'Brescia';
-  NewPerson.NumTel.Add(   TNumTel.Create(6, '02/673927',   3)   );
-  NewPerson.NumTel.Add(   TNumTel.Create(7, '347/3459276', 3)   );
-  NewPerson.NumTel.Add(   TNumTel.Create(8, '332/6714399', 3)   );
+//  NewPerson.BirthDate := StrToDate('10/10/1974');
+//  NewPerson.BirthTime := StrToTime('13:31');
+//  NewPerson.LastEdit := Now;
+  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(6, '02/673927',   3)   );
+  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(7, '347/3459276', 3)   );
+  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(8, '332/6714399', 3)   );
   NewPerson.Note.Add('Nota 1');
   NewPerson.Note.Add('Nota 2');
   Result.Add(NewPerson);
@@ -165,16 +218,19 @@ end;
 function TMainForm.BuildSampleObject: TPerson;
 begin
   Result := TPerson.Create(1, 'Maurizio Del Magno');
-//  Result.Sesso := 'M';
-  Result.Eta := 18;
-  Result.ViaggiEffettuati := 35;
-//  Result.LuogoDiNascita := 'Riccione';
-  Result.NumTel.Add(   TNumTel.Create(1, '0541/605905', 1)   );
-  Result.NumTel.Add(   TNumTel.Create(2, '329/0583381', 1)   );
-  Result.NumTel.Add(   TNumTel.Create(3, '0541/694750', 1)   );
+  Result.Gender := 'M';
+  Result.Age := 18;
+  Result.NumberOfFriends := 35;
+  Result.BirthPlace := 'Riccione';
+  Result.BirthDate := StrToDate('22/10/1970');
+  Result.BirthTime := StrToTime('20:31');
+  Result.LastEdit := Now;
+  Result.PhoneNumbers.Add(   TPhoneNumber.Create(1, '0541/605905', 1)   );
+  Result.PhoneNumbers.Add(   TPhoneNumber.Create(2, '329/0583381', 1)   );
+  Result.PhoneNumbers.Add(   TPhoneNumber.Create(3, '0541/694750', 1)   );
 
-  Result.Note.Add('Nota 1');
-  Result.Note.Add('Nota 2');
+  Result.Note.Add('Note 1');
+  Result.Note.Add('Note 2');
 end;
 
 procedure TMainForm.ButtonDeserializeBSONObjectListClick(Sender: TObject);
@@ -215,7 +271,7 @@ procedure TMainForm.ButtonDeserializeObjectListClick(Sender: TObject);
 var
   LPersonList: TObjectList<TPerson>;
   LPerson: TPerson;
-  LNumtel: TNumTel;
+  LNumtel: TPhoneNumber;
   LParams: IdjParams;
 begin
   LParams := BuildMapperParams;
@@ -415,10 +471,48 @@ begin
   end;
 end;
 
+procedure TMainForm.FormCreate(Sender: TObject);
+begin
+  // Load ISO params to screen
+  LoadISO8601ParamsToScreen;
+end;
+
+procedure TMainForm.LoadISO8601ParamsToScreen;
+var
+  LParams: IdjParams;
+begin
+  LParams := dj.Default;
+  case RadioGroupDateTimeFormat.ItemIndex of
+    DF_ISO8601: LParams.DateTimeFormat := TdjDateTimeFormat.dfISO8601;
+    DF_UNIX:    LParams.DateTimeFormat := TdjDateTimeFormat.dfUnix;
+    DF_DMVC:    LParams.DateTimeFormat := TdjDateTimeFormat.dfDMVCFramework;
+  end;
+  // Date params
+  EditDateSeparator.Text := LParams.ISO8601Params.DateSeparator;
+  // Time params
+  EditTimePrefix.Text := LParams.ISO8601Params.TimePrefix;
+  EditTimeSeparator.Text := LParams.ISO8601Params.TimeSeparator;
+  EditMillisecSeparator.Text := LParams.ISO8601Params.MillisecSeparator;
+  EditZulu.Text := LParams.ISO8601Params.Zulu;
+  CheckBoxSeconds.Checked := LParams.ISO8601Params.Seconds;
+  CheckBoxMillisec.Checked := LParams.ISO8601Params.Millisec;
+  CheckBoxUTCTime.Checked := LParams.ISO8601Params.UTCTime;
+  // Timezone params
+  EditTimezonePrefix.Text := LParams.ISO8601Params.TimeZonePrefix;
+  EditTimezoneSeparator.Text := LParams.ISO8601Params.TimeZoneSeparator;
+  CheckBoxTimezoneIgnore.Checked := LParams.ISO8601Params.TimeZoneIgnore;
+end;
+
+procedure TMainForm.RadioGroupDateTimeFormatClick(Sender: TObject);
+begin
+  // Reload ISO params to screen
+  LoadISO8601ParamsToScreen;
+end;
+
 procedure TMainForm.ShowListData(APersonList: TObjectList<TPerson>);
 var
   LPerson: TPerson;
-  LNumtel: TNumTel;
+  LNumtel: TPhoneNumber;
 begin
   Memo1.Lines.BeginUpdate;
   try
@@ -431,19 +525,24 @@ begin
       Memo1.Lines.Add('');
       Memo1.Lines.Add('Class: ' + TPerson.ClassName);
       Memo1.Lines.Add('ID = ' +  LPerson.ID.ToString);
-      Memo1.Lines.Add('Descrizione = ' +  LPerson.Descrizione);
-      Memo1.Lines.Add('Sesso = ' +  LPerson.Sesso);
-      Memo1.Lines.Add('Età = ' +  LPerson.Eta.ToString);
-      Memo1.Lines.Add('Viaggi effettuati = ' +  LPerson.ViaggiEffettuati.ToString);
-      Memo1.Lines.Add('Luogo di nascita = ' +  LPerson.LuogoDiNascita);
-      for LNumtel in LPerson.NumTel do
+      Memo1.Lines.Add('Name = ' +  LPerson.Name);
+      Memo1.Lines.Add('Gender = ' +  LPerson.Gender);
+      Memo1.Lines.Add('Age = ' +  LPerson.Age.ToString);
+      Memo1.Lines.Add('Num. of friends = ' +  LPerson.NumberOfFriends.ToString);
+      Memo1.Lines.Add('Birth place = ' +  LPerson.BirthPlace);
+      Memo1.Lines.Add('Birth date = ' +  DateToStr(LPerson.BirthDate));
+      Memo1.Lines.Add('Birth time = ' +  TimeToStr(LPerson.BirthTime));
+      Memo1.Lines.Add('Last edit = ' +  DateTimeToStr(LPerson.LastEdit));
+      Memo1.Lines.Add('Note = ' + LPerson.Note.DelimitedText);
+      for LNumtel in LPerson.PhoneNumbers do
       begin
         Memo1.Lines.Add('');
         Memo1.Lines.Add('     Class: ' + LNumtel.ClassName);
         Memo1.Lines.Add('     ID: ' + LNumtel.ID.ToString);
         Memo1.Lines.Add('     MasterID: ' + LNumtel.MasterID.ToString);
-        Memo1.Lines.Add('     Numero: ' + LNumtel.Numero);
+        Memo1.Lines.Add('     Number: ' + LNumtel.Number);
       end;
+    Memo1.Lines.Add('------------------------------------------');
     end;
     Memo1.Lines.Add('---------- End deserialized --------------');
   finally
@@ -453,7 +552,7 @@ end;
 
 procedure TMainForm.ShowSingleObjectData(APerson: TPerson);
 var
-  LNumTel: TNumTel;
+  LNumTel: TPhoneNumber;
 begin
   Memo1.Lines.BeginUpdate;
   try
@@ -463,18 +562,22 @@ begin
     Memo1.Lines.Add('---------- Start deserialized --------------');
     Memo1.Lines.Add('Class: ' + TPerson.ClassName);
     Memo1.Lines.Add('ID = ' +  APerson.ID.ToString);
-    Memo1.Lines.Add('Descrizione = ' +  APerson.Descrizione);
-    Memo1.Lines.Add('Sesso = ' +  APerson.Sesso);
-    Memo1.Lines.Add('Età = ' +  APerson.Eta.ToString);
-    Memo1.Lines.Add('Viaggi effettuati = ' +  APerson.ViaggiEffettuati.ToString);
-    Memo1.Lines.Add('Luogo di nascita = ' +  APerson.LuogoDiNascita);
-    for LNumtel in APerson.NumTel do
+    Memo1.Lines.Add('Name = ' +  APerson.Name);
+    Memo1.Lines.Add('Gender = ' +  APerson.Gender);
+    Memo1.Lines.Add('Age = ' +  APerson.Age.ToString);
+    Memo1.Lines.Add('Num. of friends = ' +  APerson.NumberOfFriends.ToString);
+    Memo1.Lines.Add('Birth place = ' +  APerson.BirthPlace);
+    Memo1.Lines.Add('Birth date = ' +  DateToStr(APerson.BirthDate));
+    Memo1.Lines.Add('Birth time = ' +  TimeToStr(APerson.BirthTime));
+    Memo1.Lines.Add('Last edit = ' +  DateTimeToStr(APerson.LastEdit));
+    Memo1.Lines.Add('Note = ' + APerson.Note.DelimitedText);
+    for LNumtel in APerson.PhoneNumbers do
     begin
       Memo1.Lines.Add('');
       Memo1.Lines.Add('     Class: ' + LNumtel.ClassName);
       Memo1.Lines.Add('     ID: ' + LNumtel.ID.ToString);
       Memo1.Lines.Add('     MasterID: ' + LNumtel.MasterID.ToString);
-      Memo1.Lines.Add('     Numero: ' + LNumtel.Numero);
+      Memo1.Lines.Add('     Number: ' + LNumtel.Number);
     end;
     Memo1.Lines.Add('---------- End deserialized --------------');
   finally

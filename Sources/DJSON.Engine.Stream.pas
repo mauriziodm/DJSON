@@ -54,7 +54,7 @@ type
   protected
     // Serializers
     class procedure SerializePropField(const AJSONWriter: TJSONWriter; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True); static;
-    class procedure SerializeFloat(const AJSONWriter: TJSONWriter; const AValue: TValue); static;
+    class procedure SerializeFloat(const AJSONWriter: TJSONWriter; const AValue: TValue; const AParams: IdjParams); static;
     class procedure SerializeEnumeration(const AJSONWriter: TJSONWriter; const AValue: TValue); static;
     class procedure SerializeString(const AJSONWriter: TJSONWriter; const AValue: TValue; const AParams: IdjParams); static;
     class procedure SerializeChar(const AJSONWriter: TJSONWriter; const AValue: TValue; const AParams: IdjParams); static;
@@ -72,7 +72,7 @@ type
     class function SerializeCustom(const AJSONWriter: TJSONWriter; AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
     // Deserializers
     class function DeserializePropField(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
-    class function DeserializeFloat(const AJSONReader: TJSONReader; const AValueType: TRttiType): TValue; static;
+    class function DeserializeFloat(const AJSONReader: TJSONReader; const AValueType: TRttiType; const AParams:IdjParams): TValue; static;
     class function DeserializeEnumeration(const AJSONReader: TJSONReader; const AValueType: TRttiType): TValue; static;
     class function DeserializeChar(const AJSONReader: TJSONReader): TValue; static;
     class function DeserializeRecord(const AJSONReader: TJSONReader; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue; static;
@@ -457,7 +457,7 @@ begin
 end;
 
 class function TdjEngineStream.DeserializeFloat(const AJSONReader: TJSONReader;
-  const AValueType: TRttiType): TValue;
+  const AValueType: TRttiType; const AParams:IdjParams): TValue;
 var
   LQualifiedTypeName: String;
 begin
@@ -469,15 +469,15 @@ begin
   else
   // TDate (string expected)
   if (LQualifiedTypeName = 'System.TDate') and (AJSONReader.TokenType = TJsonToken.String) then
-    Result := TValue.From<TDate>(TdjUtils.ISOStrToDateTime(AJSONReader.Value.AsString + ' 00:00:00'))
+    Result := TValue.From<TDate>(TdjUtils.ISOStrToDate(AJSONReader.Value.AsString, AParams))
   else
   // TDateTime (string expected)
   if (LQualifiedTypeName = 'System.TDateTime') and (AJSONReader.TokenType = TJsonToken.String) then
-    Result := TValue.From<TDateTime>(TdjUtils.ISOStrToDateTime(AJSONReader.Value.AsString))
+    Result := TValue.From<TDateTime>(TdjUtils.ISOStrToDateTime(AJSONReader.Value.AsString, AParams))
   else
   // TTime (string expected)
   if (LQualifiedTypeName = 'System.TTime') and (AJSONReader.TokenType = TJsonToken.String) then
-    Result := TValue.From<TTime>(TdjUtils.ISOStrToTime(AJSONReader.Value.AsString))
+    Result := TValue.From<TTime>(TdjUtils.ISOStrToTime(AJSONReader.Value.AsString, AParams))
   else
   // Normal float value (Float expected)
   if (AJSONReader.TokenType = TJsonToken.Float) then
@@ -708,7 +708,7 @@ begin
     tkInteger, tkInt64:
       Result := AJSONReader.Value;
     tkFloat:
-      Result := DeserializeFloat(AJSONReader, AValueType);
+      Result := DeserializeFloat(AJSONReader, AValueType, AParams);
     tkString, tkLString, tkWString, tkUString:
       Result := AJSONReader.Value;
     tkChar, tkWChar:
@@ -1128,7 +1128,7 @@ begin
 end;
 
 class procedure TdjEngineStream.SerializeFloat(const AJSONWriter: TJSONWriter;
-  const AValue: TValue);
+  const AValue: TValue; const AParams: IdjParams);
 var
   LQualifiedTypeName: String;
 begin
@@ -1138,17 +1138,17 @@ begin
     if AValue.AsExtended = 0 then
       AJSONWriter.WriteNull
     else
-      AJSONWriter.WriteValue(TdjUtils.ISODateToString(AValue.AsExtended));
+      AJSONWriter.WriteValue(TdjUtils.ISODateToString(AValue.AsExtended, AParams));
   end
   else if LQualifiedTypeName = 'System.TDateTime' then
   begin
     if AValue.AsExtended = 0 then
       AJSONWriter.WriteNull
     else
-      AJSONWriter.WriteValue(TdjUtils.ISODateTimeToString(AValue.AsExtended));
+      AJSONWriter.WriteValue(TdjUtils.ISODateTimeToString(AValue.AsExtended, AParams));
   end
   else if LQualifiedTypeName = 'System.TTime' then
-   AJSONWriter.WriteValue(TdjUtils.ISOTimeToString(AValue.AsExtended))
+   AJSONWriter.WriteValue(TdjUtils.ISOTimeToString(AValue.AsExtended, AParams))
   else
     AJSONWriter.WriteValue(AValue.AsExtended);
 end;
@@ -1281,7 +1281,7 @@ begin
     tkInteger, tkInt64:
       AJSONWriter.WriteValue(AValue.AsInteger);
     tkFloat:
-      SerializeFloat(AJSONWriter, AValue);
+      SerializeFloat(AJSONWriter, AValue, AParams);
     tkString, tkLString, tkWString, tkUString:
       SerializeString(AJSONWriter, AValue, AParams);
     tkChar, tkWChar:

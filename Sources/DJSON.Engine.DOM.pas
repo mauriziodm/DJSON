@@ -55,7 +55,7 @@ type
   protected
     // Serializers
     class function SerializePropField(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): TJSONValue; static;
-    class function SerializeFloat(const AValue: TValue): TJSONValue; static;
+    class function SerializeFloat(const AValue: TValue; const AParams:IdjParams): TJSONValue; static;
     class function SerializeEnumeration(const AValue: TValue): TJSONValue; static;
     class function SerializeInteger(const AValue: TValue): TJSONValue; static;
     class function SerializeString(const AValue: TValue; const AParams: IdjParams): TJSONValue; static;
@@ -74,7 +74,7 @@ type
     class function SerializeCustom(AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; out ResultJSONValue:TJSONValue): Boolean; static;
     // Deserializers
     class function DeserializePropField(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
-    class function DeserializeFloat(const AJSONValue: TJSONValue; const AValueType: TRttiType): TValue; static;
+    class function DeserializeFloat(const AJSONValue: TJSONValue; const AValueType: TRttiType; const AParams:IdjParams): TValue; static;
     class function DeserializeEnumeration(const AJSONValue: TJSONValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeInteger(const AJSONValue: TJSONValue): TValue; static;
     class function DeserializeString(const AJSONValue: TJSONValue): TValue; static;
@@ -444,7 +444,7 @@ begin
     TValue.Make((AJSONValue as TJSONNumber).AsInt, AValueType.Handle, Result);
 end;
 
-class function TdjEngineDOM.DeserializeFloat(const AJSONValue: TJSONValue; const AValueType: TRttiType): TValue;
+class function TdjEngineDOM.DeserializeFloat(const AJSONValue: TJSONValue; const AValueType: TRttiType; const AParams:IdjParams): TValue;
 var
   LQualifiedTypeName: String;
 begin
@@ -458,19 +458,19 @@ begin
       if AJSONValue is TJSONNull then
         Result := 0
       else
-        Result := TValue.From<TDate>(TdjUtils.ISOStrToDateTime(AJSONValue.Value + ' 00:00:00'));
+        Result := TValue.From<TDate>(TdjUtils.ISOStrToDateTime(AJSONValue.Value, AParams));
     end
     else if LQualifiedTypeName = 'System.TDateTime' then
     begin
       if AJSONValue is TJSONNull then
         Result := 0
       else
-        Result := TValue.From<TDateTime>(TdjUtils.ISOStrToDateTime(AJSONValue.Value));
+        Result := TValue.From<TDateTime>(TdjUtils.ISOStrToDateTime(AJSONValue.Value, AParams));
     end
     else if LQualifiedTypeName = 'System.TTime' then
     begin
       if AJSONValue is TJSONString then
-        Result := TValue.From<TTime>(TdjUtils.ISOStrToTime(AJSONValue.Value))
+        Result := TValue.From<TTime>(TdjUtils.ISOStrToTime(AJSONValue.Value, AParams))
       else
         raise EdjEngineError.CreateFmt('Cannot deserialize TTime value, expected [%s] got [%s]',
           ['TJSONString', AJSONValue.ClassName]);
@@ -652,7 +652,7 @@ begin
     tkInteger, tkInt64:
       Result := DeserializeInteger(AJSONValue);
     tkFloat:
-      Result := DeserializeFloat(AJSONValue, LValueType);
+      Result := DeserializeFloat(AJSONValue, LValueType, AParams);
     tkString, tkLString, tkWString, tkUString:
       Result := DeserializeString(AJSONValue);
     tkChar, tkWChar:
@@ -1198,7 +1198,7 @@ begin
   end;
 end;
 
-class function TdjEngineDOM.SerializeFloat(const AValue: TValue): TJSONValue;
+class function TdjEngineDOM.SerializeFloat(const AValue:TValue; const AParams:IdjParams): TJSONValue;
 var
   LQualifiedTypeName: String;
 begin
@@ -1209,17 +1209,17 @@ begin
     if AValue.AsExtended = 0 then
       Result := TJSONNull.Create
     else
-      Result := TJSONString.Create(TdjUtils.ISODateToString(AValue.AsExtended))
+      Result := TJSONString.Create(TdjUtils.ISODateToString(AValue.AsExtended, AParams))
   end
   else if LQualifiedTypeName = 'System.TDateTime' then
   begin
     if AValue.AsExtended = 0 then
       Result := TJSONNull.Create
     else
-      Result := TJSONString.Create(TdjUtils.ISODateTimeToString(AValue.AsExtended))
+      Result := TJSONString.Create(TdjUtils.ISODateTimeToString(AValue.AsExtended, AParams))
   end
   else if LQualifiedTypeName = 'System.TTime' then
-   Result := TJSONString.Create(TdjUtils.ISOTimeToString(AValue.AsExtended))
+   Result := TJSONString.Create(TdjUtils.ISOTimeToString(AValue.AsExtended, AParams))
   else
     Result := TJSONNumber.Create(AValue.AsExtended);
 end;
@@ -1287,7 +1287,7 @@ begin
     tkInteger, tkInt64:
       Result := SerializeInteger(AValue);
     tkFloat:
-      Result := SerializeFloat(AValue);
+      Result := SerializeFloat(AValue, AParams);
     tkString, tkLString, tkWString, tkUString:
       Result := SerializeString(AValue, AParams);
     tkChar, tkWChar:

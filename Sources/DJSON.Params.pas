@@ -62,7 +62,7 @@ type
 
   TdjSerializersContainer = class;
 
-  TdjDateTimeFormat = (dfISO8601, dfUnix, dfDMVCFramework);
+  TdjDateTimeFormat = (dfISO8601, dfDMVCFramework, dfUnix);
 
   IdjParams = interface;
 
@@ -447,16 +447,16 @@ end;
 
 procedure TdjParams.SetDateTimeFormat(const AValue: TdjDateTimeFormat);
 begin
-  if AValue = FDateTimeFormat then
-    Exit;
   FDateTimeFormat := AValue;
   case FDateTimeFormat of
-    dfISO8601: FISO8601Params.ResetToDefault;
-    dfUnix:;
+    dfISO8601:
+      FISO8601Params.ResetToDefault;
+    dfUnix:
+      FISO8601Params.ResetToDefault;
     dfDMVCFramework:begin
       FISO8601Params.ResetToDefault;
       FISO8601Params.TimePrefix := ' ';
-      FISO8601Params.Seconds := False;
+      FISO8601Params.Seconds := True;
       FISO8601Params.Millisec := False;
       FISO8601Params.Zulu := '';
     end;

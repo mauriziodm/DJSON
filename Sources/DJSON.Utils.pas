@@ -58,13 +58,13 @@ type
     class procedure GetItemsTypeNameIfEmpty(const APropField: TRttiNamedObject; const AParams:IdjParams; var AValueTypeName: String); overload; static;
     class procedure GetItemsTypeNameIfEmpty(const APropField: TRttiNamedObject; const AParams:IdjParams; var AKeyTypeName, AValueTypeName: String); overload; static;
 
-    class function ISODateTimeToString(ADateTime: TDateTime): string;
-    class function ISODateToString(ADate: TDateTime): string;
-    class function ISOTimeToString(ATime: TTime): string;
+    class function ISODateTimeToString(const ADateTime:TDateTime; const AParams:IdjParams): string;
+    class function ISODateToString(const ADate:TDateTime; const AParams:IdjParams): string;
+    class function ISOTimeToString(const ATime:TTime; const AParams:IdjParams): string;
 
-    class function ISOStrToDateTime(DateTimeAsString: string): TDateTime;
-    class function ISOStrToDate(DateAsString: string): TDate;
-    class function ISOStrToTime(TimeAsString: string): TTime;
+    class function ISOStrToDateTime(DateTimeAsString:string; const AParams:IdjParams): TDateTime;
+    class function ISOStrToDate(DateAsString:string; const AParams:IdjParams): TDate;
+    class function ISOStrToTime(TimeAsString:string; const AParams:IdjParams): TTime;
   end;
 
 implementation
@@ -185,48 +185,64 @@ begin
     ATypeName := LdsonTypeAttribute.QualifiedName
 end;
 
-class function TdjUtils.ISODateTimeToString(ADateTime: TDateTime): string;
-var
-  fs: TFormatSettings;
+class function TdjUtils.ISODateTimeToString(const ADateTime:TDateTime; const AParams:IdjParams): string;
 begin
-  fs.TimeSeparator := ':';
-  Result := FormatDateTime('yyyy-mm-dd hh:nn:ss', ADateTime, fs);
+  case AParams.DateTimeFormat of
+    TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
+      Result := AParams.ISO8601Params.FromDateTimeToISO8601(ADateTime);
+    TdjDateTimeFormat.dfUnix:
+      Result := DateTimeToUnix(ADateTime, AParams.ISO8601Params.UTCTime).ToString;
+  end;
 end;
 
-class function TdjUtils.ISODateToString(ADate: TDateTime): string;
+class function TdjUtils.ISODateToString(const ADate:TDateTime; const AParams:IdjParams): string;
 begin
-  Result := FormatDateTime('YYYY-MM-DD', ADate);
+  case AParams.DateTimeFormat of
+    TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
+      Result := AParams.ISO8601Params.FromDateToISO8601(ADate);
+    TdjDateTimeFormat.dfUnix:
+      Result := DateTimeToUnix(ADate, AParams.ISO8601Params.UTCTime).ToString;
+  end;
 end;
 
-class function TdjUtils.ISOStrToDate(DateAsString: string): TDate;
+class function TdjUtils.ISOStrToDate(DateAsString:string; const AParams:IdjParams): TDate;
 begin
-  Result := EncodeDate(StrToInt(Copy(DateAsString, 1, 4)), StrToInt(Copy(DateAsString, 6, 2)),
-    StrToInt(Copy(DateAsString, 9, 2)));
-  // , StrToInt
-  // (Copy(DateAsString, 12, 2)), StrToInt(Copy(DateAsString, 15, 2)),
-  // StrToInt(Copy(DateAsString, 18, 2)), 0);
+  case AParams.DateTimeFormat of
+    TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
+      Result := AParams.ISO8601Params.FromISO8601ToDate(DateAsString);
+    TdjDateTimeFormat.dfUnix:
+      Result := UnixToDateTime(DateAsString.ToInt64, AParams.ISO8601Params.UTCTime);
+  end;
 end;
 
-class function TdjUtils.ISOStrToDateTime(DateTimeAsString: string): TDateTime;
+class function TdjUtils.ISOStrToDateTime(DateTimeAsString:string; const AParams:IdjParams): TDateTime;
 begin
-  Result := EncodeDateTime(StrToInt(Copy(DateTimeAsString, 1, 4)),
-    StrToInt(Copy(DateTimeAsString, 6, 2)), StrToInt(Copy(DateTimeAsString, 9, 2)),
-    StrToInt(Copy(DateTimeAsString, 12, 2)), StrToInt(Copy(DateTimeAsString, 15, 2)),
-    StrToInt(Copy(DateTimeAsString, 18, 2)), 0);
+  case AParams.DateTimeFormat of
+    TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
+      Result := AParams.ISO8601Params.FromISO8601ToDateTime(DateTimeAsString);
+    TdjDateTimeFormat.dfUnix:
+      Result := UnixToDateTime(DateTimeAsString.ToInt64, AParams.ISO8601Params.UTCTime);
+  end;
 end;
 
-class function TdjUtils.ISOStrToTime(TimeAsString: string): TTime;
+class function TdjUtils.ISOStrToTime(TimeAsString:string; const AParams:IdjParams): TTime;
 begin
-  Result := EncodeTime(StrToInt(Copy(TimeAsString, 1, 2)), StrToInt(Copy(TimeAsString, 4, 2)),
-    StrToInt(Copy(TimeAsString, 7, 2)), 0);
+  case AParams.DateTimeFormat of
+    TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
+      Result := AParams.ISO8601Params.FromISO8601ToTime(TimeAsString);
+    TdjDateTimeFormat.dfUnix:
+      Result := UnixToDateTime(TimeAsString.ToInt64, AParams.ISO8601Params.UTCTime);
+  end;
 end;
 
-class function TdjUtils.ISOTimeToString(ATime: TTime): string;
-var
-  fs: TFormatSettings;
+class function TdjUtils.ISOTimeToString(const ATime:TTime; const AParams:IdjParams): string;
 begin
-  fs.TimeSeparator := ':';
-  Result := FormatDateTime('hh:nn:ss', ATime, fs);
+  case AParams.DateTimeFormat of
+    TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
+      Result := AParams.ISO8601Params.FromTimeToISO8601(ATime);
+    TdjDateTimeFormat.dfUnix:
+      Result := DateTimeToUnix(ATime, AParams.ISO8601Params.UTCTime).ToString;
+  end;
 end;
 
 class function TdjUtils.IsPropertyToBeIgnored(

@@ -11,6 +11,8 @@ object MainForm: TMainForm
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poDesktopCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object PanelTools: TPanel
@@ -401,7 +403,7 @@ object MainForm: TMainForm
       Height = 32
       Caption = 'JSON serialization engine'
       Columns = 3
-      ItemIndex = 0
+      ItemIndex = 1
       Items.Strings = (
         'Delphi DOM'
         'Delphi Stream'
@@ -486,14 +488,253 @@ object MainForm: TMainForm
     end
   end
   object Memo1: TMemo
-    Left = 0
+    Left = 171
     Top = 153
-    Width = 1130
+    Width = 959
     Height = 655
     Align = alClient
     Lines.Strings = (
       'Memo1')
     ScrollBars = ssVertical
     TabOrder = 1
+    ExplicitLeft = 168
+    ExplicitWidth = 963
+  end
+  object Panel1: TPanel
+    Left = 0
+    Top = 153
+    Width = 171
+    Height = 655
+    Align = alLeft
+    BevelOuter = bvNone
+    Color = 12895428
+    ParentBackground = False
+    TabOrder = 2
+    DesignSize = (
+      171
+      655)
+    object RadioGroupDateTimeFormat: TRadioGroup
+      Left = 16
+      Top = 6
+      Width = 139
+      Height = 98
+      Anchors = [akLeft, akTop, akRight]
+      Caption = 'DateTime format'
+      ItemIndex = 0
+      Items.Strings = (
+        'ISO8601'
+        'Unix'
+        'DMVC')
+      TabOrder = 0
+      OnClick = RadioGroupDateTimeFormatClick
+    end
+    object GroupBox1: TGroupBox
+      Left = 16
+      Top = 131
+      Width = 139
+      Height = 422
+      Anchors = [akLeft, akTop, akRight]
+      Caption = 'ISO 8601 params'
+      TabOrder = 1
+      object Label9: TLabel
+        Left = 0
+        Top = 22
+        Width = 139
+        Height = 15
+        Alignment = taCenter
+        AutoSize = False
+        Caption = 'Date'
+        Color = 14408667
+        ParentColor = False
+        Transparent = False
+      end
+      object Label10: TLabel
+        Left = 0
+        Top = 91
+        Width = 139
+        Height = 15
+        Alignment = taCenter
+        AutoSize = False
+        Caption = 'Time'
+        Color = 14408667
+        ParentColor = False
+        Transparent = False
+      end
+      object Label11: TLabel
+        Left = 0
+        Top = 318
+        Width = 139
+        Height = 15
+        Alignment = taCenter
+        AutoSize = False
+        Caption = 'Timezone'
+        Color = 14408667
+        ParentColor = False
+        Transparent = False
+      end
+      object EditDateSeparator: TLabeledEdit
+        Left = 91
+        Top = 43
+        Width = 40
+        Height = 22
+        EditLabel.Width = 73
+        EditLabel.Height = 13
+        EditLabel.Caption = 'Date separator'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold]
+        LabelPosition = lpLeft
+        ParentFont = False
+        TabOrder = 0
+      end
+      object EditTimePrefix: TLabeledEdit
+        Left = 91
+        Top = 137
+        Width = 40
+        Height = 22
+        EditLabel.Width = 53
+        EditLabel.Height = 13
+        EditLabel.Caption = 'Time prefix'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold]
+        LabelPosition = lpLeft
+        ParentFont = False
+        TabOrder = 1
+      end
+      object EditTimeSeparator: TLabeledEdit
+        Left = 91
+        Top = 165
+        Width = 40
+        Height = 22
+        EditLabel.Width = 72
+        EditLabel.Height = 13
+        EditLabel.Caption = 'Time separator'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold]
+        LabelPosition = lpLeft
+        ParentFont = False
+        TabOrder = 2
+      end
+      object EditMillisecSeparator: TLabeledEdit
+        Left = 91
+        Top = 193
+        Width = 40
+        Height = 22
+        EditLabel.Width = 83
+        EditLabel.Height = 13
+        EditLabel.Caption = 'Millisec.separator'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold]
+        LabelPosition = lpLeft
+        ParentFont = False
+        TabOrder = 3
+      end
+      object EditZulu: TLabeledEdit
+        Left = 91
+        Top = 221
+        Width = 40
+        Height = 22
+        EditLabel.Width = 20
+        EditLabel.Height = 13
+        EditLabel.Caption = 'Zulu'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold]
+        LabelPosition = lpLeft
+        ParentFont = False
+        TabOrder = 4
+      end
+      object CheckBoxSeconds: TCheckBox
+        Left = 46
+        Top = 249
+        Width = 58
+        Height = 17
+        Alignment = taLeftJustify
+        Caption = 'Seconds'
+        Checked = True
+        State = cbChecked
+        TabOrder = 5
+      end
+      object CheckBoxMillisec: TCheckBox
+        Left = 32
+        Top = 272
+        Width = 72
+        Height = 17
+        Alignment = taLeftJustify
+        Caption = 'Milliseconds'
+        Checked = True
+        State = cbChecked
+        TabOrder = 6
+      end
+      object CheckBoxUTCTime: TCheckBox
+        Left = 42
+        Top = 112
+        Width = 62
+        Height = 17
+        Alignment = taLeftJustify
+        Caption = 'UTC time'
+        Checked = True
+        State = cbChecked
+        TabOrder = 7
+      end
+      object EditTimezonePrefix: TLabeledEdit
+        Left = 91
+        Top = 340
+        Width = 40
+        Height = 22
+        EditLabel.Width = 76
+        EditLabel.Height = 13
+        EditLabel.Caption = 'Timezone prefix'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold]
+        LabelPosition = lpLeft
+        ParentFont = False
+        TabOrder = 8
+      end
+      object EditTimezoneSeparator: TLabeledEdit
+        Left = 91
+        Top = 368
+        Width = 40
+        Height = 22
+        EditLabel.Width = 69
+        EditLabel.Height = 13
+        EditLabel.Caption = 'Timezone sep.'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold]
+        LabelPosition = lpLeft
+        ParentFont = False
+        TabOrder = 9
+      end
+      object CheckBoxTimezoneIgnore: TCheckBox
+        Left = 10
+        Top = 396
+        Width = 94
+        Height = 17
+        Alignment = taLeftJustify
+        Caption = 'Timezone ignore'
+        Checked = True
+        State = cbChecked
+        TabOrder = 10
+      end
+    end
   end
 end

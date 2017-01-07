@@ -11,51 +11,46 @@ type
   [djSerializerDOM(TNumTelCustomSerializerDOM)]  // Or register the custom serializer in a IomParams object or direct in the command
   [djSerializerJDO(TNumTelCustomSerializerJDO)]  // Or register the custom serializer in a IomParams object or direct in the command
   [djSerializerStream(TNumTelCustomSerializerStream)]  // Or register the custom serializer in a IomParams object or direct in the command
-  TNumTel = class
+  TPhoneNumber = class
   private
     FID: Integer;
     FMasterID: Integer;
-    FNumero: String;
-    function GetID: Integer;
-    function GetMasterID: Integer;
-    function GetNumero: String;
-    procedure SetID(const Value: Integer);
-    procedure SetMasterID(const Value: Integer);
-    procedure SetNumero(const Value: String);
+    FNumber: String;
   public
     constructor Create(AID:Integer; ANumero:String; AMasterID:Integer); overload;
-    property ID: Integer read GetID write SetID;
-    property Numero:String read GetNumero write SetNumero;
-    property MasterID:Integer read GetMasterID write SetMasterID;
+    property ID: Integer read FID write FID;
+    property Number:String read FNumber write FNumber;
+    property MasterID:Integer read FMasterID write FMasterID;
   end;
 
   TPerson = class
   private
     FID: Integer;
-    FDescrizione: String;
+    FName: String;
     FNote: TStringList;
-    FNumTel: TObjectList<TNumTel>;
-    FSesso: Char;
-    FEta: Byte;
-    FViaggiEffettuati: Word;
-    FLuogoDiNascita: String;
-    function GetDescrizione: String;
-    function GetID: Integer;
-    function GetNumTel: TObjectList<TNumTel>;
-    procedure SetDescrizione(const Value: String);
-    procedure SetID(const Value: Integer);
+    FPhoneNumbers: TObjectList<TPhoneNumber>;
+    FGender: Char;
+    FAge: Byte;
+    FNumberOfFriends: Word;
+    FBirthPlace: String;
+    FBirthDate: TDate;
+    FBirthTime: TTime;
+    FLastEdit: TDateTime;
   public
     constructor Create; overload;
     constructor Create(AID:Integer; ADescrizione:String); overload;
     destructor Destroy; override;
-    property ID:Integer read GetID write SetID;
-    property Descrizione:String read GetDescrizione write SetDescrizione;
-    property Sesso:Char read FSesso write FSesso;
-    property Eta:Byte read FEta write FEta;
-    property LuogoDiNascita: String read FLuogoDiNascita write FLuogoDiNascita;
-    property ViaggiEffettuati:Word read FViaggiEffettuati write FViaggiEffettuati;
-    property NumTel:TObjectList<TNumTel> read GetNumTel;
-    property Note: TStringList read FNote write FNote;
+    property ID:Integer read FID write FID;
+    property Name:String read FName write FName;
+    property Gender:Char read FGender write FGender;
+    property NumberOfFriends:Word read FNumberOfFriends write FNumberOfFriends;
+    property Age:Byte read FAge write FAge;
+    property BirthPlace: String read FBirthPlace write FBirthPlace;
+    property BirthDate: TDate read FBirthDate write FBirthDate;
+    property BirthTime: TTime read FBirthTime write FBirthTime;
+    property LastEdit:TDateTime read FLastEdit write FLastEdit;
+    property PhoneNumbers:TObjectList<TPhoneNumber> read FPhoneNumbers;
+    property Note: TStringList read FNote;
   end;
 
 implementation
@@ -67,86 +62,31 @@ constructor TPerson.Create(AID:Integer; ADescrizione:String);
 begin
   Self.Create;
   FID := AID;
-  FDescrizione := ADescrizione;
+  FName := ADescrizione;
 end;
 
 constructor TPerson.Create;
 begin
   inherited;
-  FNumTel := TObjectList<TNumTel>.Create;
+  FPhoneNumbers := TObjectList<TPhoneNumber>.Create;
   FNote := TStringList.Create;
 end;
 
 destructor TPerson.Destroy;
 begin
   FNote.Free;
-  FNumTel.Free;
+  FPhoneNumbers.Free;
   inherited;
-end;
-
-function TPerson.GetDescrizione: String;
-begin
-  Result := FDescrizione;
-end;
-
-function TPerson.GetID: Integer;
-begin
-  Result := FID;
-end;
-
-function TPerson.GetNumTel: TObjectList<TNumTel>;
-begin
-  Result := FNumTel;
-end;
-
-procedure TPerson.SetDescrizione(const Value: String);
-begin
-  FDescrizione := Value;
-end;
-
-procedure TPerson.SetID(const Value: Integer);
-begin
-  FID := Value;
 end;
 
 { TNumTel }
 
-constructor TNumTel.Create(AID: Integer; ANumero: String; AMasterID: Integer);
+constructor TPhoneNumber.Create(AID: Integer; ANumero: String; AMasterID: Integer);
 begin
   inherited Create;
   FID := AID;
-  FNumero := ANumero;
+  FNumber := ANumero;
   FMasterID := AMasterID;
-end;
-
-function TNumTel.GetID: Integer;
-begin
-  Result := FID;
-end;
-
-function TNumTel.GetMasterID: Integer;
-begin
-  Result := FMasterID;
-end;
-
-function TNumTel.GetNumero: String;
-begin
-  Result := FNumero;
-end;
-
-procedure TNumTel.SetID(const Value: Integer);
-begin
-  FID := Value;
-end;
-
-procedure TNumTel.SetMasterID(const Value: Integer);
-begin
-  FMasterID := Value;
-end;
-
-procedure TNumTel.SetNumero(const Value: String);
-begin
-  FNumero := Value;
 end;
 
 end.
