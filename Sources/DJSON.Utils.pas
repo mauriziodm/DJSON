@@ -189,9 +189,9 @@ class function TdjUtils.ISODateTimeToString(const ADateTime:TDateTime; const APa
 begin
   case AParams.DateTimeFormat of
     TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
-      Result := AParams.ISO8601Params.FromDateTimeToISO8601(ADateTime);
+      Result := AParams.ISO8601Processor.FromDateTimeToISO8601(ADateTime);
     TdjDateTimeFormat.dfUnix:
-      Result := DateTimeToUnix(ADateTime, AParams.ISO8601Params.UTCTime).ToString;
+      Result := DateTimeToUnix(ADateTime, AParams.ISO8601Processor.UTCTime).ToString;
   end;
 end;
 
@@ -199,9 +199,9 @@ class function TdjUtils.ISODateToString(const ADate:TDateTime; const AParams:Idj
 begin
   case AParams.DateTimeFormat of
     TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
-      Result := AParams.ISO8601Params.FromDateToISO8601(ADate);
+      Result := AParams.ISO8601Processor.FromDateToISO8601(ADate);
     TdjDateTimeFormat.dfUnix:
-      Result := DateTimeToUnix(ADate, AParams.ISO8601Params.UTCTime).ToString;
+      Result := DateTimeToUnix(ADate, AParams.ISO8601Processor.UTCTime).ToString;
   end;
 end;
 
@@ -209,9 +209,9 @@ class function TdjUtils.ISOStrToDate(DateAsString:string; const AParams:IdjParam
 begin
   case AParams.DateTimeFormat of
     TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
-      Result := AParams.ISO8601Params.FromISO8601ToDate(DateAsString);
+      Result := AParams.ISO8601Processor.FromISO8601ToDate(DateAsString);
     TdjDateTimeFormat.dfUnix:
-      Result := UnixToDateTime(DateAsString.ToInt64, AParams.ISO8601Params.UTCTime);
+      Result := UnixToDateTime(DateAsString.ToInt64, AParams.ISO8601Processor.UTCTime);
   end;
 end;
 
@@ -219,9 +219,9 @@ class function TdjUtils.ISOStrToDateTime(DateTimeAsString:string; const AParams:
 begin
   case AParams.DateTimeFormat of
     TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
-      Result := AParams.ISO8601Params.FromISO8601ToDateTime(DateTimeAsString);
+      Result := AParams.ISO8601Processor.FromISO8601ToDateTime(DateTimeAsString);
     TdjDateTimeFormat.dfUnix:
-      Result := UnixToDateTime(DateTimeAsString.ToInt64, AParams.ISO8601Params.UTCTime);
+      Result := UnixToDateTime(DateTimeAsString.ToInt64, AParams.ISO8601Processor.UTCTime);
   end;
 end;
 
@@ -229,9 +229,9 @@ class function TdjUtils.ISOStrToTime(TimeAsString:string; const AParams:IdjParam
 begin
   case AParams.DateTimeFormat of
     TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
-      Result := AParams.ISO8601Params.FromISO8601ToTime(TimeAsString);
+      Result := AParams.ISO8601Processor.FromISO8601ToTime(TimeAsString);
     TdjDateTimeFormat.dfUnix:
-      Result := UnixToDateTime(TimeAsString.ToInt64, AParams.ISO8601Params.UTCTime);
+      Result := UnixToDateTime(TimeAsString.ToInt64, AParams.ISO8601Processor.UTCTime);
   end;
 end;
 
@@ -239,9 +239,9 @@ class function TdjUtils.ISOTimeToString(const ATime:TTime; const AParams:IdjPara
 begin
   case AParams.DateTimeFormat of
     TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
-      Result := AParams.ISO8601Params.FromTimeToISO8601(ATime);
+      Result := AParams.ISO8601Processor.FromTimeToISO8601(ATime);
     TdjDateTimeFormat.dfUnix:
-      Result := DateTimeToUnix(ATime, AParams.ISO8601Params.UTCTime).ToString;
+      Result := DateTimeToUnix(ATime, AParams.ISO8601Processor.UTCTime).ToString;
   end;
 end;
 

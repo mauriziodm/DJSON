@@ -151,8 +151,52 @@ type
     function GetDateTimeFormat: TdjDateTimeFormat;
     property DateTimeFormat:TdjDateTimeFormat read GetDateTimeFormat write SetDateTimeFormat;
     // ISO8601Params
-    function GetISO8601Params: PdjISO8601Processor;
-    property ISO8601Params:PdjISO8601Processor read GetISO8601Params;
+    function GetISO8601Processor: PdjISO8601Processor;
+    property ISO8601Processor:PdjISO8601Processor read GetISO8601Processor;
+    // DateSeparator
+    procedure SetDateSeparator(const AValue:string);
+    function GetDateSeparator: string;
+    property DateSeparator:string read GetDateSeparator write SetDateSeparator;
+    // TimeUTC
+    procedure SetTimeUTC(const AValue:boolean);
+    function GetTimeUTC: boolean;
+    property TimeUTC:boolean read GetTimeUTC write SetTimeUTC;
+    // TimePrefix
+    procedure SetTimePrefix(const AValue:string);
+    function GetTimePrefix: string;
+    property TimePrefix:string read GetTimePrefix write SetTimePrefix;
+    // TimeSeparator
+    procedure SetTimeSeparator(const AValue:string);
+    function GetTimeSeparator: string;
+    property TimeSeparator:string read GetTimeSeparator write SetTimeSeparator;
+    // TimeZulu
+    procedure SetTimeZulu(const AValue:string);
+    function GetTimeZulu: string;
+    property TimeZulu:string read GetTimeZulu write SetTimeZulu;
+    // TimeMillisecSeparator
+    procedure SetTimeMillisecSeparator(const AValue:string);
+    function GetTimeMillisecSeparator: string;
+    property TimeMillisecSeparator:string read GetTimeMillisecSeparator write SetTimeMillisecSeparator;
+    // TimeSeconds
+    procedure SetTimeSeconds(const AValue:boolean);
+    function GetTimeSeconds: boolean;
+    property TimeSeconds:boolean read GetTimeSeconds write SetTimeSeconds;
+    // TimeMillisec
+    procedure SetTimeMillisec(const AValue:boolean);
+    function GetTimeMillisec: boolean;
+    property TimeMillisec:boolean read GetTimeMillisec write SetTimeMillisec;
+    // TimezonePrefix
+    procedure SetTimezonePrefix(const AValue:string);
+    function GetTimezonePrefix: string;
+    property TimezonePrefix:string read GetTimezonePrefix write SetTimezonePrefix;
+    // TimezoneSeparator
+    procedure SetTimezoneSeparator(const AValue:string);
+    function GetTimezoneSeparator: string;
+    property TimezoneSeparator:string read GetTimezoneSeparator write SetTimezoneSeparator;
+    // TimezoneIgnore
+    procedure SetTimezoneIgnore(const AValue:boolean);
+    function GetTimezoneIgnore: boolean;
+    property TimezoneIgnore:boolean read GetTimezoneIgnore write SetTimezoneIgnore;
   end;
 
   TdjParams = class(TInterfacedObject, IdjParams)
@@ -175,7 +219,7 @@ type
     FEmptyStringAsNull: Boolean;
     FEmptyCharAsNull: Boolean;
     FDateTimeFormat: TdjDateTimeFormat;
-    FISO8601Params: TdjISO8601Processor;
+    FISO8601Processor: TdjISO8601Processor;
     // Engine (No property)
     function GetEngineClass: TdjEngineRef;
     // EngineType
@@ -233,8 +277,41 @@ type
     // DateTimeFormat
     procedure SetDateTimeFormat(const AValue:TdjDateTimeFormat);
     function GetDateTimeFormat: TdjDateTimeFormat;
-    // ISO8601Params
-    function GetISO8601Params: PdjISO8601Processor;
+    // ISO8601Processor
+    function GetISO8601Processor: PdjISO8601Processor;
+    // DateSeparator
+    procedure SetDateSeparator(const AValue:string);
+    function GetDateSeparator: string;
+    // TimeUTC
+    procedure SetTimeUTC(const AValue:boolean);
+    function GetTimeUTC: boolean;
+    // TimePrefix
+    procedure SetTimePrefix(const AValue:string);
+    function GetTimePrefix: string;
+    // TimeSeparator
+    procedure SetTimeSeparator(const AValue:string);
+    function GetTimeSeparator: string;
+    // TimeZulu
+    procedure SetTimeZulu(const AValue:string);
+    function GetTimeZulu: string;
+    // TimeMillisecSeparator
+    procedure SetTimeMillisecSeparator(const AValue:string);
+    function GetTimeMillisecSeparator: string;
+    // TimeSeconds
+    procedure SetTimeSeconds(const AValue:boolean);
+    function GetTimeSeconds: boolean;
+    // TimeMillisec
+    procedure SetTimeMillisec(const AValue:boolean);
+    function GetTimeMillisec: boolean;
+    // TimezonePrefix
+    procedure SetTimezonePrefix(const AValue:string);
+    function GetTimezonePrefix: string;
+    // TimezoneSeparator
+    procedure SetTimezoneSeparator(const AValue:string);
+    function GetTimezoneSeparator: string;
+    // TimezoneIgnore
+    procedure SetTimezoneIgnore(const AValue:boolean);
+    function GetTimezoneIgnore: boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -325,6 +402,56 @@ begin
   inherited;
 end;
 
+function TdjParams.GetTimeMillisec: boolean;
+begin
+  Result := FISO8601Processor.Millisec;
+end;
+
+function TdjParams.GetTimeMillisecSeparator: string;
+begin
+  Result := FISO8601Processor.MillisecSeparator;
+end;
+
+function TdjParams.GetTimePrefix: string;
+begin
+  Result := FISO8601Processor.TimePrefix;
+end;
+
+function TdjParams.GetTimeSeconds: boolean;
+begin
+  Result := FISO8601Processor.Seconds;
+end;
+
+function TdjParams.GetTimeSeparator: string;
+begin
+  Result := FISO8601Processor.TimeSeparator;
+end;
+
+function TdjParams.GetTimeUTC: boolean;
+begin
+  Result := FISO8601Processor.UTCTime;
+end;
+
+function TdjParams.GetTimezoneIgnore: boolean;
+begin
+  Result := FISO8601Processor.TimezoneIgnore;
+end;
+
+function TdjParams.GetTimezonePrefix: string;
+begin
+  Result := FISO8601Processor.TimezonePrefix;
+end;
+
+function TdjParams.GetTimezoneSeparator: string;
+begin
+  Result := FISO8601Processor.TimezoneSeparator;
+end;
+
+function TdjParams.GetTimeZulu: string;
+begin
+  Result := FISO8601Processor.Zulu;
+end;
+
 function TdjParams.GetTypeAnnotations: Boolean;
 begin
   Result := FTypeAnnotations;
@@ -338,6 +465,11 @@ end;
 function TdjParams.GetBsonRootLabel: String;
 begin
   Result := FBsonRootLabel;
+end;
+
+function TdjParams.GetDateSeparator: string;
+begin
+  Result := FISO8601Processor.DateSeparator;
 end;
 
 function TdjParams.GetDateTimeFormat: TdjDateTimeFormat;
@@ -375,9 +507,9 @@ begin
   Result := FIgnoredProperties;
 end;
 
-function TdjParams.GetISO8601Params: PdjISO8601Processor;
+function TdjParams.GetISO8601Processor: PdjISO8601Processor;
 begin
-  Result := @FISO8601Params;
+  Result := @FISO8601Processor;
 end;
 
 function TdjParams.GetItemsKeyDefaultQualifiedName: String;
@@ -425,6 +557,56 @@ begin
   Result := FSerializers;
 end;
 
+procedure TdjParams.SetTimeMillisec(const AValue: boolean);
+begin
+  FISO8601Processor.Millisec := AValue;
+end;
+
+procedure TdjParams.SetTimeMillisecSeparator(const AValue: string);
+begin
+  FISO8601Processor.MillisecSeparator := AValue;
+end;
+
+procedure TdjParams.SetTimePrefix(const AValue: string);
+begin
+  FISO8601Processor.TimePrefix := AValue;
+end;
+
+procedure TdjParams.SetTimeSeconds(const AValue: boolean);
+begin
+  FISO8601Processor.Seconds := AValue;
+end;
+
+procedure TdjParams.SetTimeSeparator(const AValue: string);
+begin
+  FISO8601Processor.TimeSeparator := AValue;
+end;
+
+procedure TdjParams.SetTimeUTC(const AValue: boolean);
+begin
+  FISO8601Processor.UTCTime := AValue;
+end;
+
+procedure TdjParams.SetTimezoneIgnore(const AValue: boolean);
+begin
+  FISO8601Processor.TimezoneIgnore := AValue;
+end;
+
+procedure TdjParams.SetTimezonePrefix(const AValue: string);
+begin
+  FISO8601Processor.TimezonePrefix := AValue;
+end;
+
+procedure TdjParams.SetTimezoneSeparator(const AValue: string);
+begin
+  FISO8601Processor.TimezoneSeparator := AValue;
+end;
+
+procedure TdjParams.SetTimeZulu(const AValue: string);
+begin
+  FISO8601Processor.Zulu := AValue;
+end;
+
 procedure TdjParams.SetTypeAnnotations(const AValue: Boolean);
 begin
   FTypeAnnotations := AValue;
@@ -445,20 +627,25 @@ begin
   FBsonRootLabel := AValue;
 end;
 
+procedure TdjParams.SetDateSeparator(const AValue: string);
+begin
+  FISO8601Processor.DateSeparator := AValue;
+end;
+
 procedure TdjParams.SetDateTimeFormat(const AValue: TdjDateTimeFormat);
 begin
   FDateTimeFormat := AValue;
   case FDateTimeFormat of
     dfISO8601:
-      FISO8601Params.ResetToDefault;
+      FISO8601Processor.ResetToDefault;
     dfUnix:
-      FISO8601Params.ResetToDefault;
+      FISO8601Processor.ResetToDefault;
     dfDMVCFramework:begin
-      FISO8601Params.ResetToDefault;
-      FISO8601Params.TimePrefix := ' ';
-      FISO8601Params.Seconds := True;
-      FISO8601Params.Millisec := False;
-      FISO8601Params.Zulu := '';
+      FISO8601Processor.ResetToDefault;
+      FISO8601Processor.TimePrefix := ' ';
+      FISO8601Processor.Seconds := True;
+      FISO8601Processor.Millisec := False;
+      FISO8601Processor.Zulu := '';
     end;
   end;
 end;

@@ -114,6 +114,18 @@ type
     function BsonRootLabel(const AValue:String): TdjValueDestination;
     function EmptyStringAsNull: TdjValueDestination;
     function EmptyCharAsNull: TdjValueDestination;
+    function DateTimeFormat(const ADateTimeFormat:TdjDateTimeFormat): TdjValueDestination;
+    function DateSeparator(const AValue:String): TdjValueDestination;
+    function TimeUTC(const AValue:Boolean): TdjValueDestination;
+    function TimePrefix(const AValue:String): TdjValueDestination;
+    function TimeSeparator(const AValue:String): TdjValueDestination;
+    function TimeMillisecSeparator(const AValue:String): TdjValueDestination;
+    function TimeZulu(const AValue:String): TdjValueDestination;
+    function TimeSeconds(const AValue:Boolean): TdjValueDestination;
+    function TimeMillisec(const AValue:Boolean): TdjValueDestination;
+    function TimezonePrefix(const AValue:String): TdjValueDestination;
+    function TimezoneSeparator(const AValue:String): TdjValueDestination;
+    function TimeZoneIgnore(const AValue:Boolean): TdjValueDestination;
   end;
 
   TdjJSONDestination = class
@@ -158,6 +170,19 @@ type
     function Engine(const AEngine:TdjEngine): TdjJSONDestination;
     function EmptyStringAsNull: TdjJSONDestination;
     function EmptyCharAsNull: TdjJSONDestination;
+
+    function DateTimeFormat(const ADateTimeFormat:TdjDateTimeFormat): TdjJSONDestination;
+    function DateSeparator(const AValue:String): TdjJSONDestination;
+    function TimeUTC(const AValue:Boolean): TdjJSONDestination;
+    function TimePrefix(const AValue:String): TdjJSONDestination;
+    function TimeSeparator(const AValue:String): TdjJSONDestination;
+    function TimeMillisecSeparator(const AValue:String): TdjJSONDestination;
+    function TimeZulu(const AValue:String): TdjJSONDestination;
+    function TimeSeconds(const AValue:Boolean): TdjJSONDestination;
+    function TimeMillisec(const AValue:Boolean): TdjJSONDestination;
+    function TimezonePrefix(const AValue:String): TdjJSONDestination;
+    function TimezoneSeparator(const AValue:String): TdjJSONDestination;
+    function TimeZoneIgnore(const AValue:Boolean): TdjJSONDestination;
   end;
 
   TdjBSONDestination = class(TdjJSONDestination)
@@ -272,6 +297,74 @@ begin
   finally
     Self.Free;
   end;
+end;
+
+function TdjJSONDestination.TimeMillisec(
+  const AValue: Boolean): TdjJSONDestination;
+begin
+  FParams.TimeMillisec := AValue;
+  Result := Self;
+end;
+
+function TdjJSONDestination.TimeMillisecSeparator(
+  const AValue: String): TdjJSONDestination;
+begin
+  FParams.TimeMillisecSeparator := AValue;
+  Result := Self;
+end;
+
+function TdjJSONDestination.TimePrefix(
+  const AValue: String): TdjJSONDestination;
+begin
+  FParams.TimePrefix := AValue;
+  Result := Self;
+end;
+
+function TdjJSONDestination.TimeSeconds(
+  const AValue: Boolean): TdjJSONDestination;
+begin
+  FParams.TimeSeconds := AValue;
+  Result := Self;
+end;
+
+function TdjJSONDestination.TimeSeparator(
+  const AValue: String): TdjJSONDestination;
+begin
+  FParams.TimeSeparator := AValue;
+  Result := Self;
+end;
+
+function TdjJSONDestination.TimeUTC(const AValue: Boolean): TdjJSONDestination;
+begin
+  FParams.TimeUTC := AValue;
+  Result := Self;
+end;
+
+function TdjJSONDestination.TimeZoneIgnore(
+  const AValue: Boolean): TdjJSONDestination;
+begin
+  FParams.TimezoneIgnore := AValue;
+  Result := Self;
+end;
+
+function TdjJSONDestination.TimezonePrefix(
+  const AValue: String): TdjJSONDestination;
+begin
+  FParams.TimezonePrefix := AValue;
+  Result := Self;
+end;
+
+function TdjJSONDestination.TimezoneSeparator(
+  const AValue: String): TdjJSONDestination;
+begin
+  FParams.TimezoneSeparator := AValue;
+  Result := Self;
+end;
+
+function TdjJSONDestination.TimeZulu(const AValue: String): TdjJSONDestination;
+begin
+  FParams.TimeZulu := AValue;
+  Result := Self;
 end;
 
 procedure TdjJSONDestination.&To(const AInterface: IInterface);
@@ -436,6 +529,20 @@ begin
   Result := Self;
 end;
 
+function TdjJSONDestination.DateSeparator(
+  const AValue: String): TdjJSONDestination;
+begin
+  FParams.DateSeparator := AValue;
+  Result := Self;
+end;
+
+function TdjJSONDestination.DateTimeFormat(
+  const ADateTimeFormat: TdjDateTimeFormat): TdjJSONDestination;
+begin
+  FParams.DateTimeFormat := ADateTimeFormat;
+  Result := Self;
+end;
+
 function TdjJSONDestination.EmptyCharAsNull: TdjJSONDestination;
 begin
   FParams.EmptyCharAsNull := True;
@@ -595,6 +702,20 @@ begin
   Result := Self;
 end;
 
+function TdjValueDestination.DateSeparator(
+  const AValue: String): TdjValueDestination;
+begin
+  FParams.DateSeparator := AValue;
+  Result := Self;
+end;
+
+function TdjValueDestination.DateTimeFormat(
+  const ADateTimeFormat: TdjDateTimeFormat): TdjValueDestination;
+begin
+  FParams.DateTimeFormat := ADateTimeFormat;
+  Result := Self;
+end;
+
 function TdjValueDestination.EmptyCharAsNull: TdjValueDestination;
 begin
   FParams.EmptyCharAsNull := True;
@@ -655,6 +776,76 @@ function TdjValueDestination.Params(
   const AParams: IdjParams): TdjValueDestination;
 begin
   Self.FParams := AParams;
+  Result := Self;
+end;
+
+function TdjValueDestination.TimeMillisec(
+  const AValue: Boolean): TdjValueDestination;
+begin
+  FParams.TimeMillisec := AValue;
+  Result := Self;
+end;
+
+function TdjValueDestination.TimeMillisecSeparator(
+  const AValue: String): TdjValueDestination;
+begin
+  FParams.TimeMillisecSeparator := AValue;
+  Result := Self;
+end;
+
+function TdjValueDestination.TimePrefix(
+  const AValue: String): TdjValueDestination;
+begin
+  FParams.TimePrefix := AValue;
+  Result := Self;
+end;
+
+function TdjValueDestination.TimeSeconds(
+  const AValue: Boolean): TdjValueDestination;
+begin
+  FParams.TimeSeconds := AValue;
+  Result := Self;
+end;
+
+function TdjValueDestination.TimeSeparator(
+  const AValue: String): TdjValueDestination;
+begin
+  FParams.TimeSeparator := AValue;
+  Result := Self;
+end;
+
+function TdjValueDestination.TimeUTC(
+  const AValue: Boolean): TdjValueDestination;
+begin
+  FParams.TimeUTC := AValue;
+  Result := Self;
+end;
+
+function TdjValueDestination.TimeZoneIgnore(
+  const AValue: Boolean): TdjValueDestination;
+begin
+  FParams.TimezoneIgnore := AValue;
+  Result := Self;
+end;
+
+function TdjValueDestination.TimezonePrefix(
+  const AValue: String): TdjValueDestination;
+begin
+  FParams.TimezonePrefix := AValue;
+  Result := Self;
+end;
+
+function TdjValueDestination.TimezoneSeparator(
+  const AValue: String): TdjValueDestination;
+begin
+  FParams.TimezoneSeparator := AValue;
+  Result := Self;
+end;
+
+function TdjValueDestination.TimeZulu(
+  const AValue: String): TdjValueDestination;
+begin
+  FParams.TimeZulu := AValue;
   Result := Self;
 end;
 

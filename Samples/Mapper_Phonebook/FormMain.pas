@@ -149,19 +149,19 @@ begin
     DF_DMVC:    Result.DateTimeFormat := TdjDateTimeFormat.dfDMVCFramework;
   end;
   // Load ISO8601 params
-  Result.ISO8601Params.DateSeparator := EditDateSeparator.Text;
+  Result.DateSeparator := EditDateSeparator.Text;
 
-  Result.ISO8601Params.TimePrefix := EditTimePrefix.Text;
-  Result.ISO8601Params.TimeSeparator := EditTimeSeparator.Text;
-  Result.ISO8601Params.MillisecSeparator := EditMillisecSeparator.Text;
-  Result.ISO8601Params.Zulu := EditZulu.Text;
-  Result.ISO8601Params.Seconds := CheckBoxSeconds.Checked;
-  Result.ISO8601Params.Millisec := CheckBoxMillisec.Checked;
-  Result.ISO8601Params.UTCTime := CheckBoxUTCTime.Checked;
+  Result.TimePrefix := EditTimePrefix.Text;
+  Result.TimeSeparator := EditTimeSeparator.Text;
+  Result.TimeMillisecSeparator := EditMillisecSeparator.Text;
+  Result.TimeZulu := EditZulu.Text;
+  Result.TimeSeconds := CheckBoxSeconds.Checked;
+  Result.TimeMillisec := CheckBoxMillisec.Checked;
+  Result.TimeUTC := CheckBoxUTCTime.Checked;
 
-  Result.ISO8601Params.TimeZonePrefix := EditTimezonePrefix.Text;
-  Result.ISO8601Params.TimeZoneSeparator := EditTimezoneSeparator.Text;
-  Result.ISO8601Params.TimeZoneIgnore := CheckBoxTimezoneIgnore.Checked;
+  Result.TimeZonePrefix := EditTimezonePrefix.Text;
+  Result.TimeZoneSeparator := EditTimezoneSeparator.Text;
+  Result.TimeZoneIgnore := CheckBoxTimezoneIgnore.Checked;
 end;
 
 function TMainForm.BuildSampleList: TObjectList<TPerson>;
@@ -488,19 +488,19 @@ begin
     DF_DMVC:    LParams.DateTimeFormat := TdjDateTimeFormat.dfDMVCFramework;
   end;
   // Date params
-  EditDateSeparator.Text := LParams.ISO8601Params.DateSeparator;
+  EditDateSeparator.Text := LParams.DateSeparator;
   // Time params
-  EditTimePrefix.Text := LParams.ISO8601Params.TimePrefix;
-  EditTimeSeparator.Text := LParams.ISO8601Params.TimeSeparator;
-  EditMillisecSeparator.Text := LParams.ISO8601Params.MillisecSeparator;
-  EditZulu.Text := LParams.ISO8601Params.Zulu;
-  CheckBoxSeconds.Checked := LParams.ISO8601Params.Seconds;
-  CheckBoxMillisec.Checked := LParams.ISO8601Params.Millisec;
-  CheckBoxUTCTime.Checked := LParams.ISO8601Params.UTCTime;
+  EditTimePrefix.Text := LParams.TimePrefix;
+  EditTimeSeparator.Text := LParams.TimeSeparator;
+  EditMillisecSeparator.Text := LParams.TimeMillisecSeparator;
+  EditZulu.Text := LParams.TimeZulu;
+  CheckBoxSeconds.Checked := LParams.TimeSeconds;
+  CheckBoxMillisec.Checked := LParams.TimeMillisec;
+  CheckBoxUTCTime.Checked := LParams.TimeUTC;
   // Timezone params
-  EditTimezonePrefix.Text := LParams.ISO8601Params.TimeZonePrefix;
-  EditTimezoneSeparator.Text := LParams.ISO8601Params.TimeZoneSeparator;
-  CheckBoxTimezoneIgnore.Checked := LParams.ISO8601Params.TimeZoneIgnore;
+  EditTimezonePrefix.Text := LParams.TimeZonePrefix;
+  EditTimezoneSeparator.Text := LParams.TimeZoneSeparator;
+  CheckBoxTimezoneIgnore.Checked := LParams.TimeZoneIgnore;
 end;
 
 procedure TMainForm.RadioGroupDateTimeFormatClick(Sender: TObject);
