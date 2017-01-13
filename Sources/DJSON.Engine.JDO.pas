@@ -454,6 +454,9 @@ begin
   // Normal float value (Float expected)
   if (AJSONValue.Typ = TJsonDataType.jdtFloat) then
     Exit(AJSONValue.FloatValue);
+  // Integer value (Float expected)
+  if (AJSONValue.Typ = TJsonDataType.jdtInt) then
+    Exit(AJSONValue.IntValue);
   // Otherwise (raise)
   raise EdjEngineError.Create('Cannot deserialize float value.');
 end;
