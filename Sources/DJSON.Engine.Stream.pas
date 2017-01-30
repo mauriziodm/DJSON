@@ -483,6 +483,10 @@ begin
   if (AJSONReader.TokenType = TJsonToken.Float) then
     Result := AJSONReader.Value.AsExtended
   else
+  // Integer value (Float expected)
+  if (AJSONReader.TokenType = TJsonToken.Integer) then
+    Result := AJSONReader.Value.AsInteger
+  else
   // Otherwise (raise)
     raise EdjEngineError.Create('Cannot deserialize float value.');
 end;
