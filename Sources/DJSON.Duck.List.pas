@@ -100,14 +100,11 @@ uses
 
 procedure TdjDuckList.Add(AObj: TObject);
 begin
-{ TODO : Possibile ottimizzazione se si trova il modo di richiamare il metodo Add più direttamente (noR RTTI) }
-//  TList<TObject>(FObjAsDuck).Add(AObj);
   FAddMethod.Invoke(FObjAsDuck, [AObj]);
 end;
 
 procedure TdjDuckList.AddValue(const AValue: TValue);
 begin
-{ TODO : Possibile ottimizzazione se si trova il modo di richiamare il metodo Add più direttamente (noR RTTI) }
   FAddMethod.Invoke(FObjAsDuck, [AValue]);
 end;
 
@@ -163,7 +160,6 @@ end;
 
 function TdjDuckList.GetItemValue(const index: Integer): TValue;
 begin
-{ TODO : Possibile ottimizzazione se si trova il modo di richiamare il metodo Add più direttamente (noR RTTI) }
   Result := FGetItemMethod.Invoke(FObjAsDuck, [index]);
 end;
 
