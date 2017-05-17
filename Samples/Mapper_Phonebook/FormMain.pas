@@ -112,7 +112,7 @@ var
 implementation
 
 uses
-  DJSON, System.JSON, System.Rtti, IdGlobal, DJSON.Utils;
+  DJSON, System.JSON, System.Rtti, IdGlobal, DJSON.Utils, System.TypInfo;
 
 {$R *.dfm}
 

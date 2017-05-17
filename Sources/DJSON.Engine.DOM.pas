@@ -945,7 +945,7 @@ begin
     // If first loop then add the type infos
     if AParams.TypeAnnotations and LFirst then
     begin
-      LValueQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(LValue.TypeInfo, True);
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
       LFirst := False;
     end;
     // Add the current element to the JSONArray
@@ -1009,7 +1009,7 @@ begin
     // If first loop then add the type infos
     if AParams.TypeAnnotations and LFirst then
     begin
-      LValueQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(LValue.TypeInfo, True);
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
       LFirst := False;
     end;
     // Add the current element to the JSONArray
@@ -1105,7 +1105,7 @@ begin
   if AParams.TypeAnnotations and LSerializer.isTypeNotificationCompatible then
   begin
     LJSONObj := TJSONObject.Create;
-    LJSONObj.AddPair(DJ_TYPENAME, TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, True));
+    LJSONObj.AddPair(DJ_TYPENAME, TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo));
     LJSONObj.AddPair(DJ_VALUE, LJSONValue);
     ResultJSONValue := LJSONObj;
   end
@@ -1143,8 +1143,8 @@ begin
     // If first loop then add the type infos
     if AParams.TypeAnnotations and LFirst then
     begin
-      LKeyQualifiedTypeName   := TdjRTTI.TypeInfoToTypeName(LKey.TypeInfo, True);
-      LValueQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(LValue.TypeInfo, True);
+      LKeyQualifiedTypeName   := TdjRTTI.TypeInfoToQualifiedTypeName(LKey.TypeInfo);
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
       LFirst := False;
     end;
     // Add the current element to the JSONArray
@@ -1188,7 +1188,7 @@ var
   LQualifiedTypeName: String;
 begin
 //  AQualifiedTypeName := TDuckPropField.QualifiedName(ARttiType);
-  LQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, True);
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
   if LQualifiedTypeName = 'System.Boolean' then
   begin
     if AValue.AsBoolean then
@@ -1207,7 +1207,7 @@ var
   LQualifiedTypeName: String;
 begin
 //  AQualifiedTypeName := TDuckPropField.QualifiedName(ARttiType);
-  LQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, true);
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
   if LQualifiedTypeName = 'System.TDate' then
   begin
     if AValue.AsExtended = 0 then
@@ -1315,7 +1315,7 @@ var
   LQualifiedTypeName: String;
 begin
   Result := nil;
-  LQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, True);
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
   // TTimeStamp
   if LQualifiedTypeName = 'System.SysUtils.TTimeStamp' then
   begin

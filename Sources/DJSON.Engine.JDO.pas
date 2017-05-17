@@ -841,7 +841,7 @@ begin
     // If first loop then add the type infos
     if AParams.TypeAnnotations and LFirst then
     begin
-      LValueQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(LValue.TypeInfo, true);
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
       LFirst := False;
     end;
   end;
@@ -931,7 +931,7 @@ begin
   begin
     LJSONObj := TJSONObject.Create;
     // Create & set the TypeName
-    LJSONObj.S[DJ_TYPENAME] := TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, true);
+    LJSONObj.S[DJ_TYPENAME] := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
     // Create & get the value JSONValue
     LJSONObj[DJ_VALUE] := nil;
     LJSONValue := LJSONObj.Items[LJSONObj.IndexOf(DJ_VALUE)];
@@ -980,8 +980,8 @@ begin
       // If first loop then add the type infos
       if AParams.TypeAnnotations and LFirst then
       begin
-        LKeyQualifiedTypeName   := TdjRTTI.TypeInfoToTypeName(LKey.TypeInfo, True);
-        LValueQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(LValue.TypeInfo, True);
+        LKeyQualifiedTypeName   := TdjRTTI.TypeInfoToQualifiedTypeName(LKey.TypeInfo);
+        LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
         LFirst := False;
       end;
       // Add the current element to the JSONArray
@@ -1033,7 +1033,7 @@ var
   LQualifiedTypeName: String;
 begin
   // Get the type name
-  LQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, True);
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
   // Boolean
   if LQualifiedTypeName = 'System.Boolean' then
     AResult.BoolValue := AValue.AsBoolean
@@ -1048,7 +1048,7 @@ var
   LQualifiedTypeName: String;
 begin
   // Get the type name
-  LQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, True);
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
   // TDate
   if LQualifiedTypeName = 'System.TDate' then
   begin
@@ -1109,7 +1109,7 @@ begin
     // If first loop then add the type infos
     if AParams.TypeAnnotations and LFirst then
     begin
-      LValueQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(LValue.TypeInfo, True);
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
       LFirst := False;
     end;
   end;
@@ -1264,7 +1264,7 @@ var
   LTimeStamp: TTimeStamp;
 begin
   // Get the type name
-  LQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, True);
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
   // TimeStamp
   if LQualifiedTypeName = 'System.SysUtils.TTimeStamp' then
   begin

@@ -179,7 +179,7 @@ constructor djItemsTypeAttribute.Create(const AValueTypeInfo: PTypeInfo);
 begin
   Self.Create;
   // Extract the qualified type name for the values
-  FValueQualifiedName := TdjRTTI.TypeInfoToTypeName(AValueTypeInfo, True);
+  FValueQualifiedName := TdjRTTI.TypeInfoToQualifiedTypeName(AValueTypeInfo);
 end;
 
 constructor djItemsTypeAttribute.Create(const AKeyTypeInfo,
@@ -188,7 +188,7 @@ begin
   // Extract the qualified type name for the values
   Self.Create(AValueTypeInfo);
   // Extract the qualified type name for the Keys
-  FKeyQualifiedName := TdjRTTI.TypeInfoToTypeName(AKeyTypeInfo, True);
+  FKeyQualifiedName := TdjRTTI.TypeInfoToQualifiedTypeName(AKeyTypeInfo);
 end;
 
 function djItemsTypeAttribute.GetValue: TClass;
@@ -224,7 +224,7 @@ constructor djTypeAttribute.Create(const ATypeInfo: PTypeInfo);
 begin
   Self.Create;
   // Extract the qualified type name for the values
-  FQualifiedName := TdjRTTI.TypeInfoToTypeName(ATypeInfo, True);
+  FQualifiedName := TdjRTTI.TypeInfoToQualifiedTypeName(ATypeInfo);
 end;
 
 { djSerializerAttribute<T> }

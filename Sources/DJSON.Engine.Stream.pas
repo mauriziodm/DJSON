@@ -908,7 +908,7 @@ begin
     if AValue.GetArrayLength > 0 then
     begin
       LValue := AValue.GetArrayElement(0);
-      LValueQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(LValue.TypeInfo, True);
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
     end;
     // Add the items TypeName (base on the first element of the list only
     if  (not LValueQualifiedTypeName.IsEmpty) then
@@ -1014,7 +1014,7 @@ begin
   begin
     AJSONWriter.WriteStartObject;
     AJSONWriter.WritePropertyName(DJ_TYPENAME);
-    AJSONWriter.WriteValue(TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, True));
+    AJSONWriter.WriteValue(TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo));
     AJSONWriter.WritePropertyName(DJ_VALUE);
   end;
   // Serialize the value
@@ -1053,8 +1053,8 @@ begin
       LSkipFirst := True;
       LKey   := ADuckDictionary.GetCurrentKey;
       LValue := ADuckDictionary.GetCurrentValue;
-      LKeyQualifiedTypeName   := TdjRTTI.TypeInfoToTypeName(LKey.TypeInfo, True);
-      LValueQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(LValue.TypeInfo, True);
+      LKeyQualifiedTypeName   := TdjRTTI.TypeInfoToQualifiedTypeName(LKey.TypeInfo);
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
     end;
     // Add the items TypeName (base on the first element of the list only)
     if  (not LKeyQualifiedTypeName.IsEmpty) then
@@ -1122,7 +1122,7 @@ class procedure TdjEngineStream.SerializeEnumeration(
 var
   LQualifiedTypeName: String;
 begin
-  LQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, True);
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
   // Boolean
   if LQualifiedTypeName = 'System.Boolean' then
     AJSONWriter.WriteValue(AValue.AsBoolean)
@@ -1136,7 +1136,7 @@ class procedure TdjEngineStream.SerializeFloat(const AJSONWriter: TJSONWriter;
 var
   LQualifiedTypeName: String;
 begin
-  LQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, True);
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
   if LQualifiedTypeName = 'System.TDate' then
   begin
     if AValue.AsExtended = 0 then
@@ -1191,7 +1191,7 @@ begin
     if ADuckList.Count > 0 then
     begin
       LValue := ADuckList.GetItemValue(0);
-      LValueQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(LValue.TypeInfo, true);
+      LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
     end;
     // Add the items TypeName (base on the first element of the list only
     if  (not LValueQualifiedTypeName.IsEmpty) then
@@ -1310,7 +1310,7 @@ var
   LTimeStamp: TTimeStamp;
   LQualifiedTypeName: String;
 begin
-  LQualifiedTypeName := TdjRTTI.TypeInfoToTypeName(AValue.TypeInfo, True);
+  LQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(AValue.TypeInfo);
   // TTimeStamp
   if LQualifiedTypeName = 'System.SysUtils.TTimeStamp' then
   begin

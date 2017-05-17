@@ -272,7 +272,10 @@ begin
   // Split Date & Time
   LSplitted := AValue.Split([StdTimePrefix], 2);
   OutDate := LSplitted[0];
-  OutTime := LSplitted[1];
+  if Length(LSplitted) > 1 then  // Questa condizione è perchè se riceveva una stringa con la sola parte Data dava dei problemi
+    OutTime := LSplitted[1]
+  else
+    OutTime := '';
   // Split Time & TimeZone
   LTimeZonePrefixPos := OutTime.LastIndexOfAny(['+','-']);
   if LTimeZonePrefixPos <> -1 then
@@ -378,7 +381,10 @@ var
 begin
   LSplitted := AValue.Split([TimePrefix], 2);
   OutDate := LSplitted[0];
-  OutTime := LSplitted[1];
+  if Length(LSplitted) > 1 then  // Questa condizione è perchè se riceveva una stringa con la sola parte Data dava dei problemi
+    OutTime := LSplitted[1]
+  else
+    OutTime := '';
   // PreProcess the Date part only
   if not OutDate.IsEmpty then
     OutDate := PreProcessInputDate(OutDate);

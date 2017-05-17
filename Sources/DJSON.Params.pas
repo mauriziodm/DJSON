@@ -823,7 +823,7 @@ end;
 
 procedure TdjSerializersContainer.Unregister(const ATargetTypeInfo: PTypeInfo);
 begin
-  FSerializersContainer.Remove(TdjRTTI.TypeInfoToTypeName(ATargetTypeInfo, true));
+  FSerializersContainer.Remove(TdjRTTI.TypeInfoToQualifiedTypeName(ATargetTypeInfo));
 end;
 
 procedure TdjSerializersContainer.Unregister(const ATargetClass: TClass);
@@ -839,21 +839,21 @@ end;
 function TdjSerializersContainer._Exists(
   const ATargetTypeInfo: PTypeInfo): Boolean;
 begin
-  Result := FSerializersContainer.ContainsKey(TdjRTTI.TypeInfoToTypeName(ATargetTypeInfo, true));
+  Result := FSerializersContainer.ContainsKey(TdjRTTI.TypeInfoToQualifiedTypeName(ATargetTypeInfo));
 end;
 
 function TdjSerializersContainer._GetOrCreateSerializersContainerItem(
   const ATargetTypeInfo: PTypeInfo): TdjSerializersContainerItem;
 begin
   if not Self._Exists(ATargetTypeInfo) then
-    FSerializersContainer.Add(TdjRTTI.TypeInfoToTypeName(ATargetTypeInfo, True), TdjSerializersContainerItem.Create);
+    FSerializersContainer.Add(TdjRTTI.TypeInfoToQualifiedTypeName(ATargetTypeInfo), TdjSerializersContainerItem.Create);
   Result := Self._GetSerializerItem(ATargetTypeInfo);
 end;
 
 function TdjSerializersContainer._GetSerializerItem(
   const ATargetTypeInfo:PTypeInfo): TdjSerializersContainerItem;
 begin
-  Result := FSerializersContainer.Items[TdjRTTI.TypeInfoToTypeName(ATargetTypeInfo, True)];
+  Result := FSerializersContainer.Items[TdjRTTI.TypeInfoToQualifiedTypeName(ATargetTypeInfo)];
 end;
 
 //procedure TdjSerializersContainer.Register(const ATargetTypeInfo: PTypeInfo;
