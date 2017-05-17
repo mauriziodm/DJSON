@@ -155,7 +155,7 @@ end;
 
 function TdjDuckList.GetItemQualifiedTypeName: String;
 begin
-  Result := TdjRTTI.TypeInfoToQualifiedTypeName(Self.GetItemTypeInfo);
+  Result := TdjRTTI.TypeInfoToTypeName(Self.GetItemTypeInfo, True);
 end;
 
 function TdjDuckList.GetItemValue(const index: Integer): TValue;

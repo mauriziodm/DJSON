@@ -146,7 +146,7 @@ end;
 
 function TdjDuckDictionary.GetKeyQualifiedTypeName: String;
 begin
-  Result := TdjRTTI.TypeInfoToQualifiedTypeName(Self.GetKeyTypeInfo);
+  Result := TdjRTTI.TypeInfoToTypeName(Self.GetKeyTypeInfo, True);
 end;
 
 function TdjDuckDictionary.GetKeyTypeInfo: PTypeInfo;
@@ -165,7 +165,7 @@ end;
 
 function TdjDuckDictionary.GetValueQualifiedTypeName: String;
 begin
-  Result := TdjRTTI.TypeInfoToQualifiedTypeName(Self.GetValueTypeInfo);
+  Result := TdjRTTI.TypeInfoToTypeName(Self.GetValueTypeInfo, True);
 end;
 
 function TdjDuckDictionary.GetValueTypeInfo: PTypeInfo;

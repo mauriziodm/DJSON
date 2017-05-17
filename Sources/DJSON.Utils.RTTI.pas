@@ -56,7 +56,7 @@ type
   public
     class var Ctx: TRttiContext;
     class function TValueToObject(const AValue: TValue): TObject; static;
-    class function TypeInfoToQualifiedTypeName(const ATypeInfo: PTypeInfo): String; static;
+    class function TypeInfoToTypeName(const ATypeInfo: PTypeInfo; const AQualified:Boolean=False): String; static;
     class function TypeInfoToRttiType(const ATypeInfo: PTypeInfo): TRttiType; static;
     class function QualifiedTypeNameToRttiType(const AQualifiedTypeName:String): TRttiType; static;
     class function CreateObject(ARttiType: TRttiType): TObject; overload; static;
@@ -141,10 +141,26 @@ begin
   end;
 end;
 
-class function TdjRTTI.TypeInfoToQualifiedTypeName(
-  const ATypeInfo: PTypeInfo): String;
+class function TdjRTTI.TypeInfoToTypeName(const ATypeInfo: PTypeInfo; const AQualified:Boolean): String;
 begin
-  Result := Ctx.GetType(ATypeInfo).QualifiedName;
+// From XE7
+{$IFDEF NEXTGEN}
+  // Get the type name
+  Result := ATypeInfo.NameFld.ToString;
+  // If a qualifiedname is required...
+  if AQualified then
+  begin
+    // If it is an interface then link the Interface unit to the TypeName
+    if  ATypeInfo.Kind = tkInterface then
+      Result := ATypeInfo.TypeData.IntfUnitFld.ToString + '.' + Result
+    // else (class) link the class unit to the TypeName
+    else
+      Result := ATypeInfo.TypeData.UnitNameFld.ToString + '.' + Result;
+  end;
+// Before XE7
+{$ELSE  NEXTGEN}
+  Result := ATypeInfo.Name;
+{$ENDIF NEXTGEN}
 end;
 
 class function TdjRTTI.TypeInfoToRttiType(
