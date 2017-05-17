@@ -160,7 +160,7 @@ end;
 
 function TdjDuckDictionary.GetKeyTypeName: String;
 begin
-  Result := Self.GetKeyTypeInfo.Name;
+  Result := TdjRtti.TypeInfoToTypeName(Self.GetKeyTypeInfo);
 end;
 
 function TdjDuckDictionary.GetValueQualifiedTypeName: String;
@@ -179,7 +179,7 @@ end;
 
 function TdjDuckDictionary.GetValueTypeName: String;
 begin
-  Result := Self.GetValueTypeInfo.Name;
+  Result := TdjRtti.TypeInfoToTypeName(Self.GetValueTypeInfo);
 end;
 
 function TdjDuckDictionary.MoveNext: Boolean;

@@ -58,7 +58,7 @@ type
 implementation
 
 uses
-  System.JSON.BSON, Winapi.Windows, System.JSON.Types, DJSON.Exceptions;
+  System.JSON.BSON, System.JSON.Types, DJSON.Exceptions;
 
 { TdjEngineStreamBSON }
 
