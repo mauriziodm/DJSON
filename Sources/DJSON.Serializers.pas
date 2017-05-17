@@ -46,7 +46,7 @@ interface
 
 uses
   System.Rtti, System.JSON, System.JSON.Writers, System.JSON.Readers,
-  JsonDataObjects, MSXML;
+  JsonDataObjects;
 
 type
 
@@ -74,13 +74,13 @@ type
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
 
-  TdjXMLCustomSerializerRef = class of TdjXMLCustomSerializer;
-  TdjXMLCustomSerializer = class abstract
-  public
-    class function Serialize(const AXMLNode:IXMLDOMNode; const AValue:TValue): TJSONValue; virtual;
-    class function Deserialize(const AXMLNode:IXMLDOMNode; const AExistingValue:TValue): TValue; virtual;
-    class function isTypeNotificationCompatible: Boolean; virtual;
-  end;
+//  TdjXMLCustomSerializerRef = class of TdjXMLCustomSerializer;
+//  TdjXMLCustomSerializer = class abstract
+//  public
+//    class function Serialize(const AXMLNode:IXMLDOMNode; const AValue:TValue): TJSONValue; virtual;
+//    class function Deserialize(const AXMLNode:IXMLDOMNode; const AExistingValue:TValue): TValue; virtual;
+//    class function isTypeNotificationCompatible: Boolean; virtual;
+//  end;
 
 implementation
 
@@ -142,24 +142,5 @@ begin
   // None
 end;
 
-{ TdjXMLCustomSerializer }
-
-class function TdjXMLCustomSerializer.Deserialize(const AXMLNode: IXMLDOMNode;
-  const AExistingValue: TValue): TValue;
-begin
-  // None
-end;
-
-class function TdjXMLCustomSerializer.isTypeNotificationCompatible: Boolean;
-begin
-  // TypeNotification not compatible by default
-  Result := False;
-end;
-
-class function TdjXMLCustomSerializer.Serialize(const AXMLNode: IXMLDOMNode;
-  const AValue: TValue): TJSONValue;
-begin
-  // None
-end;
 
 end.
