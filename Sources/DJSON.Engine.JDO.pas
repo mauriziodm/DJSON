@@ -645,7 +645,7 @@ begin
   // Get the type name
   LQualifiedTypeName := AValueType.QualifiedName;
   // TDate (integer expected)
-  if (LQualifiedTypeName = 'SSystem.SysUtils.TTimeStamp') then
+  if (LQualifiedTypeName = 'System.SysUtils.TTimeStamp') then
     Exit(   TValue.From<TTimeStamp>(MSecsToTimeStamp(AJSONValue.IntValue))   );
   // TValue
   if LQualifiedTypeName = 'System.Rtti.TValue' then
