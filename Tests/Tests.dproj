@@ -36,6 +36,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_Define>TESTINSIGHT;$(DCC_Define)</DCC_Define>
         <DCC_E>false</DCC_E>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_F>false</DCC_F>
