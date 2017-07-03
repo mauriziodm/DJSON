@@ -4,8 +4,10 @@ interface
 
 uses
   DUnitX.TestFramework,
+  System.Generics.Collections,
   System.Rtti,
-  System.JSON,
+  System.json,
+  DJSON.Attributes,
   DJSON.Serializers,
   DJSON.Params;
 
@@ -58,6 +60,43 @@ type
     property Population: Integer read FPopulation write FPopulation;
   end;
 
+  TEmployee = class
+    Name: string;
+    constructor Create(AName: string);
+  end;
+
+  TManager = class(TEmployee)
+  public
+    Reportees: TList<TEmployee>; { get; set; }
+    constructor Create(const AName: string);
+    destructor Destroy; override;
+  end;
+
+  THouse = class
+    StreetAddress: string; { get; set; }
+    BuildDate: TDateTime; { get; set; }
+    Bedrooms: Integer; { get; set; }
+    FloorArea: Single; { get; set; }
+  end;
+
+  THouse1 = class
+    StreetAddress: string; { get; set; }
+    [djSkip]
+    BuildDate: TDateTime; { get; set; }
+    [djSkip]
+    Bedrooms: Integer; { get; set; }
+    [djSkip]
+    FloorArea: Single; { get; set; }
+  end;
+
+  THouse2 = class
+    [djName('address')]
+    StreetAddress: string; { get; set; }
+    BuildDate: TDateTime; { get; set; }
+    Bedrooms: Integer; { get; set; }
+    FloorArea: Single; { get; set; }
+  end;
+
   [TestFixture]
   TDemoTests = class(TObject)
   private
@@ -65,8 +104,6 @@ type
   public
     [Setup]
     procedure Setup;
-    [TearDown]
-    procedure TearDown;
     [Test]
     procedure JsonConverter;
     [Test]
@@ -75,14 +112,21 @@ type
     procedure SerializationBasics;
     [Test]
     procedure SerializationBasics2;
+    [Test]
+    procedure DeserializationBasics1;
+    [Test]
+    procedure SerializeReferencesByValue;
+    [Test]
+    procedure SerializeReferencesWithMetadata;
+    [Test]
+    procedure SerializeAttributes;
   end;
 
 implementation
 
 uses
   System.SysUtils,
-  DJSON,
-  System.Generics.Collections;
+  DJSON;
 
 procedure TDemoTests.SerializationBasics;
 var
@@ -150,14 +194,116 @@ begin
   end;
 end;
 
+procedure TDemoTests.SerializeAttributes;
+var
+  house: THouse;
+  house1: THouse1;
+  house2: THouse2;
+begin
+  house := THouse.Create;
+  try
+    house.StreetAddress := '221B Baker Street';
+    house.Bedrooms := 2;
+    house.FloorArea := 100;
+    house.BuildDate := StrToDate('1.1.1890');
+    Assert.AreEqual('{"StreetAddress":"221B Baker Street",' + //
+      '"BuildDate":"1890-01-01T00:00:00.000Z","Bedrooms":2,"loorArea":100}', dj.From(house, FParams).ToJson);
+  finally
+    house.Free;
+  end;
+  house1 := THouse1.Create;
+  try
+    house1.StreetAddress := '221B Baker Street';
+    house1.Bedrooms := 2;
+    house1.FloorArea := 100;
+    house1.BuildDate := StrToDate('1.1.1890');
+    Assert.AreEqual('{"StreetAddress":"221B Baker Street"}', dj.From(house1, FParams).ToJson);
+  finally
+    house1.Free;
+  end;
+  house2 := THouse2.Create;
+  try
+    house2.StreetAddress := '221B Baker Street';
+    house2.Bedrooms := 2;
+    house2.FloorArea := 100;
+    house2.BuildDate := StrToDate('1.1.1890');
+    Assert.AreEqual('{"address":"221B Baker Street","BuildDate":"1890-01-01T00:00:00.000Z","Bedrooms":2,"loorArea":100}', dj.From(house2, FParams).ToJson);
+  finally
+    house2.Free;
+  end;
+end;
+
+procedure TDemoTests.SerializeReferencesByValue;
+var
+  arnie: TEmployee;
+  mike, susan: TManager;
+  json, valid: string;
+begin
+  arnie := TEmployee.Create('Arnie Admin');
+  mike := TManager.Create('Mike Manager');
+  susan := TManager.Create('Susan Supervisor');
+  try
+    mike.Reportees.AddRange([arnie, susan]);
+    susan.Reportees.AddRange([arnie]);
+    json := dj.From(mike, FParams).ToJson;
+    valid := //
+      '{"Reportees":[{"Name":"Arnie Admin"},{"Reportees":[{"Name":"Arnie Admin"}],' + //
+      '"Name":"Susan Supervisor"}],"Name":"Mike Manager"}';
+    Assert.AreEqual(valid, json);
+  finally
+    mike.Free;
+    susan.Free;
+    arnie.Free;
+  end;
+end;
+
+procedure TDemoTests.SerializeReferencesWithMetadata;
+var
+  arnie: TEmployee;
+  mike, susan: TManager;
+  json, valid: string;
+begin
+  arnie := TEmployee.Create('Arnie Admin');
+  mike := TManager.Create('Mike Manager');
+  susan := TManager.Create('Susan Supervisor');
+  FParams.TypeAnnotations := True;
+  try
+    mike.Reportees.AddRange([arnie, susan]);
+    susan.Reportees.AddRange([arnie]);
+    FParams.SerializationMode := smDataContract;
+    json := dj.From(mike, FParams).ToJson;
+    valid := //
+      '{"$dj_type":"DemoTests.TManager","Reportees":{"$dj_type":"System.Generics.Collections.TList<DemoTests.TEmployee>",' + //
+      '"$dj_value":"DemoTests.TEmployee","items":[{"$dj_type":"DemoTests.TEmployee","Name":"Arnie Admin"},' + //
+      '{"$dj_type":"DemoTests.TManager","Reportees":{"$dj_type":"System.Generics.Collections.TList<DemoTests.TEmployee>",' + //
+      '"$dj_value":"DemoTests.TEmployee","items":[{"$dj_type":"DemoTests.TEmployee","Name":"Arnie Admin"}]},"Name":"Susan Supervisor"}]},"Name":"Mike Manager"}';
+    Assert.AreEqual(valid, json);
+  finally
+    FParams.TypeAnnotations := False;
+    mike.Free;
+    susan.Free;
+    arnie.Free;
+  end;
+end;
+
 procedure TDemoTests.Setup;
 begin
   FParams := dj.Default;
   FParams.Engine := eDelphiDOM;
+  FParams.SerializationType := stFields;
 end;
 
-procedure TDemoTests.TearDown;
+procedure TDemoTests.DeserializationBasics1;
+var
+  j: string;
+  s: TSession;
 begin
+  j := '{' + //
+    '"Name": "Serialize All The Things",' + //
+    '"Date": "2017-07-03T00:00:00.000Z"' +   //
+    '}';
+  s := dj.FromJson(j, FParams).&to < TSession > ;
+  Assert.AreEqual('Serialize All The Things', s.Name);
 end;
 
 procedure TDemoTests.JsonConverter;
@@ -220,6 +366,26 @@ begin
   LColor := AValue.AsType<THtmlColor>;
   hexString := Format('%x%.2x%.2x', [LColor.Red, LColor.Green, LColor.Blue]);
   Result := TJSONString.Create('#' + hexString);
+end;
+
+{ TEmployee }
+
+constructor TEmployee.Create(AName: string);
+begin
+  Name := AName;
+end;
+
+{ TManager }
+constructor TManager.Create(const AName: string);
+begin
+  inherited Create(AName);
+  Reportees := TList<TEmployee>.Create;
+end;
+
+destructor TManager.Destroy;
+begin
+  Reportees.Free;
+  inherited;
 end;
 
 initialization
