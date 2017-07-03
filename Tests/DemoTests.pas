@@ -106,7 +106,7 @@ begin
     s.Name := 'Serialize All The Things';
     s.Date := StrToDate('03.07.2017');
     FParams.SerializationMode := smJavaScript;
-    Assert.AreEqual('', dj.From(s, FParams).ToJson);
+    Assert.AreEqual('{"Name":"Serialize All The Things","Date":"2017-07-03T00:00:00.000Z"}', dj.From(s, FParams).ToJson);
   finally
     s.Free;
   end;
