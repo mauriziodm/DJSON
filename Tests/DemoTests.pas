@@ -71,6 +71,10 @@ type
     procedure JsonConverter;
     [Test]
     procedure SerializationGuide;
+    [Test]
+    procedure SerializationBasics;
+    [Test]
+    procedure SerializationBasics2;
   end;
 
 implementation
@@ -79,6 +83,34 @@ uses
   System.SysUtils,
   DJSON,
   System.Generics.Collections;
+
+procedure TDemoTests.SerializationBasics;
+var
+  LRoles: TList<string>;
+begin
+  LRoles := TList<string>.Create;
+  try
+    LRoles.AddRange(['User', 'Admin']);
+    Assert.AreEqual('["User","Admin"]', dj.From(LRoles, FParams).ToJson);
+  finally
+    LRoles.Free;
+  end;
+end;
+
+procedure TDemoTests.SerializationBasics2;
+var
+  s: TSession;
+begin
+  s := TSession.Create;
+  try
+    s.Name := 'Serialize All The Things';
+    s.Date := StrToDate('03.07.2017');
+    FParams.SerializationMode := smJavaScript;
+    Assert.AreEqual('', dj.From(s, FParams).ToJson);
+  finally
+    s.Free;
+  end;
+end;
 
 procedure TDemoTests.SerializationGuide;
 var
