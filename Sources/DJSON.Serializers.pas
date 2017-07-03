@@ -36,41 +36,42 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Serializers;
 
 interface
 
 uses
-  System.Rtti, System.JSON, System.JSON.Writers, System.JSON.Readers,
+  System.Rtti,
+  System.JSON,
+  System.JSON.Writers,
+  System.JSON.Readers,
   JsonDataObjects;
 
 type
-
   TdjDOMCustomSerializerRef = class of TdjDOMCustomSerializer;
+
   TdjDOMCustomSerializer = class abstract
   public
-    class function Serialize(const AValue:TValue): TJSONValue; virtual;
-    class function Deserialize(const AJSONValue:TJSONValue; const AExistingValue:TValue): TValue; virtual;
+    class function Serialize(const AValue: TValue): TJSONValue; virtual;
+    class function Deserialize(const AJSONValue: TJSONValue; const AExistingValue: TValue): TValue; virtual;
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
 
   TdjJDOCustomSerializerRef = class of TdjJDOCustomSerializer;
+
   TdjJDOCustomSerializer = class abstract
   public
-    class procedure Serialize(const AJSONValue:PJsonDataValue; const AValue:TValue); virtual;
-    class function Deserialize(const AJSONValue:PJsonDataValue; const AExistingValue:TValue): TValue; virtual;
+    class procedure Serialize(const AJSONValue: PJsonDataValue; const AValue: TValue); virtual;
+    class function Deserialize(const AJSONValue: PJsonDataValue; const AExistingValue: TValue): TValue; virtual;
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
 
   TdjStreamCustomSerializerRef = class of TdjStreamCustomSerializer;
+
   TdjStreamCustomSerializer = class abstract
   public
-    class procedure Serialize(const AJSONWriter: TJSONWriter; const AValue:TValue); virtual;
-    class function Deserialize(const AJSONReader: TJSONReader; const AExistingValue:TValue): TValue; virtual;
+    class procedure Serialize(const AJSONWriter: TJSONWriter; const AValue: TValue); virtual;
+    class function Deserialize(const AJSONReader: TJSONReader; const AExistingValue: TValue): TValue; virtual;
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
 
@@ -86,10 +87,10 @@ implementation
 
 { TdjCustomSerializer }
 
-class function TdjDOMCustomSerializer.Deserialize(const AJSONValue: TJSONValue;
-  const AExistingValue: TValue): TValue;
+class function TdjDOMCustomSerializer.Deserialize(const AJSONValue: TJSONValue; const AExistingValue: TValue): TValue;
 begin
   // None
+  Result := nil;
 end;
 
 class function TdjDOMCustomSerializer.isTypeNotificationCompatible: Boolean;
@@ -98,17 +99,19 @@ begin
   Result := False;
 end;
 
-class function TdjDOMCustomSerializer.Serialize(const AValue: TValue): TJSONValue;
+class function TdjDOMCustomSerializer.Serialize(
+  const AValue: TValue): TJSONValue;
 begin
   // None
+  Result := nil;
 end;
 
 { TdjStreamCustomSerializer }
 
-class function TdjStreamCustomSerializer.Deserialize(
-  const AJSONReader: TJSONReader; const AExistingValue: TValue): TValue;
+class function TdjStreamCustomSerializer.Deserialize(const AJSONReader: TJSONReader; const AExistingValue: TValue): TValue;
 begin
   // None
+  Result := nil;
 end;
 
 class function TdjStreamCustomSerializer.isTypeNotificationCompatible: Boolean;
@@ -117,18 +120,17 @@ begin
   Result := False;
 end;
 
-class procedure TdjStreamCustomSerializer.Serialize(
-  const AJSONWriter: TJSONWriter; const AValue: TValue);
+class procedure TdjStreamCustomSerializer.Serialize(const AJSONWriter: TJSONWriter; const AValue: TValue);
 begin
   // None
 end;
 
 { TdjJDOCustomSerializer }
 
-class function TdjJDOCustomSerializer.Deserialize(
-  const AJSONValue: PJsonDataValue; const AExistingValue: TValue): TValue;
+class function TdjJDOCustomSerializer.Deserialize(const AJSONValue: PJsonDataValue; const AExistingValue: TValue): TValue;
 begin
   // None
+  Result := nil;
 end;
 
 class function TdjJDOCustomSerializer.isTypeNotificationCompatible: Boolean;
@@ -137,10 +139,10 @@ begin
   Result := False;
 end;
 
-class procedure TdjJDOCustomSerializer.Serialize(const AJSONValue: PJsonDataValue; const AValue:TValue);
+class procedure TdjJDOCustomSerializer.Serialize(const AJSONValue: PJsonDataValue; const AValue: TValue);
 begin
   // None
 end;
 
-
 end.
+
