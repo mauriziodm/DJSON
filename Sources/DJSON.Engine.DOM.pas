@@ -99,7 +99,8 @@ type
 implementation
 
 uses
-  System.SysUtils, System.DateUtils, DJSON.Duck.PropField, DJSON.Utils.RTTI,
+  System.SysUtils, System.DateUtils, System.NetEncoding,
+  DJSON.Duck.PropField, DJSON.Utils.RTTI,
   DJSON.Exceptions, DJSON.Serializers, DJSON.Constants, DJSON.Attributes,
   DJSON.Factory, DJSON.Utils, System.Classes, Soap.EncdDecd,
   DJSON.TypeInfoCache;
@@ -138,7 +139,6 @@ begin
   then
     Exit;
   // Defaults
-  LValueRTTIType          := nil;
   LValueQualifiedTypeName := '';
   // If the Property/Field is valid then try to get the value (Object) from the
   //  master object else the MasterObject itself is the destination of the deserialization
@@ -192,7 +192,7 @@ begin
   for I := 0 to LJSONArray.Count - 1 do
   begin
     // Extract the current element
-    LValueJSONValue := LJSONArray.Get(I);
+    LValueJSONValue := LJSONArray.Items[I];
     // Deserialize the current element
     LValue := DeserializePropField(LValueJSONValue, LValueRttiType, APropField, nil, AParams);
     // Add to the array
@@ -287,7 +287,6 @@ var
 begin
   // Init
   Result := False;
-  LSerializer := nil;
   LExistingValue := nil;
   // If the Property/Field is valid then try to get the value (Object) from the
   //  master object else the MasterObject (or the array) itself is the destination
@@ -399,7 +398,7 @@ begin
   // Loop
   for I := 0 to LJSONArray.Count - 1 do
   begin
-    LJObj := LJSONArray.Get(I) as TJSONObject;
+    LJObj := LJSONArray.Items[I] as TJSONObject;
     // Get the key anche value JSONValue
     case AParams.SerializationMode of
       smJavaScript:
@@ -413,6 +412,7 @@ begin
         LKeyJSONValue   := LJObj.GetValue(DJ_KEY);
         LValueJSONValue := LJObj.GetValue(DJ_VALUE);
       end;
+    else raise Exception.Create('TdjEngineDOM.DeserializeDictionary: The AParams.SerializationMode contain unknown parameter.');
     end;
     // Deserialization key and value
     LKey   := DeserializePropField(LKeyJSONValue, LKeyRttiType, APropField, nil, AParams);
@@ -544,7 +544,6 @@ begin
   then
     Exit;
   // Defaults
-  LValueRTTIType          := nil;
   LListTypeName           := '';
   LValueQualifiedTypeName := '';
   // If AUseClassName is true then get the "items" JSONArray containing che containing the list items
@@ -589,7 +588,7 @@ begin
   for I := 0 to LJSONArray.Count - 1 do
   begin
     // Extract the current element
-    LValueJSONValue := LJSONArray.Get(I);
+    LValueJSONValue := LJSONArray.Items[I];
     // Deserialize the current element
     LValue := DeserializePropField(LValueJSONValue, LValueRttiType, APropField, nil, AParams);
     // Add to the list
@@ -613,7 +612,6 @@ begin
   //  value/object then load and use it as AValueType
   //  NB: Ho aggiunto questa parte perchè altrimenti in caso di una lista di interfacce (es: TList<IPerson>)
   //  NB. Se alla fine del blocco non trova un ValueTypeValido allora usa quello ricevuto come parametro
-  LValueType := nil;
   LValueQualifiedTypeName := String.Empty;
   // Non deve considerare i TValue
   if not(   Assigned(AValueType) and (AValueType.Name = 'TValue')   ) then
@@ -699,6 +697,10 @@ begin
   else if LQualifiedTypeName = 'System.Rtti.TValue' then
   begin
     Result := DeserializeTValue(AJSONValue, APropField, AParams);
+  end
+  else
+  begin
+    raise Exception.Create('TdjEngineDOM.DeserializeRecord: Unknown LQualifiedTypeName.');
   end;
 end;
 
@@ -868,9 +870,6 @@ begin
 {$ENDIF}
     AObject := TdjRTTI.CreateObject(LJSONClassName.Value);
   end;
-
-  LJSONValue := nil;
-
   try
     // Get members list
     case AParams.SerializationType of
@@ -996,7 +995,6 @@ var
   LResultJSONObj: TJSONObject;
 begin
   // Init
-  Result := nil;
   LJSONArray := TJSONArray.Create;
   // Loop for all array elements
   LFirst := True;
@@ -1082,7 +1080,6 @@ var
 begin
   // Init
   Result := False;
-  LSerializer := nil;
   // If the Value is an Interface type then convert it to real object class
   //  type implementing the interface
   if AValue.Kind = tkInterface then

@@ -62,9 +62,9 @@ type
     class function ISODateToString(const ADate:TDateTime; const AParams:IdjParams): string;
     class function ISOTimeToString(const ATime:TTime; const AParams:IdjParams): string;
 
-    class function ISOStrToDateTime(DateTimeAsString:string; const AParams:IdjParams): TDateTime;
-    class function ISOStrToDate(DateAsString:string; const AParams:IdjParams): TDate;
-    class function ISOStrToTime(TimeAsString:string; const AParams:IdjParams): TTime;
+    class function ISOStrToDateTime(const DateTimeAsString:string; const AParams:IdjParams): TDateTime;
+    class function ISOStrToDate(const DateAsString:string; const AParams:IdjParams): TDate;
+    class function ISOStrToTime(const TimeAsString:string; const AParams:IdjParams): TTime;
   end;
 
 implementation
@@ -144,8 +144,6 @@ end;
 class function TdjUtils.GetKeyName(const ARttiMember: TRttiNamedObject;
   const AParams:IdjParams): string;
 var
-  attrs: TArray<TCustomAttribute>;
-  attr: TCustomAttribute;
   LdsonNameAttribute: djNameAttribute;
 begin
   // If a dsonNameAttribute is present then use it else return the name
@@ -205,33 +203,36 @@ begin
   end;
 end;
 
-class function TdjUtils.ISOStrToDate(DateAsString:string; const AParams:IdjParams): TDate;
+class function TdjUtils.ISOStrToDate(const DateAsString:string; const AParams:IdjParams): TDate;
 begin
   case AParams.DateTimeFormat of
     TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
       Result := AParams.ISO8601Processor.FromISO8601ToDate(DateAsString);
     TdjDateTimeFormat.dfUnix:
       Result := UnixToDateTime(DateAsString.ToInt64, AParams.ISO8601Processor.UTCTime);
+  else raise Exception.Create('TdjUtils.ISOStrToDate: The AParams.DateTimeFormat contain unknown parameter.');
   end;
 end;
 
-class function TdjUtils.ISOStrToDateTime(DateTimeAsString:string; const AParams:IdjParams): TDateTime;
+class function TdjUtils.ISOStrToDateTime(const DateTimeAsString:string; const AParams:IdjParams): TDateTime;
 begin
   case AParams.DateTimeFormat of
     TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
       Result := AParams.ISO8601Processor.FromISO8601ToDateTime(DateTimeAsString);
     TdjDateTimeFormat.dfUnix:
       Result := UnixToDateTime(DateTimeAsString.ToInt64, AParams.ISO8601Processor.UTCTime);
+  else raise Exception.Create('TdjUtils.ISOStrToDateTime: The AParams.DateTimeFormat contain unknown parameter.');
   end;
 end;
 
-class function TdjUtils.ISOStrToTime(TimeAsString:string; const AParams:IdjParams): TTime;
+class function TdjUtils.ISOStrToTime(const TimeAsString:string; const AParams:IdjParams): TTime;
 begin
   case AParams.DateTimeFormat of
     TdjDateTimeFormat.dfISO8601..TdjDateTimeFormat.dfDMVCFramework:
       Result := AParams.ISO8601Processor.FromISO8601ToTime(TimeAsString);
     TdjDateTimeFormat.dfUnix:
       Result := UnixToDateTime(TimeAsString.ToInt64, AParams.ISO8601Processor.UTCTime);
+  else raise Exception.Create('TdjUtils.ISOStrToTime: The AParams.DateTimeFormat contain unknown parameter.');
   end;
 end;
 
@@ -242,6 +243,7 @@ begin
       Result := AParams.ISO8601Processor.FromTimeToISO8601(ATime);
     TdjDateTimeFormat.dfUnix:
       Result := DateTimeToUnix(ATime, AParams.ISO8601Processor.UTCTime).ToString;
+  else raise Exception.Create('TdjUtils.ISOTimeToString: The AParams.DateTimeFormat contain unknown parameter.');
   end;
 end;
 

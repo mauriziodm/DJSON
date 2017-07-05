@@ -68,6 +68,7 @@ class function TdjEngineStreamBSON.Deserialize(const AByteStream: TStream;
 var
   LBSONReader: TBSONReader;
 begin
+  Result := TValue.Empty;
   AByteStream.Position := 0;
   LBSONReader := TBSONReader.Create(AByteStream);
   try

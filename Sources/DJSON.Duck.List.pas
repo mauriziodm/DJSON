@@ -94,7 +94,7 @@ implementation
 
 uses
   DJSON.Utils.RTTI, DJSON.Exceptions,
-  System.Generics.Collections;
+  System.Generics.Collections, System.SysUtils;
 
 { TdjDuckList }
 
@@ -150,6 +150,8 @@ begin
       Result := AValue.AsObject;
     tkInterface:
       Result := AValue.AsInterface as TObject;
+      else
+        raise Exception.Create('TdjDuckList.GetItem: The AValue does not contain an object or interfaced object.');
   end;
 end;
 
@@ -230,7 +232,6 @@ begin
   if not Assigned(LGetItemMethod) then LGetItemMethod := LType.GetMethod('Get');
   if not Assigned(LGetItemMethod) then Exit(nil);
   // OwnsObjects Property (No exception if not exist)
-  LOwnsObjectsProperty := nil;
   LOwnsObjectsProperty := LType.GetProperty('OwnsObjects');
   // If everithing is OK then create the Duck
   Result := Self.Create(AObjAsDuck, LCountProperty, LOwnsObjectsProperty, LAddMethod, LClearMethod, LGetItemMethod);
