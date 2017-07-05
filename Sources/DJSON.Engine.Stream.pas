@@ -786,7 +786,7 @@ var
   LStreamWriter: TStreamWriter;
 begin
   // The JSONToken must be a string type
-  if not(AJSONReader.TokenType <> TJsonToken.String) then
+  if AJSONReader.TokenType <> TJsonToken.String then
     raise EdjEngineError.Create('Wrong JSON token type deserializing a stream.');
   // Load the string representation of the stream from the JSON then
   //  load it into the object
