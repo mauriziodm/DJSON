@@ -121,7 +121,7 @@ type
   const
     DefaultEncoding = 'utf-8';
   public
-    constructor Create(AEncoding: string = DefaultEncoding);
+    constructor Create(const AEncoding: string = DefaultEncoding);
     property Encoding: string read FEncoding write SetEncoding;
   end;
 
@@ -133,7 +133,7 @@ uses
 
 { djEncodingAttribute }
 
-constructor djEncodingAttribute.Create(AEncoding: string);
+constructor djEncodingAttribute.Create(const AEncoding: string);
 begin
   inherited Create;
   if AEncoding.IsEmpty then
@@ -196,6 +196,7 @@ var
   typ: TRttiType;
 begin
   inherited;
+  Result := nil;
   typ := TdjRTTI.QualifiedTypeNameToRttiType(FValueQualifiedName);
   if Assigned(typ) and typ.IsInstance then
     Result := typ.AsInstance.MetaclassType;

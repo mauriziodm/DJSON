@@ -25,7 +25,6 @@ type
     FBlue: Integer;
   public
     constructor Create(ARed, AGreen, ABlue: Integer);
-  published
     property Red: Integer read FRed write FRed;
     property Green: Integer read FGreen write FGreen;
     property Blue: Integer read FBlue write FBlue;
@@ -36,7 +35,7 @@ type
     FName: string;
     FAge: Integer;
     FJob: string;
-  published
+  public
     property Name: string read FName write FName;
     property Age: Integer read FAge write FAge;
     property Job: string read FJob write FJob;
@@ -46,7 +45,7 @@ type
   private
     FName: string;
     FDate: TDateTime;
-  published
+  public
     property Name: string read FName write FName;
     property Date: TDateTime read FDate write FDate;
   end;
@@ -55,7 +54,7 @@ type
   private
     FName: string;
     FPopulation: Integer;
-  published
+  public
     property Name: string read FName write FName;
     property Population: Integer read FPopulation write FPopulation;
   end;
