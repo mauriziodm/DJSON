@@ -71,3 +71,5 @@ __recovery/
 
 # my list ignored
 
+dunitx-results.xml
+TestInsightSettings.ini
