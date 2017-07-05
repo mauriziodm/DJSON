@@ -221,12 +221,10 @@ begin
   LAddMethod := LType.GetMethod('Add');
   if not Assigned(LAddMethod) then Exit(nil);
   // Keys enumerator
-  LObj := nil;
   LObj := LKeysProperty.GetValue(AObjAsDuck).AsObject;
   LObj := TdjRTTI.Ctx.GetType(LObj.ClassInfo).GetMethod('GetEnumerator').Invoke(LObj, []).AsObject;
   LKeysEnumerator := TdjDuckDictionaryEnumerator.Create(   LObj   );
   // Values enumerator
-  LObj := nil;
   LObj := LValuesProperty.GetValue(AObjAsDuck).AsObject;
   LObj := TdjRTTI.Ctx.GetType(LObj.ClassInfo).GetMethod('GetEnumerator').Invoke(LObj, []).AsObject;
   LValuesEnumerator := TdjDuckDictionaryEnumerator.Create(   LObj   );

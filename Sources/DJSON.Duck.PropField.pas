@@ -82,8 +82,6 @@ begin
 end;
 
 class function TdjDuckPropField.GetValue(const Instance: TObject; const ARttiType: TRttiNamedObject): TValue;
-var
-  LRttiProperty: TRttiProperty;
 begin
   case GetPropFieldType(ARttiType) of
     ptField:

@@ -51,7 +51,7 @@ type
 
   TdjRTTI = class sealed
   private
-    class var TValueToStringFormatSettings: TFormatSettings;
+    // class var TValueToStringFormatSettings: TFormatSettings;
     class procedure Initialize; static;
   public
     class var Ctx: TRttiContext;
@@ -61,7 +61,7 @@ type
     class function TypeInfoToRttiType(const ATypeInfo: PTypeInfo): TRttiType; static;
     class function QualifiedTypeNameToRttiType(const AQualifiedTypeName:String): TRttiType; static;
     class function CreateObject(ARttiType: TRttiType): TObject; overload; static;
-    class function CreateObject(AQualifiedClassName: string): TObject; overload; static;
+    class function CreateObject(const AQualifiedClassName: string): TObject; overload; static;
     class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject): boolean; overload;
     class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject; out AAttribute: T): boolean; overload; static;
     class function GetItemsQualifiedTypeNameFromArrayTypeInfo(const ATypeInfo:PTypeInfo): String; static;
@@ -98,7 +98,7 @@ begin
   // .Invoke(ARttiType.AsInstance.MetaclassType, []).AsObject);
 end;
 
-class function TdjRTTI.CreateObject(AQualifiedClassName: string): TObject;
+class function TdjRTTI.CreateObject(const AQualifiedClassName: string): TObject;
 var
   rttitype: TRttiType;
 begin
@@ -133,7 +133,6 @@ end;
 
 class function TdjRTTI.TValueToObject(const AValue: TValue): TObject;
 begin
-  Result := nil;
   case AValue.TypeInfo.Kind of
     tkInterface: Result := AValue.AsInterface As TObject;
     tkClass: Result := AValue.AsObject;
@@ -151,7 +150,7 @@ begin
 // Before XE7
 {$ELSE  NEXTGEN}
   // Get the type name
-  Result := ATypeInfo.Name;
+  Result := string(ATypeInfo.Name);
 {$ENDIF NEXTGEN}
   // If a qualifiedname is required...
   if AQualified then
@@ -172,7 +171,6 @@ end;
 class function TdjRTTI.TypeInfoToRttiType(
   const ATypeInfo: PTypeInfo): TRttiType;
 begin
-  Result := nil;
   Result := Ctx.GetType(ATypeInfo);
 end;
 
@@ -206,7 +204,6 @@ end;
 class function TdjRTTI.QualifiedTypeNameToRttiType(
   const AQualifiedTypeName: String): TRttiType;
 begin
-  Result := nil;
   Result := Ctx.FindType(AQualifiedTypeName);
 end;
 

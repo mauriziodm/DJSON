@@ -97,10 +97,17 @@ type
 implementation
 
 uses
-  DJSON.Duck.PropField, DJSON.Utils.RTTI, System.SysUtils, DJSON.Exceptions,
+{$REGION 'System'}
+  System.SysUtils,
+  System.Classes,
+  System.NetEncoding,
+{$ENDREGION}
+{$REGION 'DJSON'}
+  DJSON.Duck.PropField, DJSON.Utils.RTTI,  DJSON.Exceptions,
   DJSON.Serializers, DJSON.Attributes, DJSON.Constants,
-  DJSON.Factory, DJSON.Utils, System.Classes, Soap.EncdDecd,
-  DJSON.TypeInfoCache;
+  DJSON.Factory, DJSON.Utils, DJSON.TypeInfoCache;
+{$ENDREGION}
+
 
 class function TdjEngineJDO.Deserialize(const AJSONText: String;
   const AValueType: TRttiType; const APropField: TRttiNamedObject;
@@ -141,7 +148,6 @@ begin
   then
     Exit;
   // Defaults
-  LValueRTTIType          := nil;
   LValueQualifiedTypeName := '';
   // If the Property/Field is valid then try to get the value (Object) from the
   //  master object else the MasterObject itself is the destination of the deserialization
@@ -288,7 +294,6 @@ var
 begin
   // Init
   Result := False;
-  LSerializer := nil;
   LExistingValue := nil;
   // If the Property/Field is valid then try to get the value (Object) from the
   //  master object else the MasterObject itself is the destination of the deserialization
@@ -337,6 +342,9 @@ var
   LJSONArray, LTmpKeyJSONArray: TJSONArray;
   LKey, LValue: TValue;
 begin
+  LKeyJSONValue := nil;
+  LValueJSONValue := nil;
+  LTmpKeyJSONArray := nil;
   // Checks
   if (not Assigned(AJSONValue))
   or (AJSONValue.Typ = TJsonDataType.jdtNone)
@@ -406,6 +414,8 @@ begin
         LKeyJSONValue   := LJObj.Items[LJObj.IndexOf(DJ_KEY)];
         LValueJSONValue   := LJObj.Items[LJObj.IndexOf(DJ_VALUE)];
       end;
+    else
+      raise Exception.Create('TdjEngineJDO.DeserializeDictionary: Unknown AParams.SerializationMode');
     end;
     // Deserialization key and value
     LKey   := DeserializePropField(LKeyJSONValue, LKeyRttiType, APropField, nil, AParams);
@@ -413,7 +423,7 @@ begin
     // If the SerializationMode equals to smJavaScript then Free the LKeyJSONValue
     //  becaouse not owned by anyone
     if AParams.SerializationMode = smJavaScript then
-      LTmpKeyJSONArray.Free;
+      FreeAndNil(LTmpKeyJSONArray);
     // Add to the dictionary
     ADuckDictionary.Add(LKey, LValue);
   end;
@@ -511,7 +521,6 @@ begin
   then
     Exit;
   // Defaults
-  LValueRTTIType          := nil;
   LListTypeName           := '';
   LValueQualifiedTypeName := '';
   // If AUseClassName is true then get the "items" JSONArray containing che containing the list items
@@ -573,7 +582,6 @@ begin
   //  value/object then load and use it as AValueType
   //  NB: Ho aggiunto questa parte perchè altrimenti in caso di una lista di interfacce (es: TList<IPerson>)
   //  NB. Se alla fine del blocco non trova un ValueTypeValido allora usa quello ricevuto come parametro
-  LValueType := nil;
   LValueQualifiedTypeName := String.Empty;
   // Non deve considerare i TValue
   if not(   Assigned(AValueType) and (AValueType.Name = 'TValue')   ) then
@@ -636,20 +644,20 @@ begin
   end;
 end;
 
-class function TdjEngineJDO.DeserializeRecord(const AJSONValue: PJsonDataValue;
-  const AValueType: TRttiType; const APropField: TRttiNamedObject;
-  const AParams: IdjParams): TValue;
+class function TdjEngineJDO.DeserializeRecord(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AParams: IdjParams): TValue;
 var
-  LQualifiedTypeName: String;
+  LQualifiedTypeName: string;
 begin
   // Get the type name
   LQualifiedTypeName := AValueType.QualifiedName;
   // TDate (integer expected)
-  if (LQualifiedTypeName = 'SSystem.SysUtils.TTimeStamp') then
-    Exit(   TValue.From<TTimeStamp>(MSecsToTimeStamp(AJSONValue.IntValue))   );
+  if (LQualifiedTypeName = 'System.SysUtils.TTimeStamp') then
+    Result := TValue.From<TTimeStamp>(MSecsToTimeStamp(AJSONValue.IntValue))
   // TValue
-  if LQualifiedTypeName = 'System.Rtti.TValue' then
-    Exit(   DeserializeTValue(AJSONValue, APropField, AParams)   );
+  else if LQualifiedTypeName = 'System.Rtti.TValue' then
+    Result := DeserializeTValue(AJSONValue, APropField, AParams)
+  else
+   raise Exception.Create('TdjEngineJDO.DeserializeRecord: Unknown LQualifiedTypeName.');
 end;
 
 class procedure TdjEngineJDO.DeserializeStream(AStream: TObject;
@@ -693,7 +701,7 @@ begin
     TStream(AStream).Position := 0;
     LStreamWriter := TStreamWriter.Create(TStream(AStream));
     try
-      LStreamWriter.Write(DecodeString(LStreamASString));
+      LStreamWriter.Write(TNetEncoding.Base64.Decode(LStreamASString));
     finally
       LStreamWriter.Free;
     end;
@@ -720,7 +728,7 @@ begin
   try
     LStringStream.WriteString(LValueAsString);
     LStringStream.Position := 0;
-    DecodeStream(LStringStream, LMemoryStream);
+    TNetEncoding.Base64.Decode(LStringStream, LMemoryStream);
     LMemoryStream.Position := 0;
     ADuckStreamable.LoadFromStream(LMemoryStream);
   finally
@@ -909,7 +917,6 @@ var
 begin
   // Init
   Result := False;
-  LSerializer := nil;
   // If the Value is an Interface type then convert it to real object class
   //  type implementing the interface
   if AValue.Kind = tkInterface then
@@ -960,6 +967,7 @@ begin
   // Init
   LKeyQualifiedTypeName   := '';
   LValueQualifiedTypeName := '';
+  LJSONValue := nil;
   // Create the Items JSON array
   LJSONArray := TJSONArray.Create;
   // Loop
@@ -1000,6 +1008,7 @@ begin
           CurrJSONObj[DJ_VALUE] := nil;
           LJSONValue := CurrJSONObj.Items[CurrJSONObj.IndexOf(DJ_VALUE)];
         end;
+      else raise Exception.Create('TdjEngineJDO.SerializeDictionary: Unknown AParams.SerializationMode');
       end;
       // Serialize the value
       SerializePropField(LJSONValue, LValue, APropField, AParams);
@@ -1172,7 +1181,6 @@ var
   LKeyName: String;
   LJSONValue: PJsonDataValue;
   LValue: TValue;
-  I: Integer;
 begin
   Result := TJSONBox.Create;
   try
@@ -1222,7 +1230,6 @@ var
   LKeyName: String;
   LValue: TValue;
 begin
-  LJSONValue := nil;
   // Get members list
   case AParams.SerializationType of
     stProperties:
@@ -1307,7 +1314,7 @@ begin
     TStream(AStream).Position := 0;
     LStringStream := TStringStream.Create;
     try
-      EncodeStream(TStream(AStream), LStringStream);
+      TNetEncoding.Base64.Encode(TStream(AStream), LStringStream);
       AResult.Value := LStringStream.DataString;
     finally
       LStringStream.Free;
@@ -1328,7 +1335,7 @@ begin
   try
     ADuckStreamable.SaveToStream(LMemoryStream);
     LMemoryStream.Position := 0;
-    EncodeStream(LMemoryStream, LStringStream);
+    TNetEncoding.Base64.Encode(LMemoryStream, LStringStream);
     AResult.Value := LStringStream.DataString;
   finally
     LMemoryStream.Free;
