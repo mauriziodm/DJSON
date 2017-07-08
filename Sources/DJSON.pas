@@ -89,6 +89,7 @@ type
     function ItemsOfType<Key,Value>: TdjValueDestination; overload;
     function JavaScriptMode: TdjValueDestination;
     function DataContractMode: TdjValueDestination;
+    function PrettyPrint: TdjValueDestination;
     function byProperties: TdjValueDestination;
     function byFields: TdjValueDestination;
     function TypeAnnotationsON: TdjValueDestination;
@@ -776,6 +777,12 @@ function TdjValueDestination.Params(
   const AParams: IdjParams): TdjValueDestination;
 begin
   Self.FParams := AParams;
+  Result := Self;
+end;
+
+function TdjValueDestination.PrettyPrint: TdjValueDestination;
+begin
+  Self.FParams.PrettyPrint := True;
   Result := Self;
 end;
 
