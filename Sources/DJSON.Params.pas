@@ -89,6 +89,10 @@ type
     procedure SetSerializationType(const AValue: TdjSerializationType);
     function GetSerializationType: TdjSerializationType;
     property SerializationType: TdjSerializationType read GetSerializationType write SetSerializationType;
+    // Pretty-Print
+    procedure SetPrettyPrint(const AValue: Boolean);
+    function GetPrettyPrint: Boolean;
+    property PrettyPrint: Boolean read GetPrettyPrint write SetPrettyPrint;
     // TypeAnnotations
     procedure SetTypeAnnotations(const AValue: Boolean);
     function GetTypeAnnotations: Boolean;
@@ -205,6 +209,7 @@ type
     FEngineType: TdjEngine;
     FSerializationMode: TdjSerializationMode;
     FSerializationType: TdjSerializationType;
+    FPrettyPrint: Boolean;
     FTypeAnnotations: Boolean;
     FIgnoredProperties: TdjIgnoredProperties;
     FEnableCustomSerializers: Boolean;
@@ -231,6 +236,9 @@ type
     // SerializationType
     procedure SetSerializationType(const AValue: TdjSerializationType);
     function GetSerializationType: TdjSerializationType;
+    // Pretty-Print
+    procedure SetPrettyPrint(const AValue: Boolean);
+    function GetPrettyPrint: Boolean;
     // DataTypesAnnotation
     procedure SetTypeAnnotations(const AValue: Boolean);
     function GetTypeAnnotations: Boolean;
@@ -542,6 +550,11 @@ begin
   Result := FOwnJSONValue;
 end;
 
+function TdjParams.GetPrettyPrint: Boolean;
+begin
+  Result := FPrettyPrint;
+end;
+
 function TdjParams.GetSerializationMode: TdjSerializationMode;
 begin
   Result := FSerializationMode;
@@ -705,6 +718,11 @@ end;
 procedure TdjParams.SetOwnJSONValue(const AValue: Boolean);
 begin
   FOwnJSONValue := AValue;
+end;
+
+procedure TdjParams.SetPrettyPrint(const AValue: Boolean);
+begin
+  FPrettyPrint := AValue;
 end;
 
 procedure TdjParams.SetSerializationMode(const AValue: TdjSerializationMode);
