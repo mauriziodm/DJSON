@@ -55,6 +55,18 @@ unit JsonDataObjects;
   {$DEFINE SUPPORTS_UTF8STRING}
 {$ENDIF}
 
+{$IFDEF CPUX64}
+  {$IFNDEF LINUX64} // Linux 64 compiler doesn't support ASM for x64 code => LLVM
+    {$DEFINE ASMSUPPORT}
+  {$ENDIF ~LINUX64}
+{$ENDIF CPUX64}
+{$IFDEF CPUX86}
+  {$DEFINE ASMSUPPORT}
+{$ENDIF CPUX86}
+{$IFDEF EXTERNALLINKER} // implicates LLVM
+  {$UNDEF ASMSUPPORT}
+{$ENDIF EXTERNALLINKER}
+
 // Enables the progress callback feature
 {$DEFINE SUPPORT_PROGRESS}
 
@@ -109,6 +121,11 @@ unit JsonDataObjects;
   // Reading a large file >64 MB from a network drive in Windows 2003 Server or older can lead to
   // an INSUFFICIENT RESOURCES error. By enabling this switch, large files are read in 20 MB blocks.
   {$DEFINE WORKAROUND_NETWORK_FILE_INSUFFICIENT_RESOURCES}
+
+  // If defined, the TzSpecificLocalTimeToSystemTime is imported with GetProcAddress and if it is
+  // not available (Windows 2000) an alternative implementation is used.
+  {$DEFINE SUPPORT_WINDOWS2000}
+
 {$ENDIF MSWINDOWS}
 
 interface
@@ -284,12 +301,12 @@ type
     procedure SetObjectValue(const AValue: TJsonObject);
     procedure SetVariantValue(const AValue: Variant);
 
-    procedure Clear;
     procedure InternToJSON(var Writer: TJsonOutputWriter);
     procedure InternSetValue(const AValue: string); // skips the call to Clear()
     procedure InternSetValueTransfer(var AValue: string); // skips the call to Clear() and transfers the string without going through UStrAsg+UStrClr
     procedure InternSetArrayValue(const AValue: TJsonArray);
     procedure InternSetObjectValue(const AValue: TJsonObject);
+    procedure Clear;
     procedure TypeCastError(ExpectedType: TJsonDataType);
   public
     property Typ: TJsonDataType read FTyp;
@@ -1047,9 +1064,35 @@ var
   {$ENDIF USE_NAME_STRING_LITERAL}
 
 {$IFDEF MSWINDOWS}
+
+  {$IFDEF SUPPORT_WINDOWS2000}
+var
+  TzSpecificLocalTimeToSystemTime: function(lpTimeZoneInformation: PTimeZoneInformation;
+    var lpLocalTime, lpUniversalTime: TSystemTime): BOOL; stdcall;
+
+function TzSpecificLocalTimeToSystemTimeWin2000(lpTimeZoneInformation: PTimeZoneInformation;
+  var lpLocalTime, lpUniversalTime: TSystemTime): BOOL; stdcall;
+var
+  TimeZoneInfo: TTimeZoneInformation;
+begin
+  if lpTimeZoneInformation <> nil then
+    TimeZoneInfo := lpTimeZoneInformation^
+  else
+    GetTimeZoneInformation(TimeZoneInfo);
+
+  // Reverse the bias so that SystemTimeToTzSpecificLocalTime becomes TzSpecificLocalTimeToSystemTime
+  TimeZoneInfo.Bias := -TimeZoneInfo.Bias;
+  TimeZoneInfo.StandardBias := -TimeZoneInfo.StandardBias;
+  TimeZoneInfo.DaylightBias := -TimeZoneInfo.DaylightBias;
+
+  Result := SystemTimeToTzSpecificLocalTime(@TimeZoneInfo, lpLocalTime, lpUniversalTime);
+end;
+  {$ELSE}
 function TzSpecificLocalTimeToSystemTime(lpTimeZoneInformation: PTimeZoneInformation;
   var lpLocalTime, lpUniversalTime: TSystemTime): BOOL; stdcall;
   external kernel32 name 'TzSpecificLocalTimeToSystemTime';
+  {$ENDIF SUPPORT_WINDOWS2000}
+
 {$ENDIF MSWINDOWS}
 
 {$IFDEF USE_NAME_STRING_LITERAL}
@@ -1083,6 +1126,8 @@ begin
   FLineNum := ALineNum;
   FColumn := AColumn;
   FPosition := APosition;
+  if FLineNum > 0 then
+    Message := Format('%s (%d, %d)', [Message, FLineNum, FColumn]);
 end;
 
 constructor EJsonParserException.CreateRes(ResStringRec: PResStringRec; ALineNum, AColumn, APosition: NativeInt);
@@ -1091,6 +1136,8 @@ begin
   FLineNum := ALineNum;
   FColumn := AColumn;
   FPosition := APosition;
+  if FLineNum > 0 then
+    Message := Format('%s (%d, %d)', [Message, FLineNum, FColumn]);
 end;
 
 procedure ListError(Msg: PResStringRec; Data: Integer);
@@ -5738,7 +5785,8 @@ begin
     TJsonReader.InvalidStringCharacterError(Self);
 end;
 
-{$IFDEF CPUX64}
+{$IFDEF ASMSUPPORT}
+  {$IFDEF CPUX64}
 function ParseUInt64Utf8(P, EndP: PByte): UInt64;
 // RCX = P
 // RDX = EndP
@@ -5773,7 +5821,7 @@ asm
 @@LeaveFail:
   xor rax, rax
 end;
-{$ELSE}
+  {$ENDIF CPUX64}
   {$IFDEF CPUX86}
 function ParseUInt64Utf8(P, EndP: PByte): UInt64;
 asm
@@ -5827,7 +5875,8 @@ asm
   xor eax, eax
   xor edx, edx
 end;
-  {$ELSE}
+  {$ENDIF CPUX86}
+{$ELSE}
 function ParseUInt64Utf8(P, EndP: PByte): UInt64;
 begin
   if P = EndP then
@@ -5843,8 +5892,7 @@ begin
     end;
   end;
 end;
-  {$ENDIF CPUX86}
-{$ENDIF CPUX64}
+{$ENDIF ASMSUPPORT}
 
 function ParseAsDoubleUtf8(F, P: PByte): Double;
 begin
@@ -6264,7 +6312,8 @@ begin
     TJsonReader.InvalidStringCharacterError(Self);
 end;
 
-{$IFDEF CPUX64}
+{$IFDEF ASMSUPPORT}
+  {$IFDEF CPUX64}
 function ParseUInt64(P, EndP: PWideChar): UInt64;
 // RCX = P
 // RDX = EndP
@@ -6299,7 +6348,7 @@ asm
 @@LeaveFail:
   xor rax, rax
 end;
-{$ELSE}
+  {$ENDIF CPUX64}
   {$IFDEF CPUX86}
 function ParseUInt64(P, EndP: PWideChar): UInt64;
 asm
@@ -6353,7 +6402,8 @@ asm
   xor eax, eax
   xor edx, edx
 end;
-  {$ELSE}
+  {$ENDIF CPUX86}
+{$ELSE}
 function ParseUInt64(P, EndP: PWideChar): UInt64;
 begin
   if P = EndP then
@@ -6369,8 +6419,7 @@ begin
     end;
   end;
 end;
-  {$ENDIF CPUX86}
-{$ENDIF CPUX64}
+{$ENDIF ASMSUPPORT}
 
 function ParseAsDouble(F, P: PWideChar): Double;
 begin
@@ -7839,6 +7888,13 @@ initialization
   {$IFDEF USE_NAME_STRING_LITERAL}
   InitializeJsonMemInfo;
   {$ENDIF USE_NAME_STRING_LITERAL}
+  {$IFDEF MSWINDOWS}
+    {$IFDEF SUPPORT_WINDOWS2000}
+  TzSpecificLocalTimeToSystemTime := GetProcAddress(GetModuleHandle(kernel32), PAnsiChar('TzSpecificLocalTimeToSystemTime'));
+  if not Assigned(TzSpecificLocalTimeToSystemTime) then
+    TzSpecificLocalTimeToSystemTime := TzSpecificLocalTimeToSystemTimeWin2000;
+    {$ENDIF SUPPORT_WINDOWS2000}
+  {$ENDIF MSWINDOWS}
   // Make sTrue and sFalse a mutable string (RefCount<>-1) so that UStrAsg doesn't always
   // create a new string.
   UniqueString(sTrue);
