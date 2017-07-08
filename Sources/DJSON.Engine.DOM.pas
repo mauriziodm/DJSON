@@ -45,7 +45,11 @@ unit DJSON.Engine.DOM;
 interface
 
 uses
-  System.JSON, System.Rtti, DJSON.Params, System.Generics.Collections, DJSON.Duck.Interfaces;
+  System.JSON,
+  System.Rtti,
+  System.Generics.Collections,
+  DJSON.Params,
+  DJSON.Duck.Interfaces;
 
 type
 
@@ -99,11 +103,24 @@ type
 implementation
 
 uses
-  System.SysUtils, System.DateUtils, System.NetEncoding,
-  DJSON.Duck.PropField, DJSON.Utils.RTTI,
-  DJSON.Exceptions, DJSON.Serializers, DJSON.Constants, DJSON.Attributes,
-  DJSON.Factory, DJSON.Utils, System.Classes, Soap.EncdDecd,
-  DJSON.TypeInfoCache;
+{$REGION 'System'}
+  System.SysUtils,
+  System.DateUtils,
+  System.NetEncoding,
+  System.Classes,
+{$ENDREGION}
+{$REGION 'DJSON'}
+  DJSON.Duck.PropField,
+  DJSON.Utils.RTTI,
+  DJSON.Exceptions,
+  DJSON.Serializers,
+  DJSON.Constants,
+  DJSON.Attributes,
+  DJSON.Factory,
+  DJSON.Utils,
+  DJSON.TypeInfoCache
+{$ENDREGION}
+  ;
 
 class function TdjEngineDOM.Deserialize(const AJSONText: String;
   const AValueType: TRttiType; const APropField: TRttiNamedObject;
@@ -745,7 +762,7 @@ begin
     TStream(AStream).Position := 0;
     LStreamWriter := TStreamWriter.Create(TStream(AStream));
     try
-      LStreamWriter.Write(DecodeString(LStreamASString));
+      LStreamWriter.Write(TNetEncoding.Base64.Decode(LStreamASString));
     finally
       LStreamWriter.Free;
     end;
@@ -772,7 +789,7 @@ begin
   try
     LStringStream.WriteString(LValueAsString);
     LStringStream.Position := 0;
-    DecodeStream(LStringStream, LMemoryStream);
+    TNetEncoding.Base64.Decode(LStringStream, LMemoryStream);
     LMemoryStream.Position := 0;
     ADuckStreamable.LoadFromStream(LMemoryStream);
   finally
@@ -1355,7 +1372,7 @@ begin
     TStream(AStream).Position := 0;
     LStringStream := TStringStream.Create;
     try
-      EncodeStream(TStream(AStream), LStringStream);
+      TNetEncoding.Base64.Encode(TStream(AStream), LStringStream);
       ResultJSONValue := TJSONString.Create(LStringStream.DataString);
     finally
       LStringStream.Free;
@@ -1376,7 +1393,7 @@ begin
   try
     ADuckStreamable.SaveToStream(LMemoryStream);
     LMemoryStream.Position := 0;
-    EncodeStream(LMemoryStream, LStringStream);
+    TNetEncoding.Base64.Encode(LMemoryStream, LStringStream);
     ResultJSONValue := TJSONString.Create(LStringStream.DataString);
   finally
     LMemoryStream.Free;
