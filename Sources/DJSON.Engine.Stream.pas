@@ -45,8 +45,17 @@ unit DJSON.Engine.Stream;
 interface
 
 uses
-  System.Rtti, DJSON.Params, System.JSON.Readers, System.JSON.Writers,
-  DJSON.Duck.Interfaces, System.Classes;
+{$REGION 'System'}
+  System.Rtti,
+  System.Classes,
+  System.JSON.Readers,
+  System.JSON.Writers,
+{$ENDREGION}
+{$REGION 'DJSON'}
+  DJSON.Params,
+  DJSON.Duck.Interfaces
+{$ENDREGION}
+;
 
 type
 

@@ -103,11 +103,16 @@ uses
   System.NetEncoding,
 {$ENDREGION}
 {$REGION 'DJSON'}
-  DJSON.Duck.PropField, DJSON.Utils.RTTI,  DJSON.Exceptions,
-  DJSON.Serializers, DJSON.Attributes, DJSON.Constants,
-  DJSON.Factory, DJSON.Utils, DJSON.TypeInfoCache;
+  DJSON.Duck.PropField,
+  DJSON.Utils.RTTI,
+  DJSON.Exceptions,
+  DJSON.Serializers,
+  DJSON.Attributes,
+  DJSON.Constants,
+  DJSON.Factory,
+  DJSON.Utils,
+  DJSON.TypeInfoCache;
 {$ENDREGION}
-
 
 class function TdjEngineJDO.Deserialize(const AJSONText: String;
   const AValueType: TRttiType; const APropField: TRttiNamedObject;
