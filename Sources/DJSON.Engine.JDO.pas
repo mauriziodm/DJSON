@@ -811,12 +811,12 @@ begin
   case LJSONValue.Typ of
     TJsonDataType.jdtObject:
     begin
-      Result := LJSONValue.ObjectValue.ToJSON(True);
+      Result := LJSONValue.ObjectValue.ToJSON(NOT AParams.PrettyPrint);
       LJSONValue.ObjectValue.Free;
     end;
     TJsonDataType.jdtArray:
     begin
-      Result := LJSONValue.ArrayValue.ToJSON(True);
+      Result := LJSONValue.ArrayValue.ToJSON(NOT AParams.PrettyPrint);
       LJSONValue.ArrayValue.Free;
     end
   else
