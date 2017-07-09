@@ -28,8 +28,7 @@ package DJSON_Project;
 {$IMPLICITBUILD ON}
 
 requires
-  rtl,
-  soaprtl;
+  rtl;
 
 contains
   DJSON.Attributes in '..\..\Sources\DJSON.Attributes.pas',
