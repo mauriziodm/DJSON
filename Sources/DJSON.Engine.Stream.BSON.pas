@@ -45,7 +45,15 @@ unit DJSON.Engine.Stream.BSON;
 interface
 
 uses
-  DJSON.Engine.Stream, System.Rtti, DJSON.Params, System.Classes;
+{$REGION 'System'}
+  System.Rtti,
+  System.Classes,
+{$ENDREGION}
+{$REGION 'DJSON'}
+  DJSON.Engine.Stream,
+  DJSON.Params
+{$ENDREGION}
+;
 
 type
 
@@ -58,7 +66,14 @@ type
 implementation
 
 uses
-  System.JSON.BSON, System.JSON.Types, DJSON.Exceptions;
+{$REGION 'System'}
+  System.JSON.BSON,
+  System.JSON.Types,
+{$ENDREGION}
+{$REGION 'DJSON'}
+  DJSON.Exceptions
+{$ENDREGION}
+  ;
 
 { TdjEngineStreamBSON }
 
