@@ -96,6 +96,11 @@ type
     FloorArea: Single; { get; set; }
   end;
 
+  TGeneric<T> = class
+    id: Integer;
+    Item: T;
+  end;
+
   [TestFixture]
   TDemoTests = class(TObject)
   private
@@ -119,6 +124,8 @@ type
     procedure SerializeReferencesWithMetadata;
     [Test]
     procedure SerializeAttributes;
+    [Test]
+    procedure DeserializationGeneric;
   end;
 
 implementation
@@ -303,6 +310,20 @@ begin
     '}';
   s := dj.FromJson(j, FParams).&to < TSession > ;
   Assert.AreEqual('Serialize All The Things', s.Name);
+end;
+
+procedure TDemoTests.DeserializationGeneric;
+var
+  j: string;
+  LResult: TGeneric<THtmlColor>;
+  LConfig: IdjParams;
+begin
+  LConfig := dj.DefaultByFields;
+  LConfig.Engine := TdjEngine.eJDO;
+  j := '{"id": 555,"Item": {"Red":255,"Green":0,"Blue":0}}';
+  LResult := dj.FromJson(j, LConfig).&to < TGeneric<THtmlColor> > ;
+  Assert.AreEqual(j, dj.From(LResult, LConfig).ToJson);
+
 end;
 
 procedure TDemoTests.JsonConverter;
