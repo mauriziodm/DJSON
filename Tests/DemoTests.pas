@@ -143,13 +143,14 @@ end;
 procedure TDemoTests.SerializationBasics2;
 var
   s: TSession;
+  Serialized: String;
 begin
   s := TSession.Create;
   try
     s.Name := 'Serialize All The Things';
-    s.Date := StrToDate('03.07.2017');
-    FParams.SerializationMode := smJavaScript;
-    Assert.AreEqual('{"Name":"Serialize All The Things","Date":"2017-07-03T00:00:00.000Z"}', dj.From(s, FParams).ToJson);
+    s.Date := StrToDate('03/07/2017');
+    Serialized := dj.From(s, FParams).ToJson;
+    Assert.AreEqual('{"Name":"Serialize All The Things","Date":"2017-07-03T00:00:00.000Z"}', Serialized);
   finally
     s.Free;
   end;
@@ -173,8 +174,8 @@ begin
 
   LDailyRegistrations := TDictionary<TDateTime, Integer>.Create;
   try
-    LDailyRegistrations.Add(StrToDate('02.07.2017'), 23);
-    LDailyRegistrations.Add(StrToDate('10.08.2017'), 50);
+    LDailyRegistrations.Add(StrToDate('02/07/2017'), 23);
+    LDailyRegistrations.Add(StrToDate('10/08/2017'), 50);
     LResult := dj.From(LDailyRegistrations, FParams).ToJson;
     Assert.AreEqual('[{"2017-07-02T00:00:00.000Z":23},{"2017-08-10T00:00:00.000Z":50}]', //
       LResult);
@@ -204,7 +205,7 @@ begin
     house.StreetAddress := '221B Baker Street';
     house.Bedrooms := 2;
     house.FloorArea := 100;
-    house.BuildDate := StrToDate('1.1.1890');
+    house.BuildDate := StrToDate('1/1/1890');
     Assert.AreEqual('{"StreetAddress":"221B Baker Street",' + //
       '"BuildDate":"1890-01-01T00:00:00.000Z","Bedrooms":2,"loorArea":100}', dj.From(house, FParams).ToJson);
   finally
@@ -215,7 +216,7 @@ begin
     house1.StreetAddress := '221B Baker Street';
     house1.Bedrooms := 2;
     house1.FloorArea := 100;
-    house1.BuildDate := StrToDate('1.1.1890');
+    house1.BuildDate := StrToDate('1/1/1890');
     Assert.AreEqual('{"StreetAddress":"221B Baker Street"}', dj.From(house1, FParams).ToJson);
   finally
     house1.Free;
@@ -225,7 +226,7 @@ begin
     house2.StreetAddress := '221B Baker Street';
     house2.Bedrooms := 2;
     house2.FloorArea := 100;
-    house2.BuildDate := StrToDate('1.1.1890');
+    house2.BuildDate := StrToDate('1/1/1890');
     Assert.AreEqual('{"address":"221B Baker Street","BuildDate":"1890-01-01T00:00:00.000Z","Bedrooms":2,"loorArea":100}', dj.From(house2, FParams).ToJson);
   finally
     house2.Free;

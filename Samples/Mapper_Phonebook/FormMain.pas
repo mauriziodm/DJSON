@@ -270,8 +270,6 @@ end;
 procedure TMainForm.ButtonDeserializeObjectListClick(Sender: TObject);
 var
   LPersonList: TObjectList<TPerson>;
-  LPerson: TPerson;
-  LNumtel: TPhoneNumber;
   LParams: IdjParams;
 begin
   LParams := BuildMapperParams;
@@ -322,7 +320,6 @@ end;
 procedure TMainForm.ButtonOtherDeserialize2Click(Sender: TObject);
 var
   LPersonList: TObjectList<TPerson>;
-  LPerson: TPerson;
 begin
   LPersonList := TObjectList<TPerson>.Create(True);
   // ---------------------
