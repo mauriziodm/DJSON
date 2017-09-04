@@ -59,8 +59,8 @@ type
 
   TdjEngineStreamBSON = class(TdjEngineStream)
   public
-    class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): TBytesStream; static;
-    class function Deserialize(const AByteStream:TStream; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; static;
+    class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): TBytesStream; reintroduce;
+    class function Deserialize(const AByteStream:TStream; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; reintroduce;
   end;
 
 implementation

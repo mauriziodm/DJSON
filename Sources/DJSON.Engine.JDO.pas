@@ -455,8 +455,11 @@ begin
   // Get the type name
   LQualifiedTypeName := AValueType.QualifiedName;
   // If JSONValue not assigned or NULL
-  if (not Assigned(AJSONValue)) or (AJSONValue.Typ = TJsonDataType.jdtNone) then
-     Exit(0);
+  if (not Assigned(AJSONValue))
+  or (AJSONValue.Typ = TJsonDataType.jdtNone)
+  or (AJSONValue.Typ = TJsonDataType.jdtObject)  // The type is jdtObject when NULL
+  then
+    Exit(0);
   // TDate (string expected)
   if (LQualifiedTypeName = 'System.TDate') then
     Exit(   TValue.From<TDate>(AJSONValue.DateTimeValue)   );
