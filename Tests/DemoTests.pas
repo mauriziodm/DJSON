@@ -93,7 +93,13 @@ type
     StreetAddress: string; { get; set; }
     BuildDate: TDateTime; { get; set; }
     Bedrooms: Integer; { get; set; }
+    [djName('FloorArea')]
     FloorArea: Single; { get; set; }
+  end;
+
+  TGeneric<T> = class
+    id: Integer;
+    Item: T;
   end;
 
   [TestFixture]
@@ -119,6 +125,8 @@ type
     procedure SerializeReferencesWithMetadata;
     [Test]
     procedure SerializeAttributes;
+    [Test]
+    procedure DeserializationGeneric;
   end;
 
 implementation
@@ -196,8 +204,6 @@ end;
 
 procedure TDemoTests.SerializeAttributes;
 var
-  house: THouse;
-  house1: THouse1;
   house2: THouse2;
 begin
   house := THouse.Create;
@@ -226,8 +232,8 @@ begin
     house2.StreetAddress := '221B Baker Street';
     house2.Bedrooms := 2;
     house2.FloorArea := 100;
-    house2.BuildDate := StrToDate('1/1/1890');
-    Assert.AreEqual('{"address":"221B Baker Street","BuildDate":"1890-01-01T00:00:00.000Z","Bedrooms":2,"loorArea":100}', dj.From(house2, FParams).ToJson);
+    house2.BuildDate := StrToDate('1.1.1890');
+    Assert.AreEqual('{"address":"221B Baker Street","BuildDate":"1890-01-01T00:00:00.000Z","Bedrooms":2,"FloorArea":100}', dj.From(house2, FParams).ToJson);
   finally
     house2.Free;
   end;
@@ -304,6 +310,19 @@ begin
     '}';
   s := dj.FromJson(j, FParams).&to < TSession > ;
   Assert.AreEqual('Serialize All The Things', s.Name);
+end;
+
+procedure TDemoTests.DeserializationGeneric;
+var
+  j: string;
+  LResult: TGeneric<THtmlColor>;
+  LConfig: IdjParams;
+begin
+  LConfig := dj.DefaultByFields;
+  LConfig.Engine := TdjEngine.eJDO;
+  j := '{"id": 555,"Item": {"Red":255,"Green":0,"Blue":0}}';
+  LResult := dj.FromJson(j, LConfig).&to < TGeneric<THtmlColor> > ;
+  Assert.AreEqual(j, dj.From(LResult, LConfig).ToJson);
 end;
 
 procedure TDemoTests.JsonConverter;

@@ -45,10 +45,12 @@ unit DJSON.Utils;
 interface
 
 uses
-  System.Rtti, DJSON.Params, System.SysUtils, DJSON.Duck.PropField;
+  System.Rtti,
+  System.SysUtils,
+  DJSON.Params,
+  DJSON.Duck.PropField;
 
 type
-
   TdjUtils = class
   public
     class function IsPropertyToBeIgnored(const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
@@ -70,8 +72,10 @@ type
 implementation
 
 uses
-  DJSON.Attributes, DJSON.Utils.RTTI,
-  System.DateUtils;
+  System.DateUtils,
+  System.TypInfo,
+  DJSON.Attributes,
+  DJSON.Utils.RTTI;
 
 { TdjUtils }
 
@@ -149,19 +153,26 @@ begin
   // If a dsonNameAttribute is present then use it else return the name
   //  of the property/field
   if TdjRTTI.HasAttribute<djNameAttribute>(ARttiMember, LdsonNameAttribute) then
-    Result := LdsonNameAttribute.Name
+  begin
+    Result := LdsonNameAttribute.Name ;
+  end
   else
+  begin
     Result := ARttiMember.Name;
+    // If SerializationType is by Fields then remove the first character if "F"
+    if (AParams.SerializationType = TdjSerializationType.stFields) and
+       (Result.StartsWith('F', True)) and
+       (
+          ((ARttiMember as  TRttiMember).Visibility = TMemberVisibility.mvPrivate)
+       or
+          ((ARttiMember as  TRttiMember).Visibility = TMemberVisibility.mvProtected)) then
+    Result := Result.Substring(1);
+  end;
   // If UpperCase or LowerCase names parama is specified...
   case AParams.NameCase of
     ncUpperCase: Result := UpperCase(ARttiMember.Name);
     ncLowerCase: Result := LowerCase(ARttiMember.Name);
   end;
-  // If SerializationType is by Fields then remove the first character if "F"
-  if (AParams.SerializationType = TdjSerializationType.stFields)
-  and (Result.StartsWith('F') or Result.StartsWith('f'))
-  then
-    Result := Result.Substring(1);
 end;
 
 class procedure TdjUtils.GetTypeNameIfEmpty(

@@ -244,7 +244,7 @@ begin
   //  create the LChildObj of the type specified by the AValueType parameter,
   //  PS: normally used by DeserializeList or other collection deserialization
   if Assigned(AValueType) and (not Assigned(LChildObj)) then // and (not AParams.TypeAnnotations) then
-    LChildObj := TdjRTTI.CreateObject(AValueType.QualifiedName);
+    LChildObj := TdjRTTI.CreateObject(AValueType);
   // Deserialize
   DeserializeClassCommon(LChildObj, AJSONValue, APropField, AParams);
   // Make the result TValue
