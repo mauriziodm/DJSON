@@ -219,9 +219,9 @@ end;
 class function dj.DefaultByFields: IdjParams;
 begin
   Result := TdjFactory.NewParams;
-  Result.SerializationMode := smDataContract;
+  Result.SerializationMode := smJavaScript;
   Result.SerializationType := stFields;
-  Result.TypeAnnotations := True;
+  Result.TypeAnnotations := False;
 end;
 
 class function dj.DefaultByProperty: IdjParams;

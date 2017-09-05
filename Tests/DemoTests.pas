@@ -97,9 +97,11 @@ type
     FloorArea: Single; { get; set; }
   end;
 
-  TGeneric<T> = class
+  TGeneric<T: class, constructor> = class
     id: Integer;
     Item: T;
+  public
+    constructor Create;
   end;
 
   [TestFixture]
@@ -208,8 +210,6 @@ var
   house1: THouse1;
   house2: THouse2;
 begin
-<<<<<<< HEAD
-=======
   house := THouse.Create;
   try
     house.StreetAddress := '221B Baker Street';
@@ -231,17 +231,12 @@ begin
   finally
     house1.Free;
   end;
->>>>>>> 785c741d4002290ee47f0798749f660e399caeeb
   house2 := THouse2.Create;
   try
     house2.StreetAddress := '221B Baker Street';
     house2.Bedrooms := 2;
     house2.FloorArea := 100;
-<<<<<<< HEAD
-    house2.BuildDate := StrToDate('1/1/1890');
-=======
-    house2.BuildDate := StrToDate('1.1.1890', TFormatSettings.Create('ua-UA'));
->>>>>>> 785c741d4002290ee47f0798749f660e399caeeb
+    house2.BuildDate := StrToDate('1/1/1890', TFormatSettings.Create('en-GB'));
     Assert.AreEqual('{"address":"221B Baker Street","BuildDate":"1890-01-01T00:00:00.000Z","Bedrooms":2,"FloorArea":100}', dj.From(house2, FParams).ToJson);
   finally
     house2.Free;
@@ -329,7 +324,7 @@ var
 begin
   LConfig := dj.DefaultByFields;
   LConfig.Engine := TdjEngine.eJDO;
-  j := '{"id": 555,"Item": {"Red":255,"Green":0,"Blue":0}}';
+  j := '{"id":555,"Item":{"Red":255,"Green":0,"Blue":0}}';
   LResult := dj.FromJson(j, LConfig).&to < TGeneric<THtmlColor> > ;
   Assert.AreEqual(j, dj.From(LResult, LConfig).ToJson);
 end;
@@ -414,6 +409,13 @@ destructor TManager.Destroy;
 begin
   Reportees.Free;
   inherited;
+end;
+
+{ TGeneric<T> }
+
+constructor TGeneric<T>.Create;
+begin
+  Item := T.Create;
 end;
 
 initialization
