@@ -206,33 +206,12 @@ procedure TDemoTests.SerializeAttributes;
 var
   house2: THouse2;
 begin
-  house := THouse.Create;
-  try
-    house.StreetAddress := '221B Baker Street';
-    house.Bedrooms := 2;
-    house.FloorArea := 100;
-    house.BuildDate := StrToDate('1/1/1890');
-    Assert.AreEqual('{"StreetAddress":"221B Baker Street",' + //
-      '"BuildDate":"1890-01-01T00:00:00.000Z","Bedrooms":2,"loorArea":100}', dj.From(house, FParams).ToJson);
-  finally
-    house.Free;
-  end;
-  house1 := THouse1.Create;
-  try
-    house1.StreetAddress := '221B Baker Street';
-    house1.Bedrooms := 2;
-    house1.FloorArea := 100;
-    house1.BuildDate := StrToDate('1/1/1890');
-    Assert.AreEqual('{"StreetAddress":"221B Baker Street"}', dj.From(house1, FParams).ToJson);
-  finally
-    house1.Free;
-  end;
   house2 := THouse2.Create;
   try
     house2.StreetAddress := '221B Baker Street';
     house2.Bedrooms := 2;
     house2.FloorArea := 100;
-    house2.BuildDate := StrToDate('1.1.1890');
+    house2.BuildDate := StrToDate('1/1/1890');
     Assert.AreEqual('{"address":"221B Baker Street","BuildDate":"1890-01-01T00:00:00.000Z","Bedrooms":2,"FloorArea":100}', dj.From(house2, FParams).ToJson);
   finally
     house2.Free;
