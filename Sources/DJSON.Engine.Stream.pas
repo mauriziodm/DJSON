@@ -257,9 +257,11 @@ class function TdjEngineStream.DeserializeClass(const AJSONReader: TJSONReader;
   AMasterObj: TObject; const AParams: IdjParams): TValue;
 var
   LChildObj: TObject;
+  LJustCreated: Boolean;
 begin
   // Init
   LChildObj := nil;
+  LJustCreated := False;
   // If the Property/Field is valid then try to get the value (Object) from the
   //  master object else the MasterObject itself is the destination of the deserialization
   if Assigned(AMasterObj) then
@@ -271,7 +273,10 @@ begin
   //  create the LChildObj of the type specified by the AValueType parameter,
   //  PS: normally used by DeserializeList or other collection deserialization
   if Assigned(AValueType) and (not Assigned(LChildObj)) then // and (not AParams.TypeAnnotations) then
-    LChildObj := TdjRTTI.CreateObject(AValueType.QualifiedName);
+  begin
+    LChildObj := TdjRTTI.CreateObject(AValueType);
+    LJustCreated := True;
+  end;
   // Deserialize
   DeserializeClassCommon(LChildObj, AJSONReader, APropField, AParams);
   // Make the result TValue
@@ -279,7 +284,13 @@ begin
   //       deserialized object is a detail of a MasterObject the creation of the
   //       child object is responsibility of the Master object itself, so the
   //       child object is already assigned to the master object property.
-  if Assigned(AMasterObj) then
+//  if Assigned(AMasterObj) then
+  // Code modified to resolve the issue of Maxim Sysoev when trying to deserialize
+  //  an instance of a class like TMyClass<T> where T maybe every type (no constraint)
+  //  and the class don't create itself the internal field of type <T> (when T is a class).
+  if (Assigned(AMasterObj) and not Assigned(LChildObj))
+  or not LJustCreated
+  then
     Result := TValue.Empty
   else
     TValue.Make(@LChildObj, LChildObj.ClassInfo, Result);
@@ -520,9 +531,11 @@ class function TdjEngineStream.DeserializeInterface(
   const AParams: IdjParams): TValue;
 var
   LChildObj: TObject;
+  LJustCreated: Boolean;
 begin
   // Init
   LChildObj := nil;
+  LJustCreated := False;
   // If the Property/Field is valid then try to get the value (Object) from the
   //  master object else the MasterObject itself is the destination of the deserialization
   if Assigned(AMasterObj) then
@@ -534,7 +547,10 @@ begin
   //  create the LChildObj of the type specified by the AValueType parameter,
   //  PS: normally used by DeserializeList or other collection deserialization
   if Assigned(AValueType) and (not Assigned(LChildObj)) and (not AParams.TypeAnnotations) then
+  begin
     LChildObj := TdjRTTI.CreateObject(AValueType.QualifiedName);
+    LJustCreated := True;
+  end;
   // Deserialize
   DeserializeClassCommon(LChildObj, AJSONReader, APropField, AParams);
   // Make the result TValue
@@ -542,7 +558,13 @@ begin
   //       deserialized object is a detail of a MasterObject the creation of the
   //       child object is responsibility of the Master object itself, so the
   //       child object is already assigned to the master object property.
-  if Assigned(AMasterObj) then
+//  if Assigned(AMasterObj) then
+  // Code modified to resolve the issue of Maxim Sysoev when trying to deserialize
+  //  an instance of a class like TMyClass<T> where T maybe every type (no constraint)
+  //  and the class don't create itself the internal field of type <T> (when T is a class).
+  if (Assigned(AMasterObj) and not Assigned(LChildObj))
+  or not LJustCreated
+  then
     Result := TValue.Empty
   else
     TValue.Make(@LChildObj, LChildObj.ClassInfo, Result);
@@ -661,7 +683,7 @@ begin
       TdjSerializationType.stProperties: LPropFieldKey := AJSONReader.Value.AsString;
       TdjSerializationType.stFields: LPropFieldKey := 'F' + AJSONReader.Value.AsString;
     end;
-    AJSONReader.Read;
+      AJSONReader.Read;
     // Get the PropField by Key
 { TODO : Ottimizzazione: ho provato sulla richiesta nome chiave ma il risultato era nullo }
     GetPropFieldByKey;

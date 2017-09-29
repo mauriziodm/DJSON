@@ -60,6 +60,7 @@ type
   end;
 
   TEmployee = class
+  public
     Name: string;
     constructor Create(AName: string);
   end;
@@ -72,6 +73,7 @@ type
   end;
 
   THouse = class
+  public
     StreetAddress: string; { get; set; }
     BuildDate: TDateTime; { get; set; }
     Bedrooms: Integer; { get; set; }
@@ -79,6 +81,7 @@ type
   end;
 
   THouse1 = class
+  public
     StreetAddress: string; { get; set; }
     [djSkip]
     BuildDate: TDateTime; { get; set; }
@@ -89,6 +92,7 @@ type
   end;
 
   THouse2 = class
+  public
     [djName('address')]
     StreetAddress: string; { get; set; }
     BuildDate: TDateTime; { get; set; }
@@ -98,10 +102,16 @@ type
   end;
 
   TGeneric<T: class, constructor> = class
+  public
     id: Integer;
     Item: T;
-  public
     constructor Create;
+  end;
+
+  TNoClassGeneric<T> = class
+  public
+    id: Integer;
+    Item: T;
   end;
 
   [TestFixture]
@@ -129,6 +139,8 @@ type
     procedure SerializeAttributes;
     [Test]
     procedure DeserializationGeneric;
+    [Test]
+    procedure DeserializationNoClassGeneric;
   end;
 
 implementation
@@ -327,6 +339,21 @@ begin
   j := '{"id":555,"Item":{"Red":255,"Green":0,"Blue":0}}';
   LResult := dj.FromJson(j, LConfig).&to < TGeneric<THtmlColor> > ;
   Assert.AreEqual(j, dj.From(LResult, LConfig).ToJson);
+end;
+
+procedure TDemoTests.DeserializationNoClassGeneric;
+var
+  LTestJSON: string;
+  LResultJSON: string;
+  LResultObj: TNoClassGeneric<THtmlColor>;
+  LConfig: IdjParams;
+begin
+  LConfig := dj.DefaultByFields;
+  LConfig.Engine := TdjEngine.eJDO;
+  LTestJSON := '{"id":555,"Item":{"Red":255,"Green":0,"Blue":0}}';
+  LResultObj := dj.FromJson(LTestJSON, LConfig).&to < TNoClassGeneric<THtmlColor> > ;
+  LResultJSON := dj.From(LResultObj, LConfig).ToJson;
+  Assert.AreEqual(LTestJSON, LResultJSON);
 end;
 
 procedure TDemoTests.JsonConverter;

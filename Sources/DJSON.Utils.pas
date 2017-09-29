@@ -153,9 +153,7 @@ begin
   // If a dsonNameAttribute is present then use it else return the name
   //  of the property/field
   if TdjRTTI.HasAttribute<djNameAttribute>(ARttiMember, LdsonNameAttribute) then
-  begin
-    Result := LdsonNameAttribute.Name ;
-  end
+    Result := LdsonNameAttribute.Name
   else
   begin
     Result := ARttiMember.Name;

@@ -52,6 +52,8 @@ type
   TJSONBox = TJSONObject;
 
   TdjEngineJDO = class(TdjEngineIntf)
+  private
+    class function IsJsonNull(const AJSONValue: PJsonDataValue): Boolean;
   protected
     // Serializers
     class procedure SerializePropField(const AResult:PJsonDataValue; const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True); static;
@@ -230,9 +232,11 @@ class function TdjEngineJDO.DeserializeClass(const AJSONValue: PJsonDataValue; c
   AMasterObj: TObject; const AParams: IdjParams): TValue;
 var
   LChildObj: TObject;
+  LJustCreated: Boolean;
 begin
   // Init
   LChildObj := nil;
+  LJustCreated := False;
   // If the Property/Field is valid then try to get the value (Object) from the
   //  master object else the MasterObject itself is the destination of the deserialization
   if Assigned(AMasterObj) then
@@ -244,7 +248,10 @@ begin
   //  create the LChildObj of the type specified by the AValueType parameter,
   //  PS: normally used by DeserializeList or other collection deserialization
   if Assigned(AValueType) and (not Assigned(LChildObj)) then // and (not AParams.TypeAnnotations) then
+  begin
     LChildObj := TdjRTTI.CreateObject(AValueType);
+    LJustCreated := True;
+  end;
   // Deserialize
   DeserializeClassCommon(LChildObj, AJSONValue, APropField, AParams);
   // Make the result TValue
@@ -252,7 +259,13 @@ begin
   //       deserialized object is a detail of a MasterObject the creation of the
   //       child object is responsibility of the Master object itself, so the
   //       child object is already assigned to the master object property.
-  if Assigned(AMasterObj) then
+//  if Assigned(AMasterObj) then
+  // Code modified to resolve the issue of Maxim Sysoev when trying to deserialize
+  //  an instance of a class like TMyClass<T> where T maybe every type (no constraint)
+  //  and the class don't create itself the internal field of type <T> (when T is a class).
+  if (Assigned(AMasterObj) and not Assigned(LChildObj))
+  or not LJustCreated
+  then
     Result := TValue.Empty
   else
     TValue.Make(@LChildObj, LChildObj.ClassInfo, Result);
@@ -484,9 +497,11 @@ class function TdjEngineJDO.DeserializeInterface(const AJSONValue: PJsonDataValu
   const AParams: IdjParams): TValue;
 var
   LChildObj: TObject;
+  LJustCreated: Boolean;
 begin
   // Init
   LChildObj := nil;
+  LJustCreated := False;
   // If the Property/Field is valid then try to get the value (Object) from the
   //  master object else the MasterObject itself is the destination of the deserialization
   if Assigned(AMasterObj) then
@@ -498,7 +513,10 @@ begin
   //  create the LChildObj of the type specified by the AValueType parameter,
   //  PS: normally used by DeserializeList or other collection deserialization
   if Assigned(AValueType) and (not Assigned(LChildObj)) and (not AParams.TypeAnnotations) then
+  begin
     LChildObj := TdjRTTI.CreateObject(AValueType.QualifiedName);
+    LJustCreated := True;
+  end;
   // Deserialize
   DeserializeClassCommon(LChildObj, AJSONValue, APropField, AParams);
   // Make the result TValue
@@ -506,7 +524,13 @@ begin
   //       deserialized object is a detail of a MasterObject the creation of the
   //       child object is responsibility of the Master object itself, so the
   //       child object is already assigned to the master object property.
-  if Assigned(AMasterObj) then
+//  if Assigned(AMasterObj) then
+  // Code modified to resolve the issue of Maxim Sysoev when trying to deserialize
+  //  an instance of a class like TMyClass<T> where T maybe every type (no constraint)
+  //  and the class don't create itself the internal field of type <T> (when T is a class).
+  if (Assigned(AMasterObj) and not Assigned(LChildObj))
+  or not LJustCreated
+  then
     Result := TValue.Empty
   else
     TValue.Make(@LChildObj, LChildObj.ClassInfo, Result);
@@ -595,7 +619,10 @@ begin
   if not(   Assigned(AValueType) and (AValueType.Name = 'TValue')   ) then
   begin
     // Cerca il ValueType in una eventuale JSONAnnotation
-    if AParams.TypeAnnotations and (AJSONValue.Typ = TJsonDataType.jdtObject) then
+    if AParams.TypeAnnotations
+    and (AJSONValue.Typ = TJsonDataType.jdtObject)
+    and not IsJsonNull(AJSONValue)
+    then
       LValueQualifiedTypeName := AJSONValue.ObjectValue.S[DJ_TYPENAME];
     // Se ancora non è stato determinato il ValueType prova anche a vedere se  stato specificato
     //  l'attributo dsonTypeAttribute
@@ -802,6 +829,12 @@ begin
     LJSONValue.ObjectValue.S[DJ_TYPENAME] := LValueQualifiedTypeName;
   // Deserialize the value
   Result := DeserializePropField(LJSONValue, LValueRTTIType, APropField, nil, AParams);
+end;
+
+class function TdjEngineJDO.IsJsonNull(
+  const AJSONValue: PJsonDataValue): Boolean;
+begin
+  Result := (AJSONValue.Typ = TJsonDataType.jdtObject) and not Assigned(AJSONValue.ObjectValue);
 end;
 
 class function TdjEngineJDO.Serialize(const AValue: TValue;

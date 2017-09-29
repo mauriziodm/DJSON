@@ -200,13 +200,13 @@ begin
   Result.Add(NewPerson);
 
   NewPerson := TPerson.Create(3, 'Omar Bossoni');
-//  NewPerson.Sesso := #0;
+//  NewPerson.Gender := #0;
   NewPerson.Age := 64;
   NewPerson.NumberOfFriends := 15;
-//  NewPerson.LuogoDiNascita := 'Brescia';
-//  NewPerson.BirthDate := StrToDate('10/10/1974');
-//  NewPerson.BirthTime := StrToTime('13:31');
-//  NewPerson.LastEdit := Now;
+//  NewPerson.BirthPlace := 'Brescia';
+//    NewPerson.BirthDate := StrToDate('10/10/1974');
+//    NewPerson.BirthTime := StrToTime('13:31');
+//    NewPerson.LastEdit := Now;
   NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(6, '02/673927',   3)   );
   NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(7, '347/3459276', 3)   );
   NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(8, '332/6714399', 3)   );
