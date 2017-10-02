@@ -75,6 +75,7 @@ type
     class function SerializeCustom(const AResult:PJsonDataValue; AValue:TValue; const APropField: TRttiNamedObject; const AParams: IdjParams): Boolean; static;
     // Deserializers
     class function DeserializePropField(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: Tvalue; const AParams: IdjParams): TValue; static;
+    class function DeserializeInt(const AJSONValue: PJsonDataValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeFloat(const AJSONValue: PJsonDataValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeEnumeration(const AJSONValue: PJsonDataValue; const AValueType: TRttiType): TValue; static;
     class function DeserializeString(const AJSONValue: PJsonDataValue): TValue; static;
@@ -280,10 +281,10 @@ begin
   case LTypeInfoCacheItem.DuckType of
     dtNone:
     begin
-      if AJSONValue.Typ = TJsonDataType.jdtObject then
-        AChildObj := DeserializeObject(AJSONValue.ObjectValue, AChildObj, AParams)
-      else if (AJSONValue.Typ = TJsonDataType.jdtNone) then
+      if (AJSONValue = nil) or (AJSONValue.Typ = TJsonDataType.jdtNone) then
         FreeAndNil(AChildObj)
+      else if AJSONValue.Typ = TJsonDataType.jdtObject then
+        AChildObj := DeserializeObject(AJSONValue.ObjectValue, AChildObj, AParams)
       else
         raise EdjEngineError.Create('Deserialize Class: Cannot deserialize as object.');
     end;
@@ -452,7 +453,9 @@ class function TdjEngineJDO.DeserializeEnumeration(const AJSONValue: PJsonDataVa
 begin
   if AValueType.QualifiedName = 'System.Boolean' then
   begin
-    if AJSONValue.Typ = TJsonDataType.jdtBool then
+    if AJSONValue = nil then
+      Result := False
+    else if AJSONValue.Typ = TJsonDataType.jdtBool then
       Result := AJSONValue.BoolValue
     else
       raise EdjEngineError.Create('Invalid value for boolean value ');
@@ -490,6 +493,15 @@ begin
     Exit(AJSONValue.IntValue);
   // Otherwise (raise)
   raise EdjEngineError.Create('Cannot deserialize float value.');
+end;
+
+class function TdjEngineJDO.DeserializeInt(const AJSONValue: PJsonDataValue;
+  const AValueType: TRttiType): TValue;
+begin
+  if not Assigned(AJSONValue) then
+    Result := 0;
+  else
+    Result := AJSONValue.IntValue;
 end;
 
 class function TdjEngineJDO.DeserializeInterface(const AJSONValue: PJsonDataValue; const AValueType: TRttiType;
@@ -648,7 +660,7 @@ begin
     tkEnumeration:
       Result := DeserializeEnumeration(AJSONValue, LValueType);
     tkInteger, tkInt64:
-      Result := AJSONValue.IntValue;
+      Result := DeserializeInt(AJSONValue, LValueType);
     tkFloat:
       Result := DeserializeFloat(AJSONValue, LValueType);
     tkString, tkLString, tkWString, tkUString:
@@ -775,8 +787,9 @@ end;
 class function TdjEngineJDO.DeserializeString(
   const AJSONValue: PJsonDataValue): TValue;
 begin
-  if (AJSONValue.Typ = TJsonDataType.jdtNone)
+  if (AJSONValue = nil)
   or (AJSONValue.Typ = TJsonDataType.jdtObject)
+  or (AJSONValue.Typ = TJsonDataType.jdtNone)
   then
     Result := ''
   else
