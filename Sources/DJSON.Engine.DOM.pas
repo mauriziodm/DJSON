@@ -285,7 +285,7 @@ begin
       if AJSONValue is TJSONObject then
         AChildObj := DeserializeObject(TJSONObject(AJSONValue), AChildObj, AParams)
       // If the JSONValue is a TJSONNull
-      else if AJSONValue is TJSONNull then
+      else if (AJSONValue = nil) or (AJSONValue is TJSONNull) then
         FreeAndNil(AChildObj)
       // Raise an exception
       else
@@ -463,7 +463,8 @@ begin
   begin
     if AJSONValue is TJSONTrue then
        Result := True
-    else if AJSONValue is TJSONFalse then
+    else
+    if (AJSONValue = nil) or (AJSONValue is TJSONFalse) then
        Result := False
     else
       raise EdjEngineError.Create('Invalid value for boolean value ');
