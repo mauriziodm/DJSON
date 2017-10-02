@@ -498,8 +498,8 @@ end;
 class function TdjEngineJDO.DeserializeInt(const AJSONValue: PJsonDataValue;
   const AValueType: TRttiType): TValue;
 begin
-  if not Assigned(AJSONValue) then
-    Result := 0;
+  if not Assigned(AJSONValue) or (AJSONValue.Typ = TJsonDataType.jdtNone)  then
+    Result := 0
   else
     Result := AJSONValue.IntValue;
 end;
