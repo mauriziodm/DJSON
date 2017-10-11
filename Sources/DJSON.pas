@@ -233,7 +233,7 @@ class function dj.DefaultByFields: IdjParams;
 begin
   Result := TdjFactory.NewParams;
   Result.SerializationMode := smJavaScript;
-  Result.SerializationType := stFields;
+  Result.SerializationTypes := [stFields];
   Result.TypeAnnotations := False;
 end;
 
@@ -241,7 +241,7 @@ class function dj.DefaultByProperty: IdjParams;
 begin
   Result := TdjFactory.NewParams;
   Result.SerializationMode := smJavaScript;
-  Result.SerializationType := stProperties;
+  Result.SerializationTypes := [stProperties];
   Result.TypeAnnotations := False;
 end;
 
@@ -388,13 +388,13 @@ end;
 
 function TdjJSONDestination.byFields: TdjJSONDestination;
 begin
-  FParams.SerializationType := stFields;
+  FParams.SerializationTypes := [stFields];
   Result := Self;
 end;
 
 function TdjJSONDestination.byProperties: TdjJSONDestination;
 begin
-  FParams.SerializationType := stProperties;
+  FParams.SerializationTypes := [stProperties];
   Result := Self;
 end;
 
@@ -642,13 +642,13 @@ end;
 
 function TdjValueDestination.byFields: TdjValueDestination;
 begin
-  FParams.SerializationType := stFields;
+  FParams.SerializationTypes := [stFields];
   Result := Self;
 end;
 
 function TdjValueDestination.byProperties: TdjValueDestination;
 begin
-  FParams.SerializationType := stProperties;
+  FParams.SerializationTypes := [stProperties];
   Result := Self;
 end;
 

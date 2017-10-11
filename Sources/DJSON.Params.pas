@@ -36,20 +36,23 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Params;
 
 interface
 
 uses
-  System.TypInfo, DJSON.Serializers, System.Generics.Collections, System.Rtti,
-  DJSON.TypeInfoCache, DJSON.ISO8601Processor;
+{$REGION 'System'}
+  System.Generics.Collections,
+  System.Rtti,
+  System.TypInfo,
+{$ENDREGION}
+{$REGION 'DJSON'}
+  DJSON.ISO8601Processor,
+  DJSON.Serializers,
+  DJSON.TypeInfoCache;
+{$ENDREGION}
 
 type
-
   TdjEngine = (eDelphiDOM, eDelphiStream, eJDO);
 
   TdjNameCase = (ncUndefinedCase, ncUpperCase, ncLowerCase);
@@ -57,6 +60,7 @@ type
   TdjSerializationMode = (smJavaScript, smDataContract);
 
   TdjSerializationType = (stProperties, stFields);
+  TdjSerializationTypes = set of TdjSerializationType;
 
   TdjIgnoredProperties = array of string;
 
@@ -86,9 +90,9 @@ type
     function GetSerializationMode: TdjSerializationMode;
     property SerializationMode: TdjSerializationMode read GetSerializationMode write SetSerializationMode;
     // SerializationType
-    procedure SetSerializationType(const AValue: TdjSerializationType);
-    function GetSerializationType: TdjSerializationType;
-    property SerializationType: TdjSerializationType read GetSerializationType write SetSerializationType;
+    procedure SetSerializationTypes(const AValue: TdjSerializationTypes);
+    function GetSerializationTypes: TdjSerializationTypes;
+    property SerializationTypes: TdjSerializationTypes read GetSerializationTypes write SetSerializationTypes;
     // Pretty-Print
     procedure SetPrettyPrint(const AValue: Boolean);
     function GetPrettyPrint: Boolean;
@@ -208,7 +212,7 @@ type
     FEngineClass: TdjEngineRef;
     FEngineType: TdjEngine;
     FSerializationMode: TdjSerializationMode;
-    FSerializationType: TdjSerializationType;
+    FSerializationTypes: TdjSerializationTypes;
     FPrettyPrint: Boolean;
     FTypeAnnotations: Boolean;
     FIgnoredProperties: TdjIgnoredProperties;
@@ -234,8 +238,8 @@ type
     procedure SetSerializationMode(const AValue: TdjSerializationMode);
     function GetSerializationMode: TdjSerializationMode;
     // SerializationType
-    procedure SetSerializationType(const AValue: TdjSerializationType);
-    function GetSerializationType: TdjSerializationType;
+    procedure SetSerializationTypes(const AValue: TdjSerializationTypes);
+    function GetSerializationTypes: TdjSerializationTypes;
     // Pretty-Print
     procedure SetPrettyPrint(const AValue: Boolean);
     function GetPrettyPrint: Boolean;
@@ -380,7 +384,10 @@ type
 implementation
 
 uses
-  DJSON.Utils.RTTI, DJSON.Factory;
+{$REGION 'DJSON'}
+  DJSON.Utils.RTTI,
+  DJSON.Factory;
+{$ENDREGION}
 
 { TdjParams }
 
@@ -560,9 +567,9 @@ begin
   Result := FSerializationMode;
 end;
 
-function TdjParams.GetSerializationType: TdjSerializationType;
+function TdjParams.GetSerializationTypes: TdjSerializationTypes;
 begin
-  Result := FSerializationType;
+  Result := FSerializationTypes;
 end;
 
 function TdjParams.GetSerializers: TdjSerializersContainer;
@@ -730,9 +737,9 @@ begin
   FSerializationMode := AValue;
 end;
 
-procedure TdjParams.SetSerializationType(const AValue: TdjSerializationType);
+procedure TdjParams.SetSerializationTypes(const AValue: TdjSerializationTypes);
 begin
-  FSerializationType := AValue;
+  FSerializationTypes := AValue;
 end;
 
 { TdjSerializersContainerItem }

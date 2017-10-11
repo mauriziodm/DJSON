@@ -36,29 +36,23 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Engine.Stream;
 
 interface
 
 uses
 {$REGION 'System'}
-  System.Rtti,
   System.Classes,
   System.JSON.Readers,
   System.JSON.Writers,
+  System.Rtti,
 {$ENDREGION}
 {$REGION 'DJSON'}
-  DJSON.Params,
-  DJSON.Duck.Interfaces
+  DJSON.Duck.Interfaces,
+  DJSON.Params;
 {$ENDREGION}
-;
 
 type
-
   TdjEngineStream = class(TdjEngineIntf)
   protected
     // Serializers
@@ -108,21 +102,22 @@ implementation
 
 uses
 {$REGION 'System'}
-  System.SysUtils,
   System.JSON.Types,
   System.JSON.BSON,
   System.NetEncoding,
+  System.SysUtils,
 {$ENDREGION}
 {$REGION 'DJSON'}
+  DJSON.Attributes,
   DJSON.Constants,
   DJSON.Duck.PropField,
-  DJSON.Utils.RTTI,
-  DJSON.Attributes,
+  DJSON.Engine.Utils,
   DJSON.Exceptions,
-  DJSON.Utils,
   DJSON.Factory,
+  DJSON.Serializers,
   DJSON.TypeInfoCache,
-  DJSON.Serializers, DJSON.Engine.Utils;
+  DJSON.Utils,
+  DJSON.Utils.RTTI;
 {$ENDREGION}
 
 { TdjEngineStream }
@@ -631,40 +626,9 @@ class procedure TdjEngineStream.DeserializeObject(const AJSONReader: TJSONReader
   AObject: TObject; const AParams: IdjParams);
 var
   LPropFieldKey: String;
-  LPropsFields: TArray<System.Rtti.TRttiNamedObject>;
   LPropField: System.Rtti.TRttiNamedObject;
-  LRTTIType: TRTTIInstanceType;
   LValue: TValue;
-  procedure GetPropFieldByKey;
-  var
-    LNameAttribute: djNameAttribute;
-    LPropFieldInternal: System.Rtti.TRttiNamedObject;
-  begin
-    // Get the PropField by Key
-    case AParams.SerializationType of
-      stProperties: LPropField := LRTTIType.GetProperty(LPropFieldKey);
-      stFields: LPropField := LRTTIType.GetField(LPropFieldKey);
-    end;
-    // If found then exit else continue find considering even the djNameAttribute
-    if Assigned(LPropField) then Exit;
-    // Get members list if not already assigned
-    if not Assigned(LPropsFields) then
-    begin
-      LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
-    end;
-    // Loop and find
-    for LPropFieldInternal in LPropsFields do
-      if TdjRTTI.HasAttribute<djNameAttribute>(LPropFieldInternal, LNameAttribute) and (LNameAttribute.Name = LPropFieldKey) then
-      begin
-        LPropField := LPropFieldInternal;
-        Exit;
-      end;
-    // If not found then set the result to nil
-    LPropField := nil;
-  end;
 begin
-  // Init
-  LRTTIType := TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance;
   // Loop for all JSONTokens (all properties of the object)
   repeat
     // If the current JSONToken is an EndObject token then exit from the loop
@@ -674,16 +638,14 @@ begin
     if (AJSONReader.TokenType <> TJsonToken.PropertyName) then
       raise EdjEngineError.Create('DeserializeObject: PropertyName token type expected.');
     // Get the current prop/field name
-    case AParams.SerializationType of
-      TdjSerializationType.stProperties:
-        LPropFieldKey := AJSONReader.Value.AsString;
-      TdjSerializationType.stFields:
-        LPropFieldKey := 'F' + AJSONReader.Value.AsString;
-    end;
+    if stProperties in AParams.SerializationTypes then
+      LPropFieldKey := AJSONReader.Value.AsString
+    else
+      LPropFieldKey := 'F' + AJSONReader.Value.AsString;
     AJSONReader.Read;
     // Get the PropField by Key
     { TODO : Ottimizzazione: ho provato sulla richiesta nome chiave ma il risultato era nullo }
-    GetPropFieldByKey;
+    LPropField := TdjEngineUtils.GetPropFieldByKey(LPropFieldKey, AParams, AObject);
     // Check to continue or not
     { TODO : Possibile punto per ottimizzazione }
     if TdjEngineUtils.IsSkipMember(LPropField, AParams) then

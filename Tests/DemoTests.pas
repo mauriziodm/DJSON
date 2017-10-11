@@ -109,9 +109,11 @@ type
   end;
 
   TNoClassGeneric<T> = class
+  private
+    Fid: Integer;
   public
-    id: Integer;
     Item: T;
+    property id: Integer read FID write FID;
   end;
 
   [TestFixture]
@@ -312,7 +314,7 @@ procedure TDemoTests.Setup;
 begin
   FParams := dj.Default;
   FParams.Engine := eDelphiDOM;
-  FParams.SerializationType := stFields;
+  FParams.SerializationTypes := [stFields];
 end;
 
 procedure TDemoTests.DeserializationBasics1;
@@ -348,8 +350,9 @@ var
   LResultObj: TNoClassGeneric<THtmlColor>;
   LConfig: IdjParams;
 begin
-  LConfig := dj.DefaultByFields;
+  LConfig := dj.DefaultByProperty;
   LConfig.Engine := TdjEngine.eJDO;
+  LConfig.SerializationTypes := [stProperties, stFields];
   LTestJSON := '{"id":555,"Item":{"Red":255,"Green":0,"Blue":0}}';
   LResultObj := dj.FromJson(LTestJSON, LConfig).&to < TNoClassGeneric<THtmlColor> > ;
   LResultJSON := dj.From(LResultObj, LConfig).ToJson;

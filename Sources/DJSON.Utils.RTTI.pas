@@ -65,6 +65,7 @@ type
     class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject): boolean; overload;
     class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject; out AAttribute: T): boolean; overload; static;
     class function GetItemsQualifiedTypeNameFromArrayTypeInfo(const ATypeInfo:PTypeInfo): String; static;
+    class function IsPrivateMember(AMember: TRttiMember):Boolean;
   end;
 
 implementation
@@ -128,6 +129,11 @@ class procedure TdjRTTI.Initialize;
 begin
   Ctx := TRttiContext.Create;
   Ctx.FindType(''); // Workaround for thread safe: https://quality.embarcadero.com/browse/RSP-9815
+end;
+
+class function TdjRTTI.IsPrivateMember(AMember: TRttiMember): Boolean;
+begin
+  Result := (AMember.Visibility = mvPrivate) or (AMember.Visibility = mvProtected);
 end;
 
 class function TdjRTTI.TValueToObject(const AValue: TValue): TObject;
