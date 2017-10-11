@@ -110,10 +110,10 @@ type
 
   TNoClassGeneric<T> = class
   private
-    Fid: Integer;
+    Fid: Int64;
   public
     Item: T;
-    property id: Integer read FID write FID;
+    property id: int64 read FID write FID;
   end;
 
   [TestFixture]
@@ -349,11 +349,13 @@ var
   LResultJSON: string;
   LResultObj: TNoClassGeneric<THtmlColor>;
   LConfig: IdjParams;
+  x: Integer;
 begin
+  x := Int64.MaxValue;
   LConfig := dj.DefaultByProperty;
   LConfig.Engine := TdjEngine.eJDO;
   LConfig.SerializationTypes := [stProperties, stFields];
-  LTestJSON := '{"id":555,"Item":{"Red":255,"Green":0,"Blue":0}}';
+  LTestJSON := '{"id":922372036854775807,"Item":{"Red":255,"Green":0,"Blue":0}}';
   LResultObj := dj.FromJson(LTestJSON, LConfig).&to < TNoClassGeneric<THtmlColor> > ;
   LResultJSON := dj.From(LResultObj, LConfig).ToJson;
   Assert.AreEqual(LTestJSON, LResultJSON);

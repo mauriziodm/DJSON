@@ -740,6 +740,8 @@ begin
         );
     tkArray, tkDynArray:
       Result := DeserializeArray(AJSONReader, LValueType, APropField, AMaster, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 
@@ -1277,8 +1279,10 @@ begin
     Exit;
   // Standard serialization by TypeKind
   case AValue.Kind of
-    tkInteger, tkInt64:
+    tkInteger:
       AJSONWriter.WriteValue(AValue.AsInteger);
+    tkInt64:
+      AJSONWriter.WriteValue(AValue.AsInt64);
     tkFloat:
       SerializeFloat(AJSONWriter, AValue, AParams);
     tkString, tkLString, tkWString, tkUString:
@@ -1295,6 +1299,8 @@ begin
       SerializeInterface(AJSONWriter, AValue, APropField, AParams);
     tkArray, tkDynArray:
       SerializeArray(AJSONWriter, AValue, APropField, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 

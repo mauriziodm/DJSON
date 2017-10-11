@@ -36,10 +36,6 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Engine.JDO;
 
 interface
@@ -495,13 +491,16 @@ begin
   raise EdjEngineError.Create('Cannot deserialize float value.');
 end;
 
-class function TdjEngineJDO.DeserializeInt(const AJSONValue: PJsonDataValue;
-  const AValueType: TRttiType): TValue;
+class function TdjEngineJDO.DeserializeInt(const AJSONValue: PJsonDataValue; const AValueType: TRttiType): TValue;
 begin
-  if not Assigned(AJSONValue) or (AJSONValue.Typ = TJsonDataType.jdtNone)  then
+  if not Assigned(AJSONValue) or (AJSONValue.Typ = TJsonDataType.jdtNone) then
     Result := 0
+  else if AJSONValue.Typ = TJsonDataType.jdtInt then
+    Result := AJSONValue.IntValue
+  else if AJSONValue.Typ = TJsonDataType.jdtLong then
+    Result := AJSONValue.LongValue
   else
-    Result := AJSONValue.IntValue;
+    raise EdjException.Create('Unknown Int type');
 end;
 
 class function TdjEngineJDO.DeserializeInterface(const AJSONValue: PJsonDataValue; const AValueType: TRttiType;
@@ -688,6 +687,8 @@ begin
         );
     tkArray, tkDynArray:
       Result := DeserializeArray(AJSONValue, APropField, AMaster, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 
@@ -1207,8 +1208,10 @@ begin
     Exit;
   // Standard serialization by TypeKind
   case AValue.Kind of
-    tkInteger, tkInt64:
+    tkInteger:
       AResult.IntValue := AValue.AsInteger;
+    tkInt64:
+      AResult.LongValue := AValue.AsInt64;
     tkFloat:
       SerializeFloat(AResult, AValue, AParams);
     tkString, tkLString, tkWString, tkUString:
@@ -1225,6 +1228,8 @@ begin
       SerializeInterface(AResult, AValue, APropField, AParams);
     tkArray, tkDynArray:
       SerializeArray(AResult, AValue, APropField, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 

@@ -520,7 +520,7 @@ begin
   if not Assigned(AJSONValue) then  // JSONKey not present
     Result := 0
   else
-    Result := StrToIntDef(AJSONValue.Value, 0);
+    Result := StrToInt64Def(AJSONValue.Value, 0);
 end;
 
 class function TdjEngineDOM.DeserializeInterface(const AJSONValue: TJSONValue; const AValueType: TRttiType;
@@ -715,6 +715,8 @@ begin
         );
     tkArray, tkDynArray:
       Result := DeserializeArray(AJSONValue, APropField, AMaster, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 
@@ -1258,7 +1260,14 @@ end;
 
 class function TdjEngineDOM.SerializeInteger(const AValue: TValue): TJSONValue;
 begin
-  Result := TJSONNumber.Create(AValue.AsInteger)
+  case AValue.Kind of
+    tkInteger:
+      Result := TJSONNumber.Create(AValue.AsInteger);
+    tkInt64:
+      Result := TJSONNumber.Create(AValue.AsInt64);
+  else
+    raise EdjException.Create('Unknown Int type');
+  end;
 end;
 
 class function TdjEngineDOM.SerializeObject(const AObject: TObject; const AParams: IdjParams): TJSONBox;
@@ -1326,6 +1335,8 @@ begin
       Result := SerializeInterface(AValue, APropField, AParams);
     tkArray, tkDynArray:
       Result := SerializeArray(AValue, APropField, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 
