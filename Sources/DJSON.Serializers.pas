@@ -38,13 +38,17 @@
 
 unit DJSON.Serializers;
 
+{$I DJSON.inc}
+
 interface
 
 uses
   System.Rtti,
   System.JSON,
+{$IFDEF ENGINE_STREAM}
   System.JSON.Writers,
   System.JSON.Readers,
+{$ENDIF}
   JsonDataObjects;
 
 type
@@ -65,7 +69,7 @@ type
     class function Deserialize(const AJSONValue: PJsonDataValue; const AExistingValue: TValue): TValue; virtual;
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
-
+{$IFDEF ENGINE_STREAM}
   TdjStreamCustomSerializerRef = class of TdjStreamCustomSerializer;
 
   TdjStreamCustomSerializer = class abstract
@@ -74,7 +78,7 @@ type
     class function Deserialize(const AJSONReader: TJSONReader; const AExistingValue: TValue): TValue; virtual;
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
-
+{$ENDIF}
 //  TdjXMLCustomSerializerRef = class of TdjXMLCustomSerializer;
 //  TdjXMLCustomSerializer = class abstract
 //  public
@@ -106,6 +110,8 @@ begin
   Result := nil;
 end;
 
+{$IFDEF ENGINE_STREAM}
+
 { TdjStreamCustomSerializer }
 
 class function TdjStreamCustomSerializer.Deserialize(const AJSONReader: TJSONReader; const AExistingValue: TValue): TValue;
@@ -124,6 +130,8 @@ class procedure TdjStreamCustomSerializer.Serialize(const AJSONWriter: TJSONWrit
 begin
   // None
 end;
+{$ENDIF}
+
 
 { TdjJDOCustomSerializer }
 

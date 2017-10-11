@@ -44,6 +44,8 @@ unit DJSON.Factory;
 
 interface
 
+{$I DJSON.inc}
+
 uses
   DJSON.Params, DJSON.Duck.Interfaces;
 
@@ -70,7 +72,9 @@ class function TdjFactory.GetEngine(
   const AEngineType: TdjEngine): TdjEngineRef;
 begin
   case AEngineType of
+{$IFDEF ENGINE_STREAM}
     TdjEngine.eDelphiStream:  Result := TdjEngineStream;
+{$ENDIF}
     TdjEngine.eJDO:           Result := TdjEngineJDO;
     TdjEngine.eDelphiDOM:     Result := TdjEngineDOM;
   else

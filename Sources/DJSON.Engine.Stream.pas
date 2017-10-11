@@ -38,7 +38,11 @@
 
 unit DJSON.Engine.Stream;
 
+{$I DJSON.inc}
+
 interface
+
+{$IFDEF ENGINE_STREAM}
 
 uses
 {$REGION 'System'}
@@ -97,8 +101,11 @@ type
     class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; override;
     class function Deserialize(const AJSONText:String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; override;
   end;
+{$ENDIF}
 
 implementation
+
+{$IFDEF ENGINE_STREAM}
 
 uses
 {$REGION 'System'}
@@ -1421,5 +1428,7 @@ begin
     Result := True;
   end;
 end;
+{$ENDIF}
 
 end.
+
