@@ -145,7 +145,7 @@ var
   LJSONValue, LValueJSONValue: TJSONValue;
   LJSONArray: TJSONArray;
   LValueRTTIType: TRttiType;
-  I: Integer;
+  I: NativeInt;
   LValue: TValue;
   PArray: Pointer;
   LArrayLen: Longint;

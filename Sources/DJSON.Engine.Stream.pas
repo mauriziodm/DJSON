@@ -901,12 +901,11 @@ class procedure TdjEngineStream.SerializeArray(const AJSONWriter: TJSONWriter;
   const AParams: IdjParams);
 var
   LValueQualifiedTypeName: String;
-  LIndex: Integer;
+  LIndex: NativeInt;
   LValue: TValue;
 begin
   // Init
   LValueQualifiedTypeName := '';
-
   // If TypeAnnotations enabled...
   if AParams.TypeAnnotations then
   begin

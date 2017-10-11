@@ -881,7 +881,7 @@ var
   LValueQualifiedTypeName: String;
   LJSONArray: TJSONArray;
   LFirst: Boolean;
-  LIndex: Integer;
+  LIndex: NativeInt;
   LValue: TValue;
   LJSONValue: PJsonDataValue;
   LResultJSONObj: TJSONObject;
