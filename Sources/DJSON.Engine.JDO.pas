@@ -36,10 +36,6 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Engine.JDO;
 
 interface
@@ -114,7 +110,7 @@ uses
   DJSON.Constants,
   DJSON.Factory,
   DJSON.Utils,
-  DJSON.TypeInfoCache;
+  DJSON.TypeInfoCache, DJSON.Engine.Utils;
 {$ENDREGION}
 
 class function TdjEngineJDO.Deserialize(const AJSONText: String;
@@ -145,10 +141,10 @@ var
   LJSONObject: TJSONObject;
   LJSONValue, LValueJSONValue: PJsonDataValue;
   LJSONArray: TJSONArray;
-  LIndex: Integer;
+  LIndex: NativeInt;
   LValue: TValue;
   PArray: Pointer;
-  LArrayLen: Longint;
+  LArrayLen: NativeInt;
 begin
   // Checks
   if (not Assigned(AJSONValue))
@@ -495,13 +491,16 @@ begin
   raise EdjEngineError.Create('Cannot deserialize float value.');
 end;
 
-class function TdjEngineJDO.DeserializeInt(const AJSONValue: PJsonDataValue;
-  const AValueType: TRttiType): TValue;
+class function TdjEngineJDO.DeserializeInt(const AJSONValue: PJsonDataValue; const AValueType: TRttiType): TValue;
 begin
-  if not Assigned(AJSONValue) or (AJSONValue.Typ = TJsonDataType.jdtNone)  then
+  if not Assigned(AJSONValue) or (AJSONValue.Typ = TJsonDataType.jdtNone) then
     Result := 0
+  else if AJSONValue.Typ = TJsonDataType.jdtInt then
+    Result := AJSONValue.IntValue
+  else if AJSONValue.Typ = TJsonDataType.jdtLong then
+    Result := AJSONValue.LongValue
   else
-    Result := AJSONValue.IntValue;
+    raise EdjException.Create('Unknown Int type');
 end;
 
 class function TdjEngineJDO.DeserializeInterface(const AJSONValue: PJsonDataValue; const AValueType: TRttiType;
@@ -688,6 +687,8 @@ begin
         );
     tkArray, tkDynArray:
       Result := DeserializeArray(AJSONValue, APropField, AMaster, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 
@@ -880,7 +881,7 @@ var
   LValueQualifiedTypeName: String;
   LJSONArray: TJSONArray;
   LFirst: Boolean;
-  LIndex: Integer;
+  LIndex: NativeInt;
   LValue: TValue;
   LJSONValue: PJsonDataValue;
   LResultJSONObj: TJSONObject;
@@ -1062,7 +1063,8 @@ begin
           CurrJSONObj[DJ_VALUE] := nil;
           LJSONValue := CurrJSONObj.Items[CurrJSONObj.IndexOf(DJ_VALUE)];
         end;
-      else raise Exception.Create('TdjEngineJDO.SerializeDictionary: Unknown AParams.SerializationMode');
+      else
+        raise Exception.Create('TdjEngineJDO.SerializeDictionary: Unknown AParams.SerializationMode');
       end;
       // Serialize the value
       SerializePropField(LJSONValue, LValue, APropField, AParams);
@@ -1206,8 +1208,10 @@ begin
     Exit;
   // Standard serialization by TypeKind
   case AValue.Kind of
-    tkInteger, tkInt64:
+    tkInteger:
       AResult.IntValue := AValue.AsInteger;
+    tkInt64:
+      AResult.LongValue := AValue.AsInt64;
     tkFloat:
       SerializeFloat(AResult, AValue, AParams);
     tkString, tkLString, tkWString, tkUString:
@@ -1224,6 +1228,8 @@ begin
       SerializeInterface(AResult, AValue, APropField, AParams);
     tkArray, tkDynArray:
       SerializeArray(AResult, AValue, APropField, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 
@@ -1242,21 +1248,13 @@ begin
     if AParams.TypeAnnotations then
       Result.S[DJ_TYPENAME] := AObject.QualifiedClassName;
     // Get members list
-    case AParams.SerializationType of
-      stProperties:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-      stFields:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-    end;
+    LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
     // Loop for all members
     for LPropField in LPropsFields do
     begin
       // Skip the RefCount
-      if (LPropField.Name = 'FRefCount')
-      or (LPropField.Name = 'RefCount')
-      or TdjRTTI.HasAttribute<djSkipAttribute>(LPropField)
-      or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
-      then
+      // Check for "DoNotSerializeAttribute" or property to ignore
+      if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
         Continue;
       // Get the KeyName
       LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
@@ -1275,37 +1273,26 @@ begin
   end;
 end;
 
-class function TdjEngineJDO.DeserializeObject(const AJSONBox: TJSONBox; AObject: TObject;
-  const AParams: IdjParams): TObject;
+class function TdjEngineJDO.DeserializeObject(const AJSONBox: TJSONBox; AObject: TObject; const AParams: IdjParams): TObject;
 var
   LJSONValue: PJsonDataValue;
   LPropField: System.Rtti.TRttiNamedObject;
   LPropsFields: TArray<System.Rtti.TRttiNamedObject>;
-  LKeyName: String;
+  LKeyName: string;
   LValue: TValue;
 begin
   // Get members list
-  case AParams.SerializationType of
-    stProperties:
-      LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-    stFields:
-      LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-  end;
+  LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
   // Loop for all members
   for LPropField in LPropsFields do
   begin
     // Check to continue or not
-    if (not TdjDuckPropField.IsWritable(LPropField) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkClass))
-    or (LPropField.Name = 'FRefCount')
-    or (LPropField.Name = 'RefCount')
-    or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
-    or (TdjRTTI.HasAttribute<djSkipAttribute>(LPropField))
-    then
+    if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
       Continue;
     // Get the JSONPair KeyName
     LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
     // Check if JSONPair exists
-    if AJSONBox.Contains(LKeyName) then
+    if AJSONBox.contains(LKeyName) then
       LJSONValue := AJSONBox.Items[AJSONBox.IndexOf(LKeyName)]
     else
       LJSONValue := nil;
@@ -1316,7 +1303,6 @@ begin
   end;
   Result := AObject;
 end;
-
 
 class procedure TdjEngineJDO.SerializeRecord(const AResult:PJsonDataValue; const AValue: TValue;
   const APropField: TRttiNamedObject; const AParams: IdjParams);

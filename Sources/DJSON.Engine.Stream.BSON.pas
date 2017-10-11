@@ -36,13 +36,13 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Engine.Stream.BSON;
 
+{$I DJSON.inc}
+
 interface
+
+{$IFDEF ENGINE_STREAM}
 
 uses
 {$REGION 'System'}
@@ -63,7 +63,11 @@ type
     class function Deserialize(const AByteStream:TStream; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; reintroduce;
   end;
 
+{$ENDIF}
+
 implementation
+
+{$IFDEF ENGINE_STREAM}
 
 uses
 {$REGION 'System'}
@@ -122,5 +126,7 @@ begin
     LBSONWriter.Free;
   end;
 end;
+
+{$ENDIF}
 
 end.

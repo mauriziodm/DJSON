@@ -36,10 +36,6 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Utils.RTTI;
 
 interface
@@ -65,6 +61,7 @@ type
     class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject): boolean; overload;
     class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject; out AAttribute: T): boolean; overload; static;
     class function GetItemsQualifiedTypeNameFromArrayTypeInfo(const ATypeInfo:PTypeInfo): String; static;
+    class function IsPrivateMember(AMember: TRttiMember):Boolean;
   end;
 
 implementation
@@ -109,8 +106,7 @@ begin
     raise Exception.Create('Cannot find RTTI for ' + AQualifiedClassName);
 end;
 
-class function TdjRTTI.GetItemsQualifiedTypeNameFromArrayTypeInfo(
-  const ATypeInfo: PTypeInfo): String;
+class function TdjRTTI.GetItemsQualifiedTypeNameFromArrayTypeInfo(const ATypeInfo: PTypeInfo): string;
 var
   LType: TRttiType;
 begin
@@ -129,6 +125,11 @@ class procedure TdjRTTI.Initialize;
 begin
   Ctx := TRttiContext.Create;
   Ctx.FindType(''); // Workaround for thread safe: https://quality.embarcadero.com/browse/RSP-9815
+end;
+
+class function TdjRTTI.IsPrivateMember(AMember: TRttiMember): Boolean;
+begin
+  Result := (AMember.Visibility = mvPrivate) or (AMember.Visibility = mvProtected);
 end;
 
 class function TdjRTTI.TValueToObject(const AValue: TValue): TObject;
@@ -168,22 +169,19 @@ begin
   Result := TypeInfoToTypeName(ATypeInfo, True);
 end;
 
-class function TdjRTTI.TypeInfoToRttiType(
-  const ATypeInfo: PTypeInfo): TRttiType;
+class function TdjRTTI.TypeInfoToRttiType(const ATypeInfo: PTypeInfo): TRttiType;
 begin
   Result := Ctx.GetType(ATypeInfo);
 end;
 
-class function TdjRTTI.HasAttribute<T>(
-  const ARTTIMember: TRttiNamedObject): boolean;
+class function TdjRTTI.HasAttribute<T>(const ARTTIMember: TRttiNamedObject): boolean;
 var
   AAttribute: TCustomAttribute;
 begin
   Result := HasAttribute<T>(ARTTIMember, AAttribute);
 end;
 
-class function TdjRTTI.HasAttribute<T>(const ARTTIMember: TRttiNamedObject;
-  out AAttribute: T): boolean;
+class function TdjRTTI.HasAttribute<T>(const ARTTIMember: TRttiNamedObject; out AAttribute: T): boolean;
 var
   attrs: TArray<TCustomAttribute>;
   attr: TCustomAttribute;
@@ -201,14 +199,12 @@ begin
     end;
 end;
 
-class function TdjRTTI.QualifiedTypeNameToRttiType(
-  const AQualifiedTypeName: String): TRttiType;
+class function TdjRTTI.QualifiedTypeNameToRttiType(const AQualifiedTypeName: String): TRttiType;
 begin
   Result := Ctx.FindType(AQualifiedTypeName);
 end;
 
 initialization
-
   TdjRTTI.Initialize;
 
 end.

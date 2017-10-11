@@ -62,7 +62,7 @@ type
   TEmployee = class
   public
     Name: string;
-    constructor Create(AName: string);
+    constructor Create(const AName: string);
   end;
 
   TManager = class(TEmployee)
@@ -109,9 +109,11 @@ type
   end;
 
   TNoClassGeneric<T> = class
+  private
+    Fid: Int64;
   public
-    id: Integer;
     Item: T;
+    property id: int64 read FID write FID;
   end;
 
   [TestFixture]
@@ -312,7 +314,7 @@ procedure TDemoTests.Setup;
 begin
   FParams := dj.Default;
   FParams.Engine := eDelphiDOM;
-  FParams.SerializationType := stFields;
+  FParams.SerializationTypes := [stFields];
 end;
 
 procedure TDemoTests.DeserializationBasics1;
@@ -347,10 +349,13 @@ var
   LResultJSON: string;
   LResultObj: TNoClassGeneric<THtmlColor>;
   LConfig: IdjParams;
+  x: Integer;
 begin
-  LConfig := dj.DefaultByFields;
+  x := Int64.MaxValue;
+  LConfig := dj.DefaultByProperty;
   LConfig.Engine := TdjEngine.eJDO;
-  LTestJSON := '{"id":555,"Item":{"Red":255,"Green":0,"Blue":0}}';
+  LConfig.SerializationTypes := [stProperties, stFields];
+  LTestJSON := '{"id":922372036854775807,"Item":{"Red":255,"Green":0,"Blue":0}}';
   LResultObj := dj.FromJson(LTestJSON, LConfig).&to < TNoClassGeneric<THtmlColor> > ;
   LResultJSON := dj.From(LResultObj, LConfig).ToJson;
   Assert.AreEqual(LTestJSON, LResultJSON);
@@ -420,7 +425,7 @@ end;
 
 { TEmployee }
 
-constructor TEmployee.Create(AName: string);
+constructor TEmployee.Create(const AName: string);
 begin
   Name := AName;
 end;

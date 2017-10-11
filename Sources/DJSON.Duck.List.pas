@@ -36,19 +36,20 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Duck.List;
 
 interface
 
 uses
-  DJSON.Duck.Interfaces, System.Rtti, System.TypInfo;
+{$REGION 'System'}
+  System.Rtti,
+  System.TypInfo,
+{$ENDREGION}
+{$REGION 'DJSON'}
+  DJSON.Duck.Interfaces;
+{$ENDREGION}
 
 type
-
   TdjDuckList = class(TInterfacedObject, IdjDuckList)
   strict private
     FObjAsDuck: TObject;
@@ -93,8 +94,14 @@ type
 implementation
 
 uses
-  DJSON.Utils.RTTI, DJSON.Exceptions,
-  System.Generics.Collections, System.SysUtils;
+{$REGION 'System'}
+  System.Generics.Collections,
+  System.SysUtils,
+{$ENDREGION}
+{$REGION 'DJSON'}
+  DJSON.Exceptions,
+  DJSON.Utils.RTTI;
+{$ENDREGION}
 
 { TdjDuckList }
 

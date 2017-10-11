@@ -36,19 +36,20 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Utils;
 
 interface
 
 uses
+{$REGION 'System'}
   System.Rtti,
   System.SysUtils,
+{$ENDREGION}
+{$REGION 'DJSON'}
   DJSON.Params,
   DJSON.Duck.PropField;
+{$ENDREGION}
+
 
 type
   TdjUtils = class
@@ -72,40 +73,41 @@ type
 implementation
 
 uses
+{$REGION 'System'}
   System.DateUtils,
   System.TypInfo,
+{$ENDREGION}
+{$REGION 'DJSON'}
   DJSON.Attributes,
   DJSON.Utils.RTTI;
+{$ENDREGION}
 
 { TdjUtils }
 
-class procedure TdjUtils.GetItemsTypeNameIfEmpty(
-  const APropField: TRttiNamedObject; const AParams: IdjParams;
-  var AValueTypeName: String);
+class procedure TdjUtils.GetItemsTypeNameIfEmpty(const APropField: TRttiNamedObject; const AParams: IdjParams; var AValueTypeName: string);
 var
-  LKeyTypeNameDummy: String;
+  LKeyTypeNameDummy: string;
 begin
   LKeyTypeNameDummy := 'DummyKeyTypeName';
   GetItemsTypeNameIfEmpty(APropField, AParams, LKeyTypeNameDummy, AValueTypeName);
 end;
 
-class function TdjUtils.Bytes2String(const ABytes: TBytes): String;
+class function TdjUtils.Bytes2String(const ABytes: TBytes): string;
 var
   I: Integer;
-  Sep: String;
+  Sep: string;
 begin
   Result := EmptyStr;
   Sep := EmptyStr;
-  for I:=low(ABytes) to high(ABytes) do
+  for I := low(ABytes) to high(ABytes) do
   begin
     Result := Result + Sep + IntToHex(ABytes[I], 2);
-    if I=0 then Sep := '-';
+    if I = 0 then
+      Sep := '-';
   end;
 end;
 
-class procedure TdjUtils.GetItemsTypeNameIfEmpty(
-  const APropField: TRttiNamedObject; const AParams: IdjParams;
-  var AKeyTypeName, AValueTypeName: String);
+class procedure TdjUtils.GetItemsTypeNameIfEmpty(const APropField: TRttiNamedObject; const AParams: IdjParams; var AKeyTypeName, AValueTypeName: string);
 var
   LdjsonItemsTypeAttribute: djItemsTypeAttribute;
 begin
@@ -158,18 +160,15 @@ begin
   begin
     Result := ARttiMember.Name;
     // If SerializationType is by Fields then remove the first character if "F"
-    if (AParams.SerializationType = TdjSerializationType.stFields) and
+    if (stFields in AParams.SerializationTypes) and
        (Result.StartsWith('F', True)) and
-       (
-          ((ARttiMember as  TRttiMember).Visibility = TMemberVisibility.mvPrivate)
-       or
-          ((ARttiMember as  TRttiMember).Visibility = TMemberVisibility.mvProtected)) then
+       TdjRTTI.IsPrivateMember(ARttiMember as TRttiMember) then
     Result := Result.Substring(1);
   end;
   // If UpperCase or LowerCase names parama is specified...
   case AParams.NameCase of
-    ncUpperCase: Result := UpperCase(ARttiMember.Name);
-    ncLowerCase: Result := LowerCase(ARttiMember.Name);
+    ncUpperCase: Result := ARttiMember.Name.ToUpper;
+    ncLowerCase: Result := ARttiMember.Name.ToLower;
   end;
 end;
 

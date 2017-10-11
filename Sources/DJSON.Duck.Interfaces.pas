@@ -36,19 +36,18 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Duck.Interfaces;
 
 interface
 
 uses
-  System.Classes, System.Rtti, System.TypInfo;
+{$REGION 'System'}
+  System.Classes,
+  System.Rtti,
+  System.TypInfo;
+{$ENDREGION}
 
 type
-
   IdjDuckStreamable = interface
     ['{D95AD3B5-02AC-49E6-B54E-2ECAA7D5B54B}']
     procedure LoadFromStream(Stream: TStream);

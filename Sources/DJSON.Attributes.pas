@@ -36,19 +36,18 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Attributes;
+
+{$I DJSON.inc}
 
 interface
 
 uses
-  System.TypInfo, DJSON.Serializers, System.Rtti;
+  System.TypInfo,
+  System.Rtti,
+  DJSON.Serializers;
 
 type
-
   // djSkip
   djSkipAttribute = class(TCustomAttribute)
   end;
@@ -66,19 +65,19 @@ type
   // djType
   djTypeAttribute = class(TCustomAttribute)
   private
-    FQualifiedName: String;
+    FQualifiedName: string;
   public
     constructor Create; overload;  // For initialization
     constructor Create(const Value: TClass); overload;  // Use with lists (for compatibility)
     constructor Create(const ATypeInfo: PTypeInfo); overload;  // Use with lists
-    property QualifiedName: String read FQualifiedName;
+    property QualifiedName: string read FQualifiedName;
   end;
 
   // djItemsType
   djItemsTypeAttribute = class(TCustomAttribute)
   private
-    FKeyQualifiedName: String;
-    FValueQualifiedName: String;
+    FKeyQualifiedName: string;
+    FValueQualifiedName: string;
     procedure SetValue(const Value: TClass);
     function GetValue: TClass;
   public
@@ -87,8 +86,8 @@ type
     constructor Create(const AValueTypeInfo: PTypeInfo); overload;  // Use with lists
     constructor Create(const AKeyTypeInfo, AValueTypeInfo: PTypeInfo); overload;  // Use with TDIctionary
     property Value: TClass read GetValue write SetValue;
-    property KeyQualifiedName: String read FKeyQualifiedName;
-    property ValueQualifiedName: String read FValueQualifiedName;
+    property KeyQualifiedName: string read FKeyQualifiedName;
+    property ValueQualifiedName: string read FValueQualifiedName;
   end;
 
   // djSerializer attributes
@@ -96,13 +95,15 @@ type
   private
     FSerializer: T;
   public
-    constructor Create(const ASerializer:T);
-    property Serializer:T read FSerializer;
+    constructor Create(const ASerializer: T);
+    property Serializer: T read FSerializer;
   end;
   // djSerializerDOM
+
   djSerializerDOMAttribute = class(djSerializerAttribute<TdjDOMCustomSerializerRef>)
   end;
   // djSerializerJDO
+
   djSerializerJDOAttribute = class(djSerializerAttribute<TdjJDOCustomSerializerRef>)
   end;
   // djSerializerXML
@@ -110,26 +111,28 @@ type
 //  end;
   // djSerializerStream
   // djSerializerXML
+{$IFDEF ENGINE_STREAM}
   djSerializerStreamAttribute = class(djSerializerAttribute<TdjStreamCustomSerializerRef>)
   end;
-
+{$ENDIF}
   // djEncoding
   djEncodingAttribute = class(TCustomAttribute)
   strict private
     FEncoding: string;
     procedure SetEncoding(const Value: string);
-  const
-    DefaultEncoding = 'utf-8';
+    const
+      DefaultEncoding = 'utf-8';
   public
     constructor Create(const AEncoding: string = DefaultEncoding);
     property Encoding: string read FEncoding write SetEncoding;
   end;
 
-
 implementation
 
 uses
-  System.SysUtils, DJSON.Utils.RTTI, System.Generics.Collections;
+  System.SysUtils,
+  DJSON.Utils.RTTI,
+  System.Generics.Collections;
 
 { djEncodingAttribute }
 
@@ -171,7 +174,7 @@ constructor djItemsTypeAttribute.Create;
 begin
   inherited Create;
   // Init
-  FKeyQualifiedName   := '';
+  FKeyQualifiedName := '';
   FValueQualifiedName := '';
 end;
 
@@ -182,8 +185,7 @@ begin
   FValueQualifiedName := TdjRTTI.TypeInfoToQualifiedTypeName(AValueTypeInfo);
 end;
 
-constructor djItemsTypeAttribute.Create(const AKeyTypeInfo,
-  AValueTypeInfo: PTypeInfo);
+constructor djItemsTypeAttribute.Create(const AKeyTypeInfo, AValueTypeInfo: PTypeInfo);
 begin
   // Extract the qualified type name for the values
   Self.Create(AValueTypeInfo);

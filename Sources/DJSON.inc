@@ -1,0 +1,5 @@
+{$I jedi.inc}
+
+{$IFDEF DELPHIX_SEATTLE_UP}
+	{$DEFINE ENGINE_STREAM}
+{$ENDIF}

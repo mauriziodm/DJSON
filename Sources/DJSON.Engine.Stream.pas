@@ -36,29 +36,27 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Engine.Stream;
+
+{$I DJSON.inc}
 
 interface
 
+{$IFDEF ENGINE_STREAM}
+
 uses
 {$REGION 'System'}
-  System.Rtti,
   System.Classes,
   System.JSON.Readers,
   System.JSON.Writers,
+  System.Rtti,
 {$ENDREGION}
 {$REGION 'DJSON'}
-  DJSON.Params,
-  DJSON.Duck.Interfaces
+  DJSON.Duck.Interfaces,
+  DJSON.Params;
 {$ENDREGION}
-;
 
 type
-
   TdjEngineStream = class(TdjEngineIntf)
   protected
     // Serializers
@@ -103,26 +101,30 @@ type
     class function Serialize(const AValue: TValue; const APropField: TRttiNamedObject; const AParams: IdjParams; const AEnableCustomSerializers:Boolean=True): String; override;
     class function Deserialize(const AJSONText:String; const AValueType: TRttiType; const APropField: TRttiNamedObject; const AMaster: TValue; const AParams: IdjParams): TValue; override;
   end;
+{$ENDIF}
 
 implementation
 
+{$IFDEF ENGINE_STREAM}
+
 uses
 {$REGION 'System'}
-  System.SysUtils,
   System.JSON.Types,
   System.JSON.BSON,
   System.NetEncoding,
+  System.SysUtils,
 {$ENDREGION}
 {$REGION 'DJSON'}
+  DJSON.Attributes,
   DJSON.Constants,
   DJSON.Duck.PropField,
-  DJSON.Utils.RTTI,
-  DJSON.Attributes,
+  DJSON.Engine.Utils,
   DJSON.Exceptions,
-  DJSON.Utils,
   DJSON.Factory,
+  DJSON.Serializers,
   DJSON.TypeInfoCache,
-  DJSON.Serializers;
+  DJSON.Utils,
+  DJSON.Utils.RTTI;
 {$ENDREGION}
 
 { TdjEngineStream }
@@ -171,7 +173,7 @@ var
   LValueQualifiedTypeName: String;
   LValueRTTIType: TRttiType;
   LValue: TValue;
-  I: Integer;
+  I: NativeInt;
   IsDynArray: Boolean;
   PArray: Pointer;
 begin
@@ -631,71 +633,29 @@ class procedure TdjEngineStream.DeserializeObject(const AJSONReader: TJSONReader
   AObject: TObject; const AParams: IdjParams);
 var
   LPropFieldKey: String;
-  LPropsFields: TArray<System.Rtti.TRttiNamedObject>;
   LPropField: System.Rtti.TRttiNamedObject;
-  LRTTIType: TRTTIInstanceType;
   LValue: TValue;
-  procedure GetPropFieldByKey;
-  var
-    LNameAttribute: djNameAttribute;
-    LPropFieldInternal: System.Rtti.TRttiNamedObject;
-  begin
-    // Get the PropField by Key
-    case AParams.SerializationType of
-      stProperties: LPropField := LRTTIType.GetProperty(LPropFieldKey);
-      stFields: LPropField := LRTTIType.GetField(LPropFieldKey);
-    end;
-    // If found then exit else continue find considering even the djNameAttribute
-    if Assigned(LPropField) then Exit;
-    // Get members list if not already assigned
-    if not Assigned(LPropsFields) then
-    begin
-      case AParams.SerializationType of
-        stProperties:
-          LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-        stFields:
-          LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-      end;
-    end;
-    // Loop and find
-    for LPropFieldInternal in LPropsFields do
-      if TdjRTTI.HasAttribute<djNameAttribute>(LPropFieldInternal, LNameAttribute) and (LNameAttribute.Name = LPropFieldKey) then
-      begin
-        LPropField := LPropFieldInternal;
-        Exit;
-      end;
-    // If not found then set the result to nil
-    LPropField := nil;
-  end;
 begin
-  // Init
-  LRTTIType := TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance;
   // Loop for all JSONTokens (all properties of the object)
   repeat
     // If the current JSONToken is an EndObject token then exit from the loop
-    if (AJSONReader.TokenType = TJSONToken.EndObject) then
+    if (AJSONReader.TokenType = TJsonToken.EndObject) then
       Break;
     // The current token must be a property name
-    if (AJSONReader.TokenType <> TJSONToken.PropertyName) then
+    if (AJSONReader.TokenType <> TJsonToken.PropertyName) then
       raise EdjEngineError.Create('DeserializeObject: PropertyName token type expected.');
     // Get the current prop/field name
-    case AParams.SerializationType of
-      TdjSerializationType.stProperties: LPropFieldKey := AJSONReader.Value.AsString;
-      TdjSerializationType.stFields: LPropFieldKey := 'F' + AJSONReader.Value.AsString;
-    end;
-      AJSONReader.Read;
+    if stProperties in AParams.SerializationTypes then
+      LPropFieldKey := AJSONReader.Value.AsString
+    else
+      LPropFieldKey := 'F' + AJSONReader.Value.AsString;
+    AJSONReader.Read;
     // Get the PropField by Key
-{ TODO : Ottimizzazione: ho provato sulla richiesta nome chiave ma il risultato era nullo }
-    GetPropFieldByKey;
+    { TODO : Ottimizzazione: ho provato sulla richiesta nome chiave ma il risultato era nullo }
+    LPropField := TdjEngineUtils.GetPropFieldByKey(LPropFieldKey, AParams, AObject);
     // Check to continue or not
-{ TODO : Possibile punto per ottimizzazione }
-    if (not Assigned(LPropField))
-    or (LPropField.Name = 'FRefCount')
-    or (LPropField.Name = 'RefCount')
-    or (not TdjDuckPropField.IsWritable(LPropField) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkClass))
-    or (TdjRTTI.HasAttribute<djSkipAttribute>(LPropField))
-    or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
-    then
+    { TODO : Possibile punto per ottimizzazione }
+    if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
       Continue;
     // Deserialize the currente member and assign it to the object member
     LValue := DeserializePropField(AJSONReader, TdjDuckPropField.RttiType(LPropField), LPropField, AObject, AParams);
@@ -780,6 +740,8 @@ begin
         );
     tkArray, tkDynArray:
       Result := DeserializeArray(AJSONReader, LValueType, APropField, AMaster, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 
@@ -939,12 +901,11 @@ class procedure TdjEngineStream.SerializeArray(const AJSONWriter: TJSONWriter;
   const AParams: IdjParams);
 var
   LValueQualifiedTypeName: String;
-  LIndex: Integer;
+  LIndex: NativeInt;
   LValue: TValue;
 begin
   // Init
   LValueQualifiedTypeName := '';
-
   // If TypeAnnotations enabled...
   if AParams.TypeAnnotations then
   begin
@@ -1288,22 +1249,13 @@ begin
     AJSONWriter.WriteValue(AObject.QualifiedClassName);
   end;
   // Get members list
-  case AParams.SerializationType of
-    stProperties:
-      LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-    stFields:
-      LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-  end;
+  LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
   // Loop for all members
   for LPropField in LPropsFields do
   begin
     // Skip the RefCount
     // Check for "DoNotSerializeAttribute" or property to ignore
-    if (LPropField.Name = 'FRefCount')
-    or (LPropField.Name = 'RefCount')
-    or TdjRTTI.HasAttribute<djSkipAttribute>(LPropField)
-    or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
-    then
+    if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
       Continue;
     // Get KeyName
     LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
@@ -1326,8 +1278,10 @@ begin
     Exit;
   // Standard serialization by TypeKind
   case AValue.Kind of
-    tkInteger, tkInt64:
+    tkInteger:
       AJSONWriter.WriteValue(AValue.AsInteger);
+    tkInt64:
+      AJSONWriter.WriteValue(AValue.AsInt64);
     tkFloat:
       SerializeFloat(AJSONWriter, AValue, AParams);
     tkString, tkLString, tkWString, tkUString:
@@ -1344,6 +1298,8 @@ begin
       SerializeInterface(AJSONWriter, AValue, APropField, AParams);
     tkArray, tkDynArray:
       SerializeArray(AJSONWriter, AValue, APropField, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 
@@ -1477,5 +1433,7 @@ begin
     Result := True;
   end;
 end;
+{$ENDIF}
 
 end.
+

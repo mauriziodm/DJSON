@@ -118,7 +118,7 @@ uses
   DJSON.Attributes,
   DJSON.Factory,
   DJSON.Utils,
-  DJSON.TypeInfoCache
+  DJSON.TypeInfoCache, DJSON.Engine.Utils
 {$ENDREGION}
   ;
 
@@ -145,7 +145,7 @@ var
   LJSONValue, LValueJSONValue: TJSONValue;
   LJSONArray: TJSONArray;
   LValueRTTIType: TRttiType;
-  I: Integer;
+  I: NativeInt;
   LValue: TValue;
   PArray: Pointer;
   LArrayLen: Longint;
@@ -520,7 +520,7 @@ begin
   if not Assigned(AJSONValue) then  // JSONKey not present
     Result := 0
   else
-    Result := StrToIntDef(AJSONValue.Value, 0);
+    Result := StrToInt64Def(AJSONValue.Value, 0);
 end;
 
 class function TdjEngineDOM.DeserializeInterface(const AJSONValue: TJSONValue; const AValueType: TRttiType;
@@ -715,6 +715,8 @@ begin
         );
     tkArray, tkDynArray:
       Result := DeserializeArray(AJSONValue, APropField, AMaster, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 
@@ -912,22 +914,12 @@ begin
   end;
   try
     // Get members list
-    case AParams.SerializationType of
-      stProperties:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-      stFields:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-    end;
+    LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
     // Loop for all members
     for LPropField in LPropsFields do
     begin
       // Check to continue or not
-      if (not TdjDuckPropField.IsWritable(LPropField) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkClass))
-      or (TdjRTTI.HasAttribute<djSkipAttribute>(LPropField))
-      or (LPropField.Name = 'FRefCount')
-      or (LPropField.Name = 'RefCount')
-      or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
-      then
+      if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
         Continue;
       // Get the JSONPair KeyName
       LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
@@ -1027,7 +1019,7 @@ class function TdjEngineDOM.SerializeArray(const AValue: TValue;
   const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue;
 var
   LValueQualifiedTypeName: String;
-  LIndex: Integer;
+  LIndex: NativeInt;
   LValue: TValue;
   LJSONValue: TJSONValue;
   LJSONArray: TJSONArray;
@@ -1268,7 +1260,14 @@ end;
 
 class function TdjEngineDOM.SerializeInteger(const AValue: TValue): TJSONValue;
 begin
-  Result := TJSONNumber.Create(AValue.AsInteger)
+  case AValue.Kind of
+    tkInteger:
+      Result := TJSONNumber.Create(AValue.AsInteger);
+    tkInt64:
+      Result := TJSONNumber.Create(AValue.AsInt64);
+  else
+    raise EdjException.Create('Unknown Int type');
+  end;
 end;
 
 class function TdjEngineDOM.SerializeObject(const AObject: TObject; const AParams: IdjParams): TJSONBox;
@@ -1285,23 +1284,15 @@ begin
     if AParams.TypeAnnotations then
       Result.AddPair(DJ_TYPENAME, AObject.QualifiedClassName);
     // Get members list
-    case AParams.SerializationType of
-      stProperties:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-      stFields:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-    end;
+    LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
     // Loop for all members
     for LPropField in LPropsFields do
     begin
       // Skip the RefCount
-      if (LPropField.Name = 'FRefCount') or (LPropField.Name = 'RefCount') then Continue;
-      // f := LowerCase(_property.Name);
-      LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
       // Check for "DoNotSerializeAttribute" or property to ignore
-      if TdjRTTI.HasAttribute<djSkipAttribute>(LPropField)
-      or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams) then
+      if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
         Continue;
+      LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
       // Serialize the currente member and add it to the JSONBox
       LValue := TdjDuckPropField.GetValue(AObject, LPropField);
       LJSONValue := SerializePropField(LValue, LPropField, AParams);
@@ -1344,6 +1335,8 @@ begin
       Result := SerializeInterface(AValue, APropField, AParams);
     tkArray, tkDynArray:
       Result := SerializeArray(AValue, APropField, AParams);
+  else
+    raise EdjException.Create('Unknown type');
   end;
 end;
 
