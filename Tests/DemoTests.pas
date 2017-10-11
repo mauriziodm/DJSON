@@ -62,7 +62,7 @@ type
   TEmployee = class
   public
     Name: string;
-    constructor Create(AName: string);
+    constructor Create(const AName: string);
   end;
 
   TManager = class(TEmployee)
@@ -420,7 +420,7 @@ end;
 
 { TEmployee }
 
-constructor TEmployee.Create(AName: string);
+constructor TEmployee.Create(const AName: string);
 begin
   Name := AName;
 end;

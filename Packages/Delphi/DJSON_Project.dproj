@@ -99,6 +99,7 @@
         <DCCReference Include="..\..\Sources\DJSON.TypeInfoCache.pas"/>
         <DCCReference Include="..\..\Sources\DJSON.Engine.Stream.BSON.pas"/>
         <DCCReference Include="..\..\Sources\DJSON.ISO8601Processor.pas"/>
+        <DCCReference Include="..\..\Sources\DJSON.Engine.Utils.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

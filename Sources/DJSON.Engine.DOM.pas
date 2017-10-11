@@ -118,7 +118,7 @@ uses
   DJSON.Attributes,
   DJSON.Factory,
   DJSON.Utils,
-  DJSON.TypeInfoCache
+  DJSON.TypeInfoCache, DJSON.Engine.Utils
 {$ENDREGION}
   ;
 
@@ -912,22 +912,12 @@ begin
   end;
   try
     // Get members list
-    case AParams.SerializationType of
-      stProperties:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-      stFields:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-    end;
+    LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
     // Loop for all members
     for LPropField in LPropsFields do
     begin
       // Check to continue or not
-      if (not TdjDuckPropField.IsWritable(LPropField) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkClass))
-      or (TdjRTTI.HasAttribute<djSkipAttribute>(LPropField))
-      or (LPropField.Name = 'FRefCount')
-      or (LPropField.Name = 'RefCount')
-      or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
-      then
+      if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
         Continue;
       // Get the JSONPair KeyName
       LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
@@ -1285,23 +1275,15 @@ begin
     if AParams.TypeAnnotations then
       Result.AddPair(DJ_TYPENAME, AObject.QualifiedClassName);
     // Get members list
-    case AParams.SerializationType of
-      stProperties:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-      stFields:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-    end;
+    LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
     // Loop for all members
     for LPropField in LPropsFields do
     begin
       // Skip the RefCount
-      if (LPropField.Name = 'FRefCount') or (LPropField.Name = 'RefCount') then Continue;
-      // f := LowerCase(_property.Name);
-      LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
       // Check for "DoNotSerializeAttribute" or property to ignore
-      if TdjRTTI.HasAttribute<djSkipAttribute>(LPropField)
-      or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams) then
+      if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
         Continue;
+      LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
       // Serialize the currente member and add it to the JSONBox
       LValue := TdjDuckPropField.GetValue(AObject, LPropField);
       LJSONValue := SerializePropField(LValue, LPropField, AParams);

@@ -36,19 +36,20 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Duck.Dictionary;
 
 interface
 
 uses
-  System.Rtti, DJSON.Duck.Interfaces, System.TypInfo;
+{$REGION 'System'}
+  System.Rtti,
+  System.TypInfo,
+{$ENDREGION}
+{$REGION 'DJSON'}
+  DJSON.Duck.Interfaces;
+{$ENDREGION}
 
 type
-
   TdjDuckDictionaryEnumerator = class
   strict private
     FObjectAsDuck: TObject;
@@ -93,7 +94,10 @@ type
 implementation
 
 uses
-  DJSON.Utils.RTTI, DJSON.Exceptions;
+{$REGION 'DJSON'}
+  DJSON.Utils.RTTI,
+  DJSON.Exceptions;
+{$ENDREGION}
 
 { TdjDuckDictionary }
 

@@ -36,19 +36,16 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON.Duck.Obj;
 
 interface
 
 uses
-  DJSON.Duck.Interfaces, System.Rtti, System.Classes;
+  DJSON.Duck.Interfaces,
+  System.Rtti,
+  System.Classes;
 
 type
-
   TdjDuckStreamable = class(TInterfacedObject, IdjDuckStreamable)
   strict protected
     FObjAsDuck: TObject;

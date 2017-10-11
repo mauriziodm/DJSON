@@ -109,8 +109,7 @@ begin
     raise Exception.Create('Cannot find RTTI for ' + AQualifiedClassName);
 end;
 
-class function TdjRTTI.GetItemsQualifiedTypeNameFromArrayTypeInfo(
-  const ATypeInfo: PTypeInfo): String;
+class function TdjRTTI.GetItemsQualifiedTypeNameFromArrayTypeInfo(const ATypeInfo: PTypeInfo): string;
 var
   LType: TRttiType;
 begin
@@ -168,22 +167,19 @@ begin
   Result := TypeInfoToTypeName(ATypeInfo, True);
 end;
 
-class function TdjRTTI.TypeInfoToRttiType(
-  const ATypeInfo: PTypeInfo): TRttiType;
+class function TdjRTTI.TypeInfoToRttiType(const ATypeInfo: PTypeInfo): TRttiType;
 begin
   Result := Ctx.GetType(ATypeInfo);
 end;
 
-class function TdjRTTI.HasAttribute<T>(
-  const ARTTIMember: TRttiNamedObject): boolean;
+class function TdjRTTI.HasAttribute<T>(const ARTTIMember: TRttiNamedObject): boolean;
 var
   AAttribute: TCustomAttribute;
 begin
   Result := HasAttribute<T>(ARTTIMember, AAttribute);
 end;
 
-class function TdjRTTI.HasAttribute<T>(const ARTTIMember: TRttiNamedObject;
-  out AAttribute: T): boolean;
+class function TdjRTTI.HasAttribute<T>(const ARTTIMember: TRttiNamedObject; out AAttribute: T): boolean;
 var
   attrs: TArray<TCustomAttribute>;
   attr: TCustomAttribute;
@@ -201,14 +197,12 @@ begin
     end;
 end;
 
-class function TdjRTTI.QualifiedTypeNameToRttiType(
-  const AQualifiedTypeName: String): TRttiType;
+class function TdjRTTI.QualifiedTypeNameToRttiType(const AQualifiedTypeName: String): TRttiType;
 begin
   Result := Ctx.FindType(AQualifiedTypeName);
 end;
 
 initialization
-
   TdjRTTI.Initialize;
 
 end.

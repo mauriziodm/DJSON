@@ -114,7 +114,7 @@ uses
   DJSON.Constants,
   DJSON.Factory,
   DJSON.Utils,
-  DJSON.TypeInfoCache;
+  DJSON.TypeInfoCache, DJSON.Engine.Utils;
 {$ENDREGION}
 
 class function TdjEngineJDO.Deserialize(const AJSONText: String;
@@ -1062,7 +1062,8 @@ begin
           CurrJSONObj[DJ_VALUE] := nil;
           LJSONValue := CurrJSONObj.Items[CurrJSONObj.IndexOf(DJ_VALUE)];
         end;
-      else raise Exception.Create('TdjEngineJDO.SerializeDictionary: Unknown AParams.SerializationMode');
+      else
+        raise Exception.Create('TdjEngineJDO.SerializeDictionary: Unknown AParams.SerializationMode');
       end;
       // Serialize the value
       SerializePropField(LJSONValue, LValue, APropField, AParams);
@@ -1242,21 +1243,13 @@ begin
     if AParams.TypeAnnotations then
       Result.S[DJ_TYPENAME] := AObject.QualifiedClassName;
     // Get members list
-    case AParams.SerializationType of
-      stProperties:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-      stFields:
-        LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-    end;
+    LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
     // Loop for all members
     for LPropField in LPropsFields do
     begin
       // Skip the RefCount
-      if (LPropField.Name = 'FRefCount')
-      or (LPropField.Name = 'RefCount')
-      or TdjRTTI.HasAttribute<djSkipAttribute>(LPropField)
-      or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
-      then
+      // Check for "DoNotSerializeAttribute" or property to ignore
+      if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
         Continue;
       // Get the KeyName
       LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
@@ -1275,37 +1268,26 @@ begin
   end;
 end;
 
-class function TdjEngineJDO.DeserializeObject(const AJSONBox: TJSONBox; AObject: TObject;
-  const AParams: IdjParams): TObject;
+class function TdjEngineJDO.DeserializeObject(const AJSONBox: TJSONBox; AObject: TObject; const AParams: IdjParams): TObject;
 var
   LJSONValue: PJsonDataValue;
   LPropField: System.Rtti.TRttiNamedObject;
   LPropsFields: TArray<System.Rtti.TRttiNamedObject>;
-  LKeyName: String;
+  LKeyName: string;
   LValue: TValue;
 begin
   // Get members list
-  case AParams.SerializationType of
-    stProperties:
-      LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-    stFields:
-      LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-  end;
+  LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
   // Loop for all members
   for LPropField in LPropsFields do
   begin
     // Check to continue or not
-    if (not TdjDuckPropField.IsWritable(LPropField) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkClass))
-    or (LPropField.Name = 'FRefCount')
-    or (LPropField.Name = 'RefCount')
-    or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
-    or (TdjRTTI.HasAttribute<djSkipAttribute>(LPropField))
-    then
+    if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
       Continue;
     // Get the JSONPair KeyName
     LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
     // Check if JSONPair exists
-    if AJSONBox.Contains(LKeyName) then
+    if AJSONBox.contains(LKeyName) then
       LJSONValue := AJSONBox.Items[AJSONBox.IndexOf(LKeyName)]
     else
       LJSONValue := nil;
@@ -1316,7 +1298,6 @@ begin
   end;
   Result := AObject;
 end;
-
 
 class procedure TdjEngineJDO.SerializeRecord(const AResult:PJsonDataValue; const AValue: TValue;
   const APropField: TRttiNamedObject; const AParams: IdjParams);

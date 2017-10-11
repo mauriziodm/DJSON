@@ -36,17 +36,22 @@
 {                                                                           }
 {***************************************************************************}
 
-
-
-
-
 unit DJSON;
 
 interface
 
 uses
-  DJSON.Params, System.Rtti, System.JSON, System.TypInfo, DJSON.Serializers,
-  System.SysUtils, System.Classes;
+{$REGION 'System'}
+  System.Classes,
+  System.JSON,
+  System.Rtti,
+  System.SysUtils,
+  System.TypInfo,
+{$ENDREGION}
+{$REGION 'DJSON'}
+  DJSON.Params,
+  DJSON.Serializers;
+{$ENDREGION}
 
 type
 
@@ -206,8 +211,16 @@ type
 implementation
 
 uses
-  DJSON.Factory, DJSON.Utils.RTTI, DJSON.Engine.DOM, DJSON.Constants, DJSON.Exceptions,
-  DJSON.Engine.Stream, DJSON.Engine.JDO, DJSON.Engine.Stream.BSON;
+{$REGION 'DJSON'}
+  DJSON.Constants,
+  DJSON.Engine.Stream.BSON ,
+  DJSON.Engine.DOM,
+  DJSON.Engine.JDO,
+  DJSON.Engine.Stream,
+  DJSON.Exceptions,
+  DJSON.Factory,
+  DJSON.Utils.RTTI;
+{$ENDREGION}
 
 { dj }
 

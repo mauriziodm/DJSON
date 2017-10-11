@@ -122,7 +122,7 @@ uses
   DJSON.Utils,
   DJSON.Factory,
   DJSON.TypeInfoCache,
-  DJSON.Serializers;
+  DJSON.Serializers, DJSON.Engine.Utils;
 {$ENDREGION}
 
 { TdjEngineStream }
@@ -650,12 +650,7 @@ var
     // Get members list if not already assigned
     if not Assigned(LPropsFields) then
     begin
-      case AParams.SerializationType of
-        stProperties:
-          LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-        stFields:
-          LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-      end;
+      LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
     end;
     // Loop and find
     for LPropFieldInternal in LPropsFields do
@@ -673,29 +668,25 @@ begin
   // Loop for all JSONTokens (all properties of the object)
   repeat
     // If the current JSONToken is an EndObject token then exit from the loop
-    if (AJSONReader.TokenType = TJSONToken.EndObject) then
+    if (AJSONReader.TokenType = TJsonToken.EndObject) then
       Break;
     // The current token must be a property name
-    if (AJSONReader.TokenType <> TJSONToken.PropertyName) then
+    if (AJSONReader.TokenType <> TJsonToken.PropertyName) then
       raise EdjEngineError.Create('DeserializeObject: PropertyName token type expected.');
     // Get the current prop/field name
     case AParams.SerializationType of
-      TdjSerializationType.stProperties: LPropFieldKey := AJSONReader.Value.AsString;
-      TdjSerializationType.stFields: LPropFieldKey := 'F' + AJSONReader.Value.AsString;
+      TdjSerializationType.stProperties:
+        LPropFieldKey := AJSONReader.Value.AsString;
+      TdjSerializationType.stFields:
+        LPropFieldKey := 'F' + AJSONReader.Value.AsString;
     end;
-      AJSONReader.Read;
+    AJSONReader.Read;
     // Get the PropField by Key
-{ TODO : Ottimizzazione: ho provato sulla richiesta nome chiave ma il risultato era nullo }
+    { TODO : Ottimizzazione: ho provato sulla richiesta nome chiave ma il risultato era nullo }
     GetPropFieldByKey;
     // Check to continue or not
-{ TODO : Possibile punto per ottimizzazione }
-    if (not Assigned(LPropField))
-    or (LPropField.Name = 'FRefCount')
-    or (LPropField.Name = 'RefCount')
-    or (not TdjDuckPropField.IsWritable(LPropField) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkClass))
-    or (TdjRTTI.HasAttribute<djSkipAttribute>(LPropField))
-    or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
-    then
+    { TODO : Possibile punto per ottimizzazione }
+    if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
       Continue;
     // Deserialize the currente member and assign it to the object member
     LValue := DeserializePropField(AJSONReader, TdjDuckPropField.RttiType(LPropField), LPropField, AObject, AParams);
@@ -1288,22 +1279,13 @@ begin
     AJSONWriter.WriteValue(AObject.QualifiedClassName);
   end;
   // Get members list
-  case AParams.SerializationType of
-    stProperties:
-      LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetProperties));
-    stFields:
-      LPropsFields := TArray<System.Rtti.TRttiNamedObject>(TObject(TdjRTTI.TypeInfoToRttiType(AObject.ClassInfo).AsInstance.GetFields));
-  end;
+  LPropsFields := TdjEngineUtils.GetMemberList(AObject, AParams);
   // Loop for all members
   for LPropField in LPropsFields do
   begin
     // Skip the RefCount
     // Check for "DoNotSerializeAttribute" or property to ignore
-    if (LPropField.Name = 'FRefCount')
-    or (LPropField.Name = 'RefCount')
-    or TdjRTTI.HasAttribute<djSkipAttribute>(LPropField)
-    or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
-    then
+    if TdjEngineUtils.IsSkipMember(LPropField, AParams) then
       Continue;
     // Get KeyName
     LKeyName := TdjUtils.GetKeyName(LPropField, AParams);
