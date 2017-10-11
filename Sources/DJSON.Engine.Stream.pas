@@ -173,7 +173,7 @@ var
   LValueQualifiedTypeName: String;
   LValueRTTIType: TRttiType;
   LValue: TValue;
-  I: Integer;
+  I: NativeInt;
   IsDynArray: Boolean;
   PArray: Pointer;
 begin

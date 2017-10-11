@@ -1019,7 +1019,7 @@ class function TdjEngineDOM.SerializeArray(const AValue: TValue;
   const APropField: TRttiNamedObject; const AParams: IdjParams): TJSONValue;
 var
   LValueQualifiedTypeName: String;
-  LIndex: Integer;
+  LIndex: NativeInt;
   LValue: TValue;
   LJSONValue: TJSONValue;
   LJSONArray: TJSONArray;

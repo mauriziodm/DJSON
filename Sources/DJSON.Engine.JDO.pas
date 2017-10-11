@@ -141,10 +141,10 @@ var
   LJSONObject: TJSONObject;
   LJSONValue, LValueJSONValue: PJsonDataValue;
   LJSONArray: TJSONArray;
-  LIndex: Integer;
+  LIndex: NativeInt;
   LValue: TValue;
   PArray: Pointer;
-  LArrayLen: Longint;
+  LArrayLen: NativeInt;
 begin
   // Checks
   if (not Assigned(AJSONValue))
