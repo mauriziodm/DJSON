@@ -247,9 +247,8 @@ begin
   if (AJSONReader.TokenType = TJsonToken.Null)
   or (AJSONReader.Value.AsString.IsEmpty)
   then
-    Result := #0
-  else
-    Result := AJSONReader.Value;
+    Exit(#0);
+  Result := AJSONReader.Value;
 end;
 
 class function TdjEngineStream.DeserializeClass(const AJSONReader: TJSONReader;
@@ -484,7 +483,12 @@ begin
 { TODO : Controllare se è possibile assegnare AJSONReader.Value direttamente. }
   // Boolean
   if AValueType.QualifiedName = 'System.Boolean' then
+  begin
+    // If Null value
+    if AJSONReader.TokenType = TJsonToken.Null then
+      Exit(False);
     Result := AJSONReader.Value.AsBoolean
+  end
   // Other enumerated type
   else
     TValue.Make(AJSONReader.Value.AsInteger, AValueType.Handle, Result);
@@ -497,8 +501,10 @@ var
 begin
   // Get the type name
   LQualifiedTypeName := AValueType.QualifiedName;
-  // If Null value
-  if AJSONReader.TokenType = TJsonToken.Null then
+  // If Null or empty value
+  if (AJSONReader.TokenType = TJsonToken.Null) // NB: Da errore con JSONNull
+  or (AJSONReader.Value.AsString.IsEmpty)  // NB: Da errore con JSONNull
+  then
     Result := 0
   else
   // TDate (string expected)
@@ -793,16 +799,16 @@ begin
   // TTimeStamp
   if LQualifiedTypeName = 'System.SysUtils.TTimeStamp' then
   begin
-    if AJSONReader.TokenType = TJsonToken.Null then
-      Result := TValue.From<TTimeStamp>(MSecsToTimeStamp(0))
-    else
-      Result := TValue.From<TTimeStamp>(MSecsToTimeStamp(AJSONReader.Value.AsInt64));
+    // If Null or empty value
+    if (AJSONReader.TokenType = TJsonToken.Null)
+    or (AJSONReader.Value.AsString.IsEmpty)
+    then
+      Exit(  TValue.From<TTimeStamp>(MSecsToTimeStamp(0))  );
+    Result := TValue.From<TTimeStamp>(MSecsToTimeStamp(AJSONReader.Value.AsInt64));
   end
   // TValue
   else if LQualifiedTypeName = 'System.Rtti.TValue' then
-  begin
-    Result := DeserializeTValue(AJSONReader, APropField, AParams);
-  end
+    Result := DeserializeTValue(AJSONReader, APropField, AParams)
   else
     raise Exception.Create('TdjEngineStream.DeserializeRecord: Unknown LQualifiedTypeName.');
 end;

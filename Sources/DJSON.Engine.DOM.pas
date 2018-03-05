@@ -220,14 +220,13 @@ end;
 class function TdjEngineDOM.DeserializeChar(
   const AJSONValue: TJSONValue): TValue;
 begin
-  // If Null or empty value
-  if (not Assigned(AJSONValue))
-  or (AJSONValue is TJSONNull)
+  // If JSONNull or JSON non assigned then return 0
+  if (not Assigned(AJSONValue))   // JSONKey not present
+  or (AJSONValue is TJSONNull)    // JSONNull
   or (AJSONValue.Value.IsEmpty)
   then
-    Result := #0
-  else
-    Result := AJSONValue.Value;
+    Exit(#0);
+  Result := AJSONValue.Value;
 end;
 
 class function TdjEngineDOM.DeserializeClass(const AJSONValue: TJSONValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
@@ -477,50 +476,41 @@ class function TdjEngineDOM.DeserializeFloat(const AJSONValue: TJSONValue; const
 var
   LQualifiedTypeName: String;
 begin
-  if not Assigned(AJSONValue) then   // JSONKey not present
-    Result := 0
+  // If JSONNull or JSON non assigned then return 0
+  if (not Assigned(AJSONValue))   // JSONKey not present
+  or (AJSONValue is TJSONNull)    // JSONNull
+  then
+    Exit(0);
+  // Else...
+  LQualifiedTypeName := AValueType.QualifiedName;
+  if LQualifiedTypeName = 'System.TDate' then
+    Result := TValue.From<TDate>(TdjUtils.ISOStrToDateTime(AJSONValue.Value, AParams))
   else
+  if LQualifiedTypeName = 'System.TDateTime' then
+    Result := TValue.From<TDateTime>(TdjUtils.ISOStrToDateTime(AJSONValue.Value, AParams))
+  else
+  if LQualifiedTypeName = 'System.TTime' then
   begin
-    LQualifiedTypeName := AValueType.QualifiedName;
-    if LQualifiedTypeName = 'System.TDate' then
-    begin
-      if AJSONValue is TJSONNull then
-        Result := 0
-      else
-        Result := TValue.From<TDate>(TdjUtils.ISOStrToDateTime(AJSONValue.Value, AParams));
-    end
-    else if LQualifiedTypeName = 'System.TDateTime' then
-    begin
-      if AJSONValue is TJSONNull then
-        Result := 0
-      else
-        Result := TValue.From<TDateTime>(TdjUtils.ISOStrToDateTime(AJSONValue.Value, AParams));
-    end
-    else if LQualifiedTypeName = 'System.TTime' then
-    begin
-      if AJSONValue is TJSONString then
-        Result := TValue.From<TTime>(TdjUtils.ISOStrToTime(AJSONValue.Value, AParams))
-      else
-        raise EdjEngineError.CreateFmt('Cannot deserialize TTime value, expected [%s] got [%s]',
-          ['TJSONString', AJSONValue.ClassName]);
-    end
-    else { if APropFieldRttiType.QualifiedName = 'System.Currency' then }
-    begin
-      if AJSONValue is TJSONNumber then
-        Result := TJSONNumber(AJSONValue).AsDouble
-      else
-        raise EdjEngineError.CreateFmt('Cannot deserialize float value, expected [%s] got [%s]',
-          ['TJSONNumber', AJSONValue.ClassName]);
-    end;
+    if not (AJSONValue is TJSONString) then
+      raise EdjEngineError.CreateFmt('Cannot deserialize TTime value, expected [%s] got [%s]', ['TJSONString', AJSONValue.ClassName]);
+    Result := TValue.From<TTime>(TdjUtils.ISOStrToTime(AJSONValue.Value, AParams))
+  end
+  else { if APropFieldRttiType.QualifiedName = 'System.Currency' then }
+  begin
+    if not (AJSONValue is TJSONNumber) then
+      raise EdjEngineError.CreateFmt('Cannot deserialize float value, expected [%s] got [%s]', ['TJSONNumber', AJSONValue.ClassName]);
+    Result := TJSONNumber(AJSONValue).AsDouble
   end;
 end;
 
 class function TdjEngineDOM.DeserializeInteger(const AJSONValue: TJSONValue): TValue;
 begin
-  if not Assigned(AJSONValue) then  // JSONKey not present
-    Result := 0
-  else
-    Result := StrToIntDef(AJSONValue.Value, 0);
+  // If JSONNull or JSON non assigned then return 0
+  if (not Assigned(AJSONValue))   // JSONKey not present
+  or (AJSONValue is TJSONNull)    // JSONNull
+  then
+    Exit(0);
+  Result := StrToIntDef(AJSONValue.Value, 0);
 end;
 
 class function TdjEngineDOM.DeserializeInterface(const AJSONValue: TJSONValue; const AValueType: TRttiType;
@@ -728,10 +718,11 @@ begin
   // TTimeStamp
   if LQualifiedTypeName = 'System.SysUtils.TTimeStamp' then
   begin
-    if not Assigned(AJSONValue) then  // JSONKey not present
-      Result := TValue.From<TTimeStamp>(MSecsToTimeStamp(0))
-    else
-      Result := TValue.From<TTimeStamp>(MSecsToTimeStamp(   (AJSONValue as TJSONNumber).AsInt64   ));
+    if (not Assigned(AJSONValue))
+    or (AJSONValue is TJSONNull)
+    then  // JSONKey not present
+      Exit(  TValue.From<TTimeStamp>(MSecsToTimeStamp(0))  );
+    Result := TValue.From<TTimeStamp>(MSecsToTimeStamp(   (AJSONValue as TJSONNumber).AsInt64   ));
   end
   // TValue
   else if LQualifiedTypeName = 'System.Rtti.TValue' then
@@ -823,12 +814,12 @@ end;
 
 class function TdjEngineDOM.DeserializeString(const AJSONValue: TJSONValue): TValue;
 begin
-  if (not Assigned(AJSONValue))
-  or (AJSONValue is TJSONNull)
+  // If JSONNull or JSON non assigned then return 0
+  if (not Assigned(AJSONValue))   // JSONKey not present
+  or (AJSONValue is TJSONNull)    // JSONNull
   then
-    Result := ''
-  else
-    Result := AJSONValue.Value;
+    Exit('');
+  Result := AJSONValue.Value;
 end;
 
 class function TdjEngineDOM.DeserializeTValue(const AJSONValue: TJSONValue; const APropField: TRttiNamedObject; const AParams:IdjParams): TValue;

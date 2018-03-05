@@ -219,14 +219,14 @@ end;
 class function TdjEngineJDO.DeserializeChar(
   const AJSONValue: PJsonDataValue): TValue;
 begin
-  // If Null or empty value
-  if (AJSONValue.Typ = TJsonDataType.jdtNone)
-  or (AJSONValue.Typ = TJsonDataType.jdtObject)
-  or (AJSONValue.Value.IsEmpty)
+  // If JSONValue not assigned or NULL
+  if (not Assigned(AJSONValue))
+  or (AJSONValue.Typ = TJsonDataType.jdtNone)
+  or (AJSONValue.Typ = TJsonDataType.jdtObject)  // The type is jdtObject when NULL
+  or (AJSONValue.Value.IsEmpty)  // Empty value
   then
-    Result := #0
-  else
-    Result := AJSONValue.Value;
+    Exit(#0);
+  Result := AJSONValue.Value;
 end;
 
 class function TdjEngineJDO.DeserializeClass(const AJSONValue: PJsonDataValue; const AValueType: TRttiType; const APropField: TRttiNamedObject;
@@ -453,12 +453,14 @@ class function TdjEngineJDO.DeserializeEnumeration(const AJSONValue: PJsonDataVa
 begin
   if AValueType.QualifiedName = 'System.Boolean' then
   begin
-    if AJSONValue = nil then
-      Result := False
-    else if AJSONValue.Typ = TJsonDataType.jdtBool then
-      Result := AJSONValue.BoolValue
-    else
-      raise EdjEngineError.Create('Invalid value for boolean value ');
+    // If JSONValue not assigned or NULL
+    if (not Assigned(AJSONValue))
+    or (AJSONValue.Typ = TJsonDataType.jdtNone)
+    or (AJSONValue.Typ = TJsonDataType.jdtObject)  // The type is jdtObject when NULL
+    or (AJSONValue.Typ <> TJsonDataType.jdtBool)  // The type is not a JSON boolean type
+    then
+      Exit(False);
+    Result := AJSONValue.BoolValue
   end
   else // it is an enumerated value but it's not a boolean.
     TValue.Make(AJSONValue.IntValue, AValueType.Handle, Result);
@@ -498,10 +500,13 @@ end;
 class function TdjEngineJDO.DeserializeInt(const AJSONValue: PJsonDataValue;
   const AValueType: TRttiType): TValue;
 begin
-  if not Assigned(AJSONValue) or (AJSONValue.Typ = TJsonDataType.jdtNone)  then
-    Result := 0
-  else
-    Result := AJSONValue.IntValue;
+  // If JSONValue not assigned or NULL
+  if (not Assigned(AJSONValue))
+  or (AJSONValue.Typ = TJsonDataType.jdtNone)
+  or (AJSONValue.Typ = TJsonDataType.jdtObject)  // The type is jdtObject when NULL
+  then
+    Exit(0);
+  Result := AJSONValue.IntValue;
 end;
 
 class function TdjEngineJDO.DeserializeInterface(const AJSONValue: PJsonDataValue; const AValueType: TRttiType;
@@ -699,7 +704,15 @@ begin
   LQualifiedTypeName := AValueType.QualifiedName;
   // TDate (integer expected)
   if (LQualifiedTypeName = 'System.SysUtils.TTimeStamp') then
-    Result := TValue.From<TTimeStamp>(MSecsToTimeStamp(AJSONValue.IntValue))
+  begin
+    // If JSONValue not assigned or NULL
+    if (not Assigned(AJSONValue))
+    or (AJSONValue.Typ = TJsonDataType.jdtNone)
+    or (AJSONValue.Typ = TJsonDataType.jdtObject)  // The type is jdtObject when NULL
+    then
+      Exit(  TValue.From<TTimeStamp>(MSecsToTimeStamp(0))  );
+    Result := TValue.From<TTimeStamp>(MSecsToTimeStamp(AJSONValue.IntValue));
+  end
   // TValue
   else if LQualifiedTypeName = 'System.Rtti.TValue' then
     Result := DeserializeTValue(AJSONValue, APropField, AParams)
@@ -787,13 +800,12 @@ end;
 class function TdjEngineJDO.DeserializeString(
   const AJSONValue: PJsonDataValue): TValue;
 begin
-  if (AJSONValue = nil)
+  if (not Assigned(AJSONValue))
   or (AJSONValue.Typ = TJsonDataType.jdtObject)
   or (AJSONValue.Typ = TJsonDataType.jdtNone)
   then
-    Result := ''
-  else
-    Result := AJSONValue.Value;
+    Exit('');
+  Result := AJSONValue.Value;
 end;
 
 class function TdjEngineJDO.DeserializeTValue(const AJSONValue: PJsonDataValue; const APropField: TRttiNamedObject; const AParams:IdjParams): TValue;
