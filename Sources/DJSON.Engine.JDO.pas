@@ -604,6 +604,9 @@ begin
   if (not Assigned(LValueRTTIType)) and (LJSONArray.Count > 0) then
     raise EdjEngineError.Create('Value type not found deserializing a List');
   // ------------
+  // Clear the collection
+  if AParams.ClearCollection then
+    ADuckList.Clear;
   // Loop
   for I := 0 to LJSONArray.Count - 1 do
   begin

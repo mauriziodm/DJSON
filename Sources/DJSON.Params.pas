@@ -200,6 +200,10 @@ type
     procedure SetTimezoneIgnore(const AValue:boolean);
     function GetTimezoneIgnore: boolean;
     property TimezoneIgnore:boolean read GetTimezoneIgnore write SetTimezoneIgnore;
+    // ClearCollection
+    procedure SetClearCollection(const AValue:boolean);
+    function GetClearCollection: boolean;
+    property ClearCollection:boolean read GetClearCollection write SetClearCollection;
   end;
 
   TdjParams = class(TInterfacedObject, IdjParams)
@@ -224,6 +228,7 @@ type
     FEmptyCharAsNull: Boolean;
     FDateTimeFormat: TdjDateTimeFormat;
     FISO8601Processor: TdjISO8601Processor;
+    FClearCollection: Boolean;
     // Engine (No property)
     function GetEngineClass: TdjEngineRef;
     // EngineType
@@ -319,6 +324,9 @@ type
     // TimezoneIgnore
     procedure SetTimezoneIgnore(const AValue:boolean);
     function GetTimezoneIgnore: boolean;
+    // ClearCollection
+    procedure SetClearCollection(const AValue:boolean);
+    function GetClearCollection: boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -400,6 +408,7 @@ begin
   FEmptyStringAsNull := False;
   FEmptyCharAsNull := False;
   SetDateTimeFormat(TdjDateTimeFormat.dfISO8601);  // Use the setter
+  FClearCollection := False;
 end;
 
 destructor TdjParams.Destroy;
@@ -472,6 +481,11 @@ end;
 function TdjParams.GetBsonRootLabel: String;
 begin
   Result := FBsonRootLabel;
+end;
+
+function TdjParams.GetClearCollection: boolean;
+begin
+  result := FClearCollection;
 end;
 
 function TdjParams.GetDateSeparator: string;
@@ -637,6 +651,11 @@ end;
 procedure TdjParams.SetBsonRootLabel(const AValue: String);
 begin
   FBsonRootLabel := AValue;
+end;
+
+procedure TdjParams.SetClearCollection(const AValue: boolean);
+begin
+  FClearCollection := AValue;
 end;
 
 procedure TdjParams.SetDateSeparator(const AValue: string);

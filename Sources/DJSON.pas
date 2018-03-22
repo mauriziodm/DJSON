@@ -152,6 +152,7 @@ type
     function DataContractMode: TdjJSONDestination;
     function byProperties: TdjJSONDestination;
     function byFields: TdjJSONDestination;
+    function ClearCollection: TdjJSONDestination;
     function TypeAnnotationsON: TdjJSONDestination;
     function TypeAnnotationsOFF: TdjJSONDestination;
     function CustomSerializersON: TdjJSONDestination;
@@ -382,6 +383,12 @@ end;
 function TdjJSONDestination.byProperties: TdjJSONDestination;
 begin
   FParams.SerializationType := stProperties;
+  Result := Self;
+end;
+
+function TdjJSONDestination.ClearCollection: TdjJSONDestination;
+begin
+  FParams.ClearCollection := True;
   Result := Self;
 end;
 

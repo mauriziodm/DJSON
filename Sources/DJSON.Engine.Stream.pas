@@ -617,6 +617,9 @@ begin
   if (not Assigned(LValueRTTIType)) and (AJSONReader.TokenType <> TJsonToken.EndArray) then
     raise EdjEngineError.Create('Value type not found deserializing a List');
   // ------------
+  // Clear the collection
+  if AParams.ClearCollection then
+    ADuckList.Clear;
   // Loop
   repeat
     // If the current JSONToken is an EndArray token then exit from the loop
