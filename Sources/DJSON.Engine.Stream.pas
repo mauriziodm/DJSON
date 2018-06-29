@@ -503,7 +503,7 @@ begin
   LQualifiedTypeName := AValueType.QualifiedName;
   // If Null or empty value
   if (AJSONReader.TokenType = TJsonToken.Null) // NB: Da errore con JSONNull
-  or (AJSONReader.Value.AsString.IsEmpty)  // NB: Da errore con JSONNull
+  or (  (AJSONReader.Value.Kind = tkString) and (AJSONReader.Value.AsString.IsEmpty)  )  // NB: Da errore con JSONNull
   then
     Result := 0
   else
