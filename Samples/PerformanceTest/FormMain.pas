@@ -27,6 +27,8 @@ type
     LabelElapsedDeserializeOM: TLabel;
     ButonSerializeOM: TButton;
     LabelElapsedSerializeOM: TLabel;
+    ButtonDeserializaTurboJDO: TButton;
+    LabelElapsedDeserializeTurboJDO: TLabel;
     procedure CreateSampleObj;
     procedure FormDestroy(Sender: TObject);
     procedure ButonSerializeDOMClick(Sender: TObject);
@@ -38,6 +40,7 @@ type
     procedure ButonSerializeStreamClick(Sender: TObject);
     procedure ButtonDeserializeOMClick(Sender: TObject);
     procedure ButonSerializeOMClick(Sender: TObject);
+    procedure ButtonDeserializaTurboJDOClick(Sender: TObject);
   private
     { Private declarations }
     FList: TObjectList<TPerson>;
@@ -173,6 +176,24 @@ begin
 
     LStopWatch.Stop;
     LabelElapsedDeserializeStream.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms   (' + IntToStr(ResultList.Count) + ' items)';
+  finally
+    ResultList.Free;
+  end;
+end;
+
+procedure TMainForm.ButtonDeserializaTurboJDOClick(Sender: TObject);
+var
+  ResultList: TObjectList<TPerson>;
+  LStopWatch: TStopWatch;
+begin
+  try
+    ResultList := TObjectList<TPerson>.Create;
+    LStopWatch := TStopwatch.StartNew;
+
+    dj.FromJson(FJSONText).ItemsOfType<TPerson>.Engine(eTurboJDO).&To(ResultList);
+
+    LStopWatch.Stop;
+    LabelElapsedDeserializeTurboJDO.Text := LStopWatch.ElapsedMilliseconds.ToString + ' ms   (' + IntToStr(ResultList.Count) + ' items)';
   finally
     ResultList.Free;
   end;

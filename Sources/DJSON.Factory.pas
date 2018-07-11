@@ -62,7 +62,7 @@ implementation
 
 uses
   DJSON.Duck.Dictionary, DJSON.Duck.List, DJSON.Duck.Obj, DJSON.Engine.Stream,
-  DJSON.Engine.JDO, DJSON.Engine.DOM, DJSON.Exceptions;
+  DJSON.Engine.JDO, DJSON.Engine.DOM, DJSON.Exceptions, DJSON.Engine.JDO.Turbo;
 
 { TdjFactory }
 
@@ -72,6 +72,7 @@ begin
   case AEngineType of
     TdjEngine.eDelphiStream:  Result := TdjEngineStream;
     TdjEngine.eJDO:           Result := TdjEngineJDO;
+    TdjEngine.eTurboJDO:      Result := TdjEngineTurboJDO;
     TdjEngine.eDelphiDOM:     Result := TdjEngineDOM;
   else
     raise EdjException.Create('TdjFactory: Wrong engine type.');

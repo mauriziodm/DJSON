@@ -709,7 +709,7 @@ begin
     // Deserialize the currente member and assign it to the object member
     LValue := DeserializePropField(AJSONReader, TdjDuckPropField.RttiType(LPropField), LPropField, AObject, AParams);
     if not LValue.IsEmpty then
-      TdjDuckPropField.SetValue(AObject, LPropField, LValue);
+      TdjDuckPropField.SetValue(AObject, LPropField, LValue, AParams);
   until (not AJSONReader.Read);
 end;
 

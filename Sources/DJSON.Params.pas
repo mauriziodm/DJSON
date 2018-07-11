@@ -49,7 +49,7 @@ uses
 
 type
 
-  TdjEngine = (eDelphiDOM, eDelphiStream, eJDO);
+  TdjEngine = (eDelphiDOM, eDelphiStream, eJDO, eTurboJDO);
 
   TdjNameCase = (ncUndefinedCase, ncUpperCase, ncLowerCase);
 
@@ -60,6 +60,8 @@ type
   TdjIgnoredProperties = array of string;
 
   TdjSerializersContainer = class;
+
+  TdjPropInfoCache = class;
 
   TdjDateTimeFormat = (dfISO8601, dfDMVCFramework, dfUnix);
 
@@ -204,6 +206,8 @@ type
     procedure SetClearCollection(const AValue:boolean);
     function GetClearCollection: boolean;
     property ClearCollection:boolean read GetClearCollection write SetClearCollection;
+    // PropInfoCache
+    function PropInfoCache: TdjPropInfoCache;
   end;
 
   TdjParams = class(TInterfacedObject, IdjParams)
@@ -229,6 +233,7 @@ type
     FDateTimeFormat: TdjDateTimeFormat;
     FISO8601Processor: TdjISO8601Processor;
     FClearCollection: Boolean;
+    FPropInfoCache: TdjPropInfoCache;
     // Engine (No property)
     function GetEngineClass: TdjEngineRef;
     // EngineType
@@ -327,6 +332,8 @@ type
     // ClearCollection
     procedure SetClearCollection(const AValue:boolean);
     function GetClearCollection: boolean;
+    // PropInfoCache
+    function PropInfoCache: TdjPropInfoCache;
   public
     constructor Create;
     destructor Destroy; override;
@@ -384,6 +391,15 @@ type
     function Exists_Stream<T>: Boolean; overload;
   end;
 
+  TdjPropInfoCache = class
+  strict private
+    FPropInfoCollection: TDictionary<Pointer,PPropInfo>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function GetPropInfo(const AProperty:TRttiNamedObject): PPropInfo;
+  end;
+
 implementation
 
 uses
@@ -409,12 +425,14 @@ begin
   FEmptyCharAsNull := False;
   SetDateTimeFormat(TdjDateTimeFormat.dfISO8601);  // Use the setter
   FClearCollection := False;
+  FPropInfoCache := TdjPropInfoCache.Create;
 end;
 
 destructor TdjParams.Destroy;
 begin
   FTypeInfoCache.Free;
   FSerializers.Free;
+  FPropInfoCache.Free;
   inherited;
 end;
 
@@ -471,6 +489,11 @@ end;
 function TdjParams.GetTypeAnnotations: Boolean;
 begin
   Result := FTypeAnnotations;
+end;
+
+function TdjParams.PropInfoCache: TdjPropInfoCache;
+begin
+  Result := FPropInfoCache;
 end;
 
 function TdjParams.GetBsonRoot: Boolean;
@@ -951,5 +974,26 @@ end;
 //begin
 //  Self.Register(ATargetClass.ClassInfo, ASerializer);
 //end;
+
+{ TdjPropInfoCache }
+
+constructor TdjPropInfoCache.Create;
+begin
+  inherited;
+  FPropInfoCollection := TDictionary<Pointer,PPropInfo>.Create;
+end;
+
+destructor TdjPropInfoCache.Destroy;
+begin
+  FPropInfoCollection.Free;
+  inherited;
+end;
+
+function TdjPropInfoCache.GetPropInfo(const AProperty: TRttiNamedObject): PPropInfo;
+begin
+  if not FPropInfoCollection.ContainsKey(AProperty) then
+    FPropInfoCollection.Add(AProperty, TRttiInstanceProperty(AProperty).PropInfo);
+  Result := FPropInfoCollection.Items[AProperty];
+end;
 
 end.
