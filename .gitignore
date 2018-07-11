@@ -74,3 +74,4 @@ __recovery/
 dunitx-results.xml
 TestInsightSettings.ini
 *.ficfg
+*.skincfg
