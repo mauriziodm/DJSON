@@ -45,7 +45,7 @@ unit DJSON.Duck.PropField;
 interface
 
 uses
-  System.Rtti;
+  System.Rtti, DJSON.Params;
 
 type
 
@@ -56,7 +56,7 @@ type
     class function IsValidPropField(const ARttiType: TRttiNamedObject): Boolean; static;
     class function GetPropFieldType(const ARttiType: TRttiNamedObject): TdjDuckPropFieldType; static;
     class function GetValue(const Instance: TObject; const ARttiType: TRttiNamedObject): TValue; static;
-    class procedure SetValue(const Instance: TObject; const ARttiType: TRttiNamedObject; const AValue: TValue); static;
+    class procedure SetValue(const Instance: TObject; const ARttiType: TRttiNamedObject; const AValue: TValue; const AParams:IdjParams); static;
     class function RttiType(const ARttiType: TRttiNamedObject): TRttiType; static;
     class function IsWritable(const ARttiType: TRttiNamedObject): Boolean; static;
     class function QualifiedName(const ARttiType: TRttiNamedObject): String; static;
@@ -67,7 +67,7 @@ type
 implementation
 
 uses
-  DJSON.Exceptions;
+  DJSON.Exceptions, System.TypInfo;
 
 { TdjDuckPropField }
 
@@ -138,12 +138,19 @@ begin
   end;
 end;
 
-class procedure TdjDuckPropField.SetValue(const Instance: TObject; const ARttiType: TRttiNamedObject; const AValue: TValue);
+class procedure TdjDuckPropField.SetValue(const Instance: TObject; const ARttiType: TRttiNamedObject; const AValue: TValue; const AParams:IdjParams);
 // --------------- TEST FOR OPTIMIZATION (for properties only, no fields) --------------------
 //var
-//  LPropInfo:PPropInfo;
+//  LPropInfo: PPropInfo;
 // --------------- TEST FOR OPTIMIZATION (for properties only, no fields) --------------------
 begin
+
+  // NB: Il parametro AParams è stato aggiunto a questo metodo per fare delle prove di ottimizzazione in cui serviva
+  //      ma normalmente non servirebbe quindi alla fine delle prove se non dovesse essere più necessario meglio
+  //      eliminarlo
+
+
+
   case GetPropFieldType(ARttiType) of
     ptField:
       TRttiField(ARttiType).SetValue(Instance, AValue);
@@ -152,13 +159,19 @@ begin
   else
       raise EdsonDuckException.CreateFmt('Invalid prop/field type $s', [ARttiType.Name]);
   end;
+
+
+
+
 // --------------- TEST FOR OPTIMIZATION (for properties only, no fields) --------------------
 //  LPropInfo := TRttiInstanceProperty(ARttiType).PropInfo;
+//  LPropInfo := AParams.PropInfoCache.GetPropInfo(ARttiType);
 //  case LPropInfo.PropType^.Kind of
 //    tkString, tkLString, tkWString, tkUString:
 //      SetStrProp(Instance, LPropInfo, AValue.AsString);
 //    tkInteger, tkInt64:
 //      SetOrdProp(Instance, LPropInfo, AValue.AsOrdinal);
+//      SetOrdProp(Instance, LPropInfo, 999);
 //  end;
 // --------------- TEST FOR OPTIMIZATION (for properties only, no fields) --------------------
 end;
