@@ -776,7 +776,7 @@ end;
 
 function TdjValueDestination.LowerCase: TdjValueDestination;
 begin
-  Self.FParams.NameCase := TdjNameCase.ncUpperCase;
+  Self.FParams.NameCase := TdjNameCase.ncLowerCase;
   Result := Self;
 end;
 
@@ -909,7 +909,7 @@ end;
 
 function TdjValueDestination.UpperCase: TdjValueDestination;
 begin
-  Self.FParams.NameCase := TdjNameCase.ncLowerCase;
+  Self.FParams.NameCase := TdjNameCase.ncUpperCase;
   Result := Self;
 end;
 
