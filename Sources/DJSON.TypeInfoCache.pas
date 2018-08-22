@@ -119,7 +119,8 @@ begin
       Result.DuckType := TdjDuckType.dtStreamable
     else
       Result.DuckType := TdjDuckType.dtNone;
-    FInternatContainer.Add(AObj.ClassName, Result);
+    if FEnabled then
+      FInternatContainer.Add(AObj.ClassName, Result);
   end;
 end;
 
