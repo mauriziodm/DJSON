@@ -1247,11 +1247,14 @@ begin
       LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
     end;
     // Add the items TypeName (base on the first element of the list only
-    if  (not LValueQualifiedTypeName.IsEmpty) then
-    begin
-      AJSONWriter.WritePropertyName(DJ_VALUE);
-      AJSONWriter.WriteValue(LValueQualifiedTypeName);
-    end;
+    // Omar Bossoni - Modifica effettuata nel caso la lista sia vuota
+    AJSONWriter.WritePropertyName(DJ_VALUE);
+    if not LValueQualifiedTypeName.IsEmpty then
+      AJSONWriter.WriteValue(LValueQualifiedTypeName)
+    else
+      AJSONWriter.WriteValue('');
+
+
     // Add the "items" property
     AJSONWriter.WritePropertyName('items');
   end;

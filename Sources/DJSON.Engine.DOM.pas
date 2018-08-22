@@ -990,8 +990,13 @@ begin
   begin
     LResultJSONObj := TJSONObject.Create;
     LResultJSONObj.AddPair(DJ_TYPENAME, ADuckList.DuckObjQualifiedName);
+
+    // Omar Bossoni - Modifica effettuata nel caso la lista sia vuota
     if not LValueQualifiedTypeName.IsEmpty then
-      LResultJSONObj.AddPair(DJ_VALUE, LValueQualifiedTypeName);
+      LResultJSONObj.AddPair(DJ_VALUE, LValueQualifiedTypeName)
+    else
+      LResultJSONObj.AddPair(DJ_VALUE, '');
+
     LResultJSONObj.AddPair('items', LJSONArray);
     ResultJSONValue := LResultJSONObj;
   end

@@ -1197,8 +1197,13 @@ begin
   begin
     LResultJSONObj := TJSONObject.Create;
     LResultJSONObj.S[DJ_TYPENAME] := ADuckList.DuckObjQualifiedName;
+
+    // Omar Bossoni - Modifica effettuata nel caso la lista sia vuota
     if not LValueQualifiedTypeName.IsEmpty then
-      LResultJSONObj.S[DJ_VALUE] := LValueQualifiedTypeName;
+      LResultJSONObj.S[DJ_VALUE] := LValueQualifiedTypeName
+    else
+      LResultJSONObj.S[DJ_VALUE] := '';
+
     LResultJSONObj.A['items'] := LJSONArray;
     AResult.ObjectValue := LResultJSONObj;
   end
