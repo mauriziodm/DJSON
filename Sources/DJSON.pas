@@ -94,6 +94,8 @@ type
     function byFields: TdjValueDestination;
     function TypeAnnotationsON: TdjValueDestination;
     function TypeAnnotationsOFF: TdjValueDestination;
+    function TypeInfoCacheON: TdjValueDestination;
+    function TypeInfoCacheOFF: TdjValueDestination;
     function CustomSerializersON: TdjValueDestination;
     function CustomSerializersOFF: TdjValueDestination;
     function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjDOMCustomSerializerRef): TdjValueDestination; overload;
@@ -155,6 +157,8 @@ type
     function ClearCollection: TdjJSONDestination;
     function TypeAnnotationsON: TdjJSONDestination;
     function TypeAnnotationsOFF: TdjJSONDestination;
+    function TypeInfoCacheON: TdjJSONDestination;
+    function TypeInfoCacheOFF: TdjJSONDestination;
     function CustomSerializersON: TdjJSONDestination;
     function CustomSerializersOFF: TdjJSONDestination;
     function CustomSerializer(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjDOMCustomSerializerRef): TdjJSONDestination; overload;
@@ -425,6 +429,18 @@ end;
 function TdjJSONDestination.TypeAnnotationsON: TdjJSONDestination;
 begin
   FParams.TypeAnnotations := True;
+  Result := Self;
+end;
+
+function TdjJSONDestination.TypeInfoCacheOFF: TdjJSONDestination;
+begin
+  FParams.TypeInfoCache.Enabled := False;
+  Result := Self;
+end;
+
+function TdjJSONDestination.TypeInfoCacheON: TdjJSONDestination;
+begin
+  FParams.TypeInfoCache.Enabled := True;
   Result := Self;
 end;
 
@@ -904,6 +920,18 @@ end;
 function TdjValueDestination.TypeAnnotationsON: TdjValueDestination;
 begin
   FParams.TypeAnnotations := True;
+  Result := Self;
+end;
+
+function TdjValueDestination.TypeInfoCacheOFF: TdjValueDestination;
+begin
+  FParams.TypeInfoCache.Enabled := False;
+  Result := Self;
+end;
+
+function TdjValueDestination.TypeInfoCacheON: TdjValueDestination;
+begin
+  FParams.TypeInfoCache.Enabled := True;
   Result := Self;
 end;
 

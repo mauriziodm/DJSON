@@ -63,10 +63,12 @@ type
   TdjTypeInfoCache = class
   private
     FInternatContainer: TdjTypeInfoCacheInternalContainer;
+    FEnabled: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
     function Get(const AObj:TObject): TdjTypeInfoCacheItem;
+    property Enabled:Boolean read FEnabled write FEnabled;
   end;
 
 implementation
@@ -79,6 +81,7 @@ uses
 constructor TdjTypeInfoCache.Create;
 begin
   inherited;
+  FEnabled := True;
   FInternatContainer := TdjTypeInfoCacheInternalContainer.Create([doOwnsValues]);
 end;
 
@@ -90,7 +93,7 @@ end;
 
 function TdjTypeInfoCache.Get(const AObj: TObject): TdjTypeInfoCacheItem;
 begin
-  if FInternatContainer.TryGetValue(AObj.ClassName, Result) then
+  if FEnabled and FInternatContainer.TryGetValue(AObj.ClassName, Result) then
   begin
     case Result.DuckType of
       dtNone:;
