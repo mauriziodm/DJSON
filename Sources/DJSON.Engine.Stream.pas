@@ -191,8 +191,7 @@ begin
   if AParams.TypeAnnotations then
   begin
     // Get the value type name (collection TypeName already retrieved by DeserializePropField)
-    if not TryGetTypeAnnotation(AJSONReader, DJ_VALUE, LValueQualifiedTypeName) then
-      raise EdjEngineError.Create('Value type annotation expected (TypeAnnotations enabled).');
+    TryGetTypeAnnotation(AJSONReader, DJ_VALUE, LValueQualifiedTypeName);
     // The current token must be a property name named 'items'
     if not ((AJSONReader.TokenType = TJSONToken.PropertyName) and (AJSONReader.Value.AsString = 'items')) then
       raise EdjEngineError.Create('"items" property expected(TypeAnnotations enabled).');
@@ -591,8 +590,7 @@ begin
   if AParams.TypeAnnotations then
   begin
     // Get the value type name (collection TypeName already retrieved by DeserializePropField)
-    if not TryGetTypeAnnotation(AJSONReader, DJ_VALUE, LValueQualifiedTypeName) then
-      raise EdjEngineError.Create('Value type annotation expected (TypeAnnotations enabled).');
+    TryGetTypeAnnotation(AJSONReader, DJ_VALUE, LValueQualifiedTypeName);
     // The current token must be a property name named 'items'
     if not ((AJSONReader.TokenType = TJSONToken.PropertyName) and (AJSONReader.Value.AsString = 'items')) then
       raise EdjEngineError.Create('"items" property expected(TypeAnnotations enabled).');
@@ -899,17 +897,19 @@ var
 begin
   // Defaults
   LValueQualifiedTypeName := '';
+  // If the JSONValue is a TJSONNull
+  if (AJSONReader.TokenType = TJsonToken.Null) then
+    Exit(TValue.Empty);
   // If TypeAnnotations is enabled then get the "items" JSONArray containing the list items
   //  else AJSONValue is the JSONArray containing che containing the list items
   if AParams.TypeAnnotations then
   begin
     // Get the value type name (collection TypeName already retrieved by DeserializePropField)
-    if not TryGetTypeAnnotation(AJSONReader, DJ_TYPENAME, LValueQualifiedTypeName) then
-      raise EdjEngineError.Create('Value type annotation expected for TValue (TypeAnnotations enabled).');
+    TryGetTypeAnnotation(AJSONReader, DJ_TYPENAME, LValueQualifiedTypeName);
     // The current token must be a property name named "DJ_VALUE" (it is a constant)
-    if not ((AJSONReader.TokenType = TJSONToken.PropertyName) and (AJSONReader.Value.AsString = DJ_VALUE)) then
-      raise EdjEngineError.Create('DJ_VALUE (constant) property expected for TValue (TypeAnnotations enabled).');
-    AJSONReader.Read;
+    //  NB: If the original TValue is empty then the property DJ_VALUE not exixts
+    if (AJSONReader.TokenType = TJSONToken.PropertyName) and (AJSONReader.Value.AsString = DJ_VALUE) then
+      AJSONReader.Read;
   end;
   // Get values RttiType, if the RttiType is not found then check for
   //  "dsonType" attribute
@@ -919,7 +919,7 @@ begin
     raise EdjEngineError.Create('Value type not found deserializing a TValue');
   // Deserialize the value
   Result := DeserializePropField(AJSONReader, LValueRTTIType, APropField, nil, AParams);
-  // If TypeAnnotations is enabled then e "CloseObject" char is expected
+  // If TypeAnnotations is enabled then a "CloseObject" char is expected
   if CheckForEndObjectCharIfTypeAnnotations(AJSONReader, AParams) then
     raise EdjEngineError.Create('EndObject char expected for TValue (TypeAnnotations enabled).');
 end;
@@ -1246,7 +1246,6 @@ begin
       LValue := ADuckList.GetItemValue(0);
       LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
     end;
-    // Add the items TypeName (base on the first element of the list only
     if  (not LValueQualifiedTypeName.IsEmpty) then
     begin
       AJSONWriter.WritePropertyName(DJ_VALUE);

@@ -831,13 +831,11 @@ var
   LValueQualifiedTypeName: String;
   LValueRTTIType: TRttiType;
   LJSONValue: TJSONValue;
-//  LObj: TObject;
-//  LIntf: IInterface;
 begin
   // Defaults
   LValueQualifiedTypeName := '';
   // If JSONValue not assigned
-  if not Assigned(AJSONValue) then
+  if (not Assigned(AJSONValue)) or AJSONValue.Null then
     Exit(TValue.Empty);
   // If TypeAnnotations is true then get the "items" JSONArray containing che containing the list items
   //  else AJSONValue is the JSONArray containing che containing the list items

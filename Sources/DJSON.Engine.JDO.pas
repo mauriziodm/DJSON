@@ -581,7 +581,9 @@ begin
     LJSONObject := AJSONValue.ObjectValue;
     // Get the collection anche the value type name
     LListTypeName := LJSONObject.S[DJ_TYPENAME];
-    LValueQualifiedTypeName := LJSONObject.S[DJ_VALUE];
+    // If JSONValue not assigned or NULL (the DataType is jdtOvject when the value is null)
+    if not ((LJSONObject.Types[DJ_VALUE] = TJsonDataType.jdtNone) or (LJSONObject.Types[DJ_VALUE] = TJsonDataType.jdtObject)) then
+      LValueQualifiedTypeName := LJSONObject.S[DJ_VALUE];
     // Get the items array
     LJSONValue := LJSONObject.Items[LJSONObject.IndexOf('items')];
   end
@@ -821,7 +823,7 @@ begin
   // Defaults
   LValueQualifiedTypeName := '';
   // If JSONValue not assigned
-  if not Assigned(AJSONValue) then
+  if (not Assigned(AJSONValue)) or IsJsonNull(AJSONValue) then
     Exit(TValue.Empty);
   // If TypeAnnotations is true then get the "items" JSONArray containing che containing the list items
   //  else AJSONValue is the JSONArray containing che containing the list items
@@ -1199,6 +1201,8 @@ begin
     LResultJSONObj.S[DJ_TYPENAME] := ADuckList.DuckObjQualifiedName;
     if not LValueQualifiedTypeName.IsEmpty then
       LResultJSONObj.S[DJ_VALUE] := LValueQualifiedTypeName;
+//    else
+//      LResultJSONObj.O[DJ_VALUE] := nil;  // Set as NULL
     LResultJSONObj.A['items'] := LJSONArray;
     AResult.ObjectValue := LResultJSONObj;
   end

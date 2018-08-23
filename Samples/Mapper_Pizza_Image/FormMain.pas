@@ -53,6 +53,7 @@ type
     Memo1: TMemo;
     Image1: TImage;
     Image2: TImage;
+    Image4: TImage;
     Image3: TImage;
     procedure ButtonSerializeSignleObjectClick(Sender: TObject);
     procedure ButtonDeserializeSignleObjectClick(Sender: TObject);
@@ -124,20 +125,27 @@ begin
 
   LNewPizza := TPizza.Create;
   LNewPizza.ID := 1;
+  LNewPizza.Name := 'Love pizza';
+//  LNewPizza.AnyTypeValue := TValue.From<TDateTime>(Now);
+//  LNewPizza.Image.LoadFromFile('..\..\PizzaSalamePiccante.bmp');
+  Result.Add(LNewPizza);
+
+  LNewPizza := TPizza.Create;
+  LNewPizza.ID := 2;
   LNewPizza.Name := 'Capricciosa pizza';
   LNewPizza.AnyTypeValue := 'This can be any type';
   LNewPizza.Image.LoadFromFile('..\..\PizzaCapricciosa.bmp');
   Result.Add(LNewPizza);
 
   LNewPizza := TPizza.Create;
-  LNewPizza.ID := 2;
+  LNewPizza.ID := 3;
   LNewPizza.Name := 'Margherita pizza';
   LNewPizza.AnyTypeValue := 1254.5;
   LNewPizza.Image.LoadFromFile('..\..\PizzaMargherita.bmp');
   Result.Add(LNewPizza);
 
   LNewPizza := TPizza.Create;
-  LNewPizza.ID := 3;
+  LNewPizza.ID := 4;
   LNewPizza.Name := 'Pepperoni pizza';
   LNewPizza.AnyTypeValue := TValue.From<TDateTime>(Now);
   LNewPizza.Image.LoadFromFile('..\..\PizzaSalamePiccante.bmp');
@@ -147,6 +155,7 @@ begin
   Image1.Picture.Graphic := nil;
   Image2.Picture.Graphic := nil;
   Image3.Picture.Graphic := nil;
+  Image4.Picture.Graphic := nil;
 end;
 
 function TMainForm.BuildSampleObject: TPizza;
@@ -161,6 +170,7 @@ begin
   Image1.Picture.Graphic := nil;
   Image2.Picture.Graphic := nil;
   Image3.Picture.Graphic := nil;
+  Image4.Picture.Graphic := nil;
 end;
 
 procedure TMainForm.ButtonDeserializeBSONObjectListClick(Sender: TObject);
@@ -364,7 +374,8 @@ begin
     Memo1.Lines.Add('Class: ' + LPizza.ClassName);
     Memo1.Lines.Add('ID = ' +  LPizza.ID.ToString);
     Memo1.Lines.Add('Name = ' +  LPizza.Name);
-    Memo1.Lines.Add('AnyTypeValue = ' +  LPizza.AnyTypeValue.ToString + '   (' + TdjRTTI.TypeInfoToQualifiedTypeName(LPizza.AnyTypeValue.TypeInfo) + ')');
+    if not LPizza.AnyTypeValue.IsEmpty then
+      Memo1.Lines.Add('AnyTypeValue = ' +  LPizza.AnyTypeValue.ToString + '   (' + TdjRTTI.TypeInfoToQualifiedTypeName(LPizza.AnyTypeValue.TypeInfo) + ')');
   end;
   Memo1.Lines.Add('');
   Memo1.Lines.Add('---------- End deserialized --------------');
@@ -372,6 +383,7 @@ begin
   Image1.Picture.Bitmap := APizzaList[0].Image;
   Image2.Picture.Bitmap := APizzaList[1].Image;
   Image3.Picture.Bitmap := APizzaList[2].Image;
+  Image4.Picture.Bitmap := APizzaList[3].Image;
 end;
 
 procedure TMainForm.ShowSingleObjectData(APizza: TPizza);
@@ -383,7 +395,8 @@ begin
   Memo1.Lines.Add('Class: ' + APizza.ClassName);
   Memo1.Lines.Add('ID = ' +  APizza.ID.ToString);
   Memo1.Lines.Add('Name = ' +  APizza.Name);
-  Memo1.Lines.Add('AnyTypeValue = ' +  APizza.AnyTypeValue.ToString + '   (' + TdjRTTI.TypeInfoToQualifiedTypeName(APizza.AnyTypeValue.TypeInfo) + ')');
+  if not APizza.AnyTypeValue.IsEmpty then
+    Memo1.Lines.Add('AnyTypeValue = ' +  APizza.AnyTypeValue.ToString + '   (' + TdjRTTI.TypeInfoToQualifiedTypeName(APizza.AnyTypeValue.TypeInfo) + ')');
   Memo1.Lines.Add('');
   Memo1.Lines.Add('---------- End deserialized --------------');
   // Images

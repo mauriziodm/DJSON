@@ -126,9 +126,9 @@ begin
   NewPerson := TPerson.Create;
   NewPerson.ID := 1;
   NewPerson.Name := 'Maurizio Del Magno';
-  NewPerson.Phones.Add(   'Home',   TPhoneNumber.Create(1, '0541/605905', 1)   );
-  NewPerson.Phones.Add(   'Mobile', TPhoneNumber.Create(2, '329/0583381', 1)   );
-  NewPerson.Phones.Add(   'Office', TPhoneNumber.Create(3, '0541/694750', 1)   );
+//  NewPerson.Phones.Add(   'Home',   TPhoneNumber.Create(1, '0541/605905', 1)   );
+//  NewPerson.Phones.Add(   'Mobile', TPhoneNumber.Create(2, '329/0583381', 1)   );
+//  NewPerson.Phones.Add(   'Office', TPhoneNumber.Create(3, '0541/694750', 1)   );
   Result.Add(NewPerson);
 
   NewPerson := TPerson.Create;

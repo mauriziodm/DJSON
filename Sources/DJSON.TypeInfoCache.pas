@@ -96,11 +96,11 @@ begin
   if FEnabled and FInternatContainer.TryGetValue(AObj.ClassName, Result) then
   begin
     case Result.DuckType of
-      dtNone:;
       dtList: Result.DuckListWrapper.SetObject(AObj);
       dtStreamable: Result.DuckStreamableWrapper.SetObject(AObj);
       dtDictionary: Result.DuckDictionaryWrapper.SetObject(AObj);
       dtStream:;
+      dtNone:;
     end;
   end
   else
@@ -119,6 +119,7 @@ begin
       Result.DuckType := TdjDuckType.dtStreamable
     else
       Result.DuckType := TdjDuckType.dtNone;
+    // Add to the container if enabled
     if FEnabled then
       FInternatContainer.Add(AObj.ClassName, Result);
   end;

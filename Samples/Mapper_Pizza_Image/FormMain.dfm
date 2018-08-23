@@ -403,6 +403,16 @@ object MainForm: TMainForm
         ExplicitLeft = 72
         ExplicitTop = 339
       end
+      object Image4: TImage
+        Left = 0
+        Top = 555
+        Width = 185
+        Height = 185
+        Align = alTop
+        Stretch = True
+        ExplicitLeft = 40
+        ExplicitTop = 571
+      end
       object Image3: TImage
         Left = 0
         Top = 370
@@ -410,8 +420,7 @@ object MainForm: TMainForm
         Height = 185
         Align = alTop
         Stretch = True
-        ExplicitLeft = 72
-        ExplicitTop = 478
+        ExplicitTop = 364
       end
     end
     object Memo1: TMemo

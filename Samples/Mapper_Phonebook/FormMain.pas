@@ -178,9 +178,9 @@ begin
   NewPerson.BirthDate := StrToDate('22/10/1970');
   NewPerson.BirthTime := StrToTime('20:31');
   NewPerson.LastEdit := Now;
-  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(1, '0541/605905', 1)   );
-  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(2, '329/0583381', 1)   );
-  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(3, '0541/694750', 1)   );
+//  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(1, '0541/605905', 1)   );
+//  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(2, '329/0583381', 1)   );
+//  NewPerson.PhoneNumbers.Add(   TPhoneNumber.Create(3, '0541/694750', 1)   );
   NewPerson.Note.Add('Nota 1');
   NewPerson.Note.Add('Nota 2');
   Result.Add(NewPerson);

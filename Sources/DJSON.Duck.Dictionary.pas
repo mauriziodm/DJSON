@@ -70,6 +70,8 @@ type
     FCountProperty: TRttiProperty;
     FKeysEnumerator: TdjDuckDictionaryEnumerator;
     FValuesEnumerator: TdjDuckDictionaryEnumerator;
+    procedure ExtractEnumerator;
+    procedure FreeEnumerator;
   public
     class function TryCreate(const AObjAsDuck:TObject): IdjDuckDictionary;
     constructor Create(AObjAsDuck:TObject; const AKeysProperty,AValuesProperty,ACountProperty:TRTTIProperty;
@@ -122,16 +124,35 @@ end;
 
 destructor TdjDuckDictionary.Destroy;
 begin
-  if assigned(FKeysEnumerator) then
-    FKeysEnumerator.Free;
-  if assigned(FValuesEnumerator) then
-    FValuesEnumerator.Free;
+  FreeEnumerator;
   inherited;
 end;
 
 function TdjDuckDictionary.DuckObjQualifiedName: String;
 begin
   Result := FObjAsDuck.QualifiedClassName;
+end;
+
+procedure TdjDuckDictionary.ExtractEnumerator;
+var
+  LObj: TObject;
+begin
+  // Keys enumerator
+  LObj := FKeysProperty.GetValue(FObjAsDuck).AsObject;
+  LObj := TdjRTTI.Ctx.GetType(LObj.ClassInfo).GetMethod('GetEnumerator').Invoke(LObj, []).AsObject;
+  FKeysEnumerator := TdjDuckDictionaryEnumerator.Create(   LObj   );
+  // Values enumerator
+  LObj := FValuesProperty.GetValue(FObjAsDuck).AsObject;
+  LObj := TdjRTTI.Ctx.GetType(LObj.ClassInfo).GetMethod('GetEnumerator').Invoke(LObj, []).AsObject;
+  FValuesEnumerator := TdjDuckDictionaryEnumerator.Create(   LObj   );
+end;
+
+procedure TdjDuckDictionary.FreeEnumerator;
+begin
+  if assigned(FKeysEnumerator) then
+    FKeysEnumerator.Free;
+  if assigned(FValuesEnumerator) then
+    FValuesEnumerator.Free;
 end;
 
 function TdjDuckDictionary.GetCurrentKey: TValue;
@@ -189,7 +210,9 @@ end;
 
 procedure TdjDuckDictionary.SetObject(const AObj: TObject);
 begin
+  FreeEnumerator;
   FObjAsDuck := AObj;
+  ExtractEnumerator;
 end;
 
 class function TdjDuckDictionary.TryCreate(const AObjAsDuck: TObject): IdjDuckDictionary;

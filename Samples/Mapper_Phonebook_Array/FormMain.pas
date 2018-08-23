@@ -123,9 +123,9 @@ begin
   SetLength(Result, 3);
 
   NewPerson := TPerson.Create(1, 'Maurizio Del Magno');
-  NewPerson.AddNumTel(   TNumTel.Create(1, '0541/605905', 1)   );
-  NewPerson.AddNumTel(   TNumTel.Create(2, '329/0583381', 1)   );
-  NewPerson.AddNumTel(   TNumTel.Create(3, '0541/694750', 1)   );
+//  NewPerson.AddNumTel(   TNumTel.Create(1, '0541/605905', 1)   );
+//  NewPerson.AddNumTel(   TNumTel.Create(2, '329/0583381', 1)   );
+//  NewPerson.AddNumTel(   TNumTel.Create(3, '0541/694750', 1)   );
   Result[0] := NewPerson;
 
   NewPerson := TPerson.Create(2, 'Daniele Teti');
