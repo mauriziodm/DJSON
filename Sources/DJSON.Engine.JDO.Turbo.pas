@@ -251,7 +251,7 @@ begin
   for LProperty in LProperties do
   begin
     // Check to continue or not
-    if (not TdjDuckPropField.IsWritable(LProperty) and (TdjDuckPropField.RttiType(LProperty).TypeKind <> tkClass))
+    if (not TdjDuckPropField.IsWritable(LProperty) and (TdjDuckPropField.RttiType(LProperty).TypeKind <> tkClass) and (TdjDuckPropField.RttiType(LProperty).TypeKind <> tkInterface))
     or (LProperty.Name = 'FRefCount')
     or (LProperty.Name = 'RefCount')
     or TdjUtils.IsPropertyToBeIgnored(LProperty, AParams)

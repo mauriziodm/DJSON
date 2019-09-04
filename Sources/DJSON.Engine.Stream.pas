@@ -699,7 +699,7 @@ begin
     if (not Assigned(LPropField))
     or (LPropField.Name = 'FRefCount')
     or (LPropField.Name = 'RefCount')
-    or (not TdjDuckPropField.IsWritable(LPropField) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkClass))
+    or (not TdjDuckPropField.IsWritable(LPropField) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkClass) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkInterface))
     or (TdjRTTI.HasAttribute<djSkipAttribute>(LPropField))
     or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
     then

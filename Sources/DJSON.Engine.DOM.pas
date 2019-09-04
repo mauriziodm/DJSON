@@ -914,7 +914,7 @@ begin
     for LPropField in LPropsFields do
     begin
       // Check to continue or not
-      if (not TdjDuckPropField.IsWritable(LPropField) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkClass))
+      if (not TdjDuckPropField.IsWritable(LPropField) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkClass) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkInterface))
       or (TdjRTTI.HasAttribute<djSkipAttribute>(LPropField))
       or (LPropField.Name = 'FRefCount')
       or (LPropField.Name = 'RefCount')

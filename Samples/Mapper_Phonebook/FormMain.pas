@@ -101,6 +101,7 @@ type
     procedure LoadISO8601ParamsToScreen;
     function BuildMapperParams: IdjParams;
     function BuildSampleObject: TPerson;
+    function BuildSampleObjectWithoutPhones: TPerson;
     function BuildSampleList: TObjectList<TPerson>;
     procedure ShowSingleObjectData(APerson: TPerson);
     procedure ShowListData(APersonList: TObjectList<TPerson>);
@@ -228,6 +229,21 @@ begin
   Result.PhoneNumbers.Add(   TPhoneNumber.Create(1, '0541/605905', 1)   );
   Result.PhoneNumbers.Add(   TPhoneNumber.Create(2, '329/0583381', 1)   );
   Result.PhoneNumbers.Add(   TPhoneNumber.Create(3, '0541/694750', 1)   );
+
+  Result.Note.Add('Note 1');
+  Result.Note.Add('Note 2');
+end;
+
+function TMainForm.BuildSampleObjectWithoutPhones: TPerson;
+begin
+  Result := TPerson.Create(1, 'Maurizio Del Magno');
+  Result.Gender := 'M';
+  Result.Age := 18;
+  Result.NumberOfFriends := 35;
+  Result.BirthPlace := 'Riccione';
+  Result.BirthDate := StrToDate('22/10/1970');
+  Result.BirthTime := StrToTime('20:31');
+  Result.LastEdit := Now;
 
   Result.Note.Add('Note 1');
   Result.Note.Add('Note 2');
@@ -459,7 +475,7 @@ var
   LParams: IdjParams;
 begin
   LParams := BuildMapperParams;
-  LPerson := BuildSampleObject;
+  LPerson := BuildSampleObjectWithoutPhones;
   try
     Memo1.Clear;
     Memo1.Lines.Text := dj.From(LPerson, LParams).ToJSON;
