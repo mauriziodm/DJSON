@@ -1246,11 +1246,9 @@ begin
       LValue := ADuckList.GetItemValue(0);
       LValueQualifiedTypeName := TdjRTTI.TypeInfoToQualifiedTypeName(LValue.TypeInfo);
     end;
-    if  (not LValueQualifiedTypeName.IsEmpty) then
-    begin
-      AJSONWriter.WritePropertyName(DJ_VALUE);
-      AJSONWriter.WriteValue(LValueQualifiedTypeName);
-    end;
+    // Add the Items TypeName
+    AJSONWriter.WritePropertyName(DJ_VALUE);
+    AJSONWriter.WriteValue(LValueQualifiedTypeName);
     // Add the "items" property
     AJSONWriter.WritePropertyName('items');
   end;

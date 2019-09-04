@@ -1198,11 +1198,8 @@ begin
   if AParams.TypeAnnotations then
   begin
     LResultJSONObj := TJSONObject.Create;
-    LResultJSONObj.S[DJ_TYPENAME] := ADuckList.DuckObjQualifiedName;
-    if not LValueQualifiedTypeName.IsEmpty then
-      LResultJSONObj.S[DJ_VALUE] := LValueQualifiedTypeName;
-//    else
-//      LResultJSONObj.O[DJ_VALUE] := nil;  // Set as NULL
+    LResultJSONObj.S[DJ_TYPENAME] := ADuckList.DuckObjQualifiedName;  // List typename
+    LResultJSONObj.S[DJ_VALUE] := LValueQualifiedTypeName;  // Items typename
     LResultJSONObj.A['items'] := LJSONArray;
     AResult.ObjectValue := LResultJSONObj;
   end

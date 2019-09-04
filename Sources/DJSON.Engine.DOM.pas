@@ -987,9 +987,8 @@ begin
   if AParams.TypeAnnotations then
   begin
     LResultJSONObj := TJSONObject.Create;
-    LResultJSONObj.AddPair(DJ_TYPENAME, ADuckList.DuckObjQualifiedName);
-    if not LValueQualifiedTypeName.IsEmpty then
-      LResultJSONObj.AddPair(DJ_VALUE, LValueQualifiedTypeName);
+    LResultJSONObj.AddPair(DJ_TYPENAME, ADuckList.DuckObjQualifiedName);  // List typename
+    LResultJSONObj.AddPair(DJ_VALUE, LValueQualifiedTypeName);  // Items typename
     LResultJSONObj.AddPair('items', LJSONArray);
     ResultJSONValue := LResultJSONObj;
   end
