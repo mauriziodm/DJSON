@@ -69,6 +69,8 @@ type
     class function FromJson(const AJSONText:String; const AParams:IdjParams=nil): TdjJSONDestination;
     class function FromBson(const ABytesStream:TStream; const AParams:IdjParams=nil): TdjBSONDestination; overload;
     class function FromBson(const ABytes:TBytes; const AParams:IdjParams=nil): TdjBSONDestination; overload;
+    // Other
+    class function Pretty(const AJSONText: String): String;
   end;
 
   TdjValueDestination = class
@@ -212,7 +214,7 @@ implementation
 
 uses
   DJSON.Factory, DJSON.Utils.RTTI, DJSON.Engine.DOM, DJSON.Constants, DJSON.Exceptions,
-  DJSON.Engine.Stream, DJSON.Engine.JDO, DJSON.Engine.Stream.BSON;
+  DJSON.Engine.Stream, DJSON.Engine.JDO, DJSON.Engine.Stream.BSON, DJSON.Utils;
 
 { dj }
 
@@ -274,6 +276,11 @@ class function dj.FromJson(const AJSONText: String;
   const AParams: IdjParams): TdjJSONDestination;
 begin
   Result := TdjJSONDestination.Create(AJSONText, AParams);
+end;
+
+class function dj.Pretty(const AJSONText: String): String;
+begin
+  Result := TdjUtils.Pretty(AJSONText);
 end;
 
 class function dj.From(const APointer: Pointer;

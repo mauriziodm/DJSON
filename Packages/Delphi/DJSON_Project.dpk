@@ -28,7 +28,8 @@ package DJSON_Project;
 {$IMPLICITBUILD ON}
 
 requires
-  rtl;
+  rtl,
+  RESTComponents;
 
 contains
   DJSON.Attributes in '..\..\Sources\DJSON.Attributes.pas',

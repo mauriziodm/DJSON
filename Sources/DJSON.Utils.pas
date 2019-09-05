@@ -67,6 +67,8 @@ type
     class function ISOStrToDateTime(const DateTimeAsString:string; const AParams:IdjParams): TDateTime;
     class function ISOStrToDate(const DateAsString:string; const AParams:IdjParams): TDate;
     class function ISOStrToTime(const TimeAsString:string; const AParams:IdjParams): TTime;
+
+    class function Pretty(const AJSON: String): String;
   end;
 
 implementation
@@ -75,7 +77,7 @@ uses
   System.DateUtils,
   System.TypInfo,
   DJSON.Attributes,
-  DJSON.Utils.RTTI;
+  DJSON.Utils.RTTI, System.JSON, REST.Json;
 
 { TdjUtils }
 
@@ -265,6 +267,18 @@ begin
     if SameText(APropField.Name, LIgnoredProperty) then
       Exit(True);
   Exit(False);
+end;
+
+class function TdjUtils.Pretty(const AJSON: String): String;
+var
+  JVal: TJSONValue;
+begin
+  JVal := TJSONObject.ParseJSONValue(AJSON);
+  try
+    Result := TJSON.Format(JVal);
+  finally
+    JVal.Free;
+  end;
 end;
 
 end.
