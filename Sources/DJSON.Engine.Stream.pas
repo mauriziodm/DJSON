@@ -1014,16 +1014,18 @@ var
   AChildObj: TObject;
   LTypeInfoCacheItem: TdjTypeInfoCacheItem;
 begin
-  // Get the child object
   AChildObj := AValue.AsObject;
+  if not Assigned(AChildObj) then
+  begin
+    AJSONWriter.WriteNull;
+    Exit;
+  end;
   LTypeInfoCacheItem := AParams.TypeInfoCache.Get(AValue.AsObject);
   case LTypeInfoCacheItem.DuckType of
     dtNone:
     begin
       if Assigned(AChildObj) then
-        SerializeObject(AJSONWriter, AChildObj, AParams)
-      else
-        AJSONWriter.WriteNull;
+        SerializeObject(AJSONWriter, AChildObj, AParams);
     end;
     dtList:
       SerializeList(AJSONWriter, LTypeInfoCacheItem.DuckListWrapper, APropField, AParams);

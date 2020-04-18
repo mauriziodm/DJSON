@@ -1077,17 +1077,15 @@ var
   AChildObj: TObject;
   LTypeInfoCacheItem: TdjTypeInfoCacheItem;
 begin
-  // Get the child object
-{ TODO : Se AChildObj = nil da un AV error }
   AChildObj := AValue.AsObject;
+  if not Assigned(AChildObj) then
+    Exit(TJSONNull.Create);
   LTypeInfoCacheItem := AParams.TypeInfoCache.Get(AValue.AsObject);
   case LTypeInfoCacheItem.DuckType of
     dtNone:
     begin
       if Assigned(AChildObj) then
-        Result := SerializeObject(AChildObj, AParams)
-      else
-        Result := TJSONNull.Create;
+        Result := SerializeObject(AChildObj, AParams);
     end;
     dtList:
       SerializeList(LTypeInfoCacheItem.DuckListWrapper, APropField, AParams, Result);

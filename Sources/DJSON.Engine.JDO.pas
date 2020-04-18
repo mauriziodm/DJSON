@@ -958,13 +958,13 @@ var
   AChildObj: TObject;
   LTypeInfoCacheItem: TdjTypeInfoCacheItem;
 begin
-  // Get the child object
   AChildObj := AValue.AsObject;
+  if not Assigned(AChildObj) then
+    Exit;
   LTypeInfoCacheItem := AParams.TypeInfoCache.Get(AValue.AsObject);
   case LTypeInfoCacheItem.DuckType of
     dtNone:
-      if Assigned(AChildObj) then
-        AResult.ObjectValue := SerializeObject(AChildObj, AParams);
+      AResult.ObjectValue := SerializeObject(AChildObj, AParams);
     dtList:
       SerializeList(AResult, LTypeInfoCacheItem.DuckListWrapper, APropField, AParams);
     dtStreamable:
