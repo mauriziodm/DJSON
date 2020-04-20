@@ -283,9 +283,9 @@ begin
     begin
       if AJSONValue is TJSONObject then
         AChildObj := DeserializeObject(TJSONObject(AJSONValue), AChildObj, AParams)
-      // If the JSONValue is a TJSONNull
+      // If the JSONValue is a TJSONNull (Mauri 19/04/2020: Non fa più il FreeAndNil perchè in alcuni casi era un problema)
       else if (AJSONValue = nil) or (AJSONValue is TJSONNull) then
-        FreeAndNil(AChildObj)
+//        FreeAndNil(AChildObj)
       // Raise an exception
       else
         raise EdjEngineError.Create('Deserialize Class: Cannot deserialize as object.');

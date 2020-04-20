@@ -306,9 +306,9 @@ begin
     begin
       if (AJSONReader.TokenType <> TJsonToken.Null) then
         DeserializeObject(AJSONReader, AChildObj, AParams)
-      // If the JSONValue is a TJSONNull
+      // If the JSONValue is a TJSONNull (Mauri 19/04/2020: Non fa più il FreeAndNil perchè in alcuni casi era un problema)
       else if (AJSONReader.TokenType = TJsonToken.Null) then
-        FreeAndNil(AChildObj)
+//        FreeAndNil(AChildObj)
       // Raise an exception
       else
         raise EdjEngineError.Create('Deserialize Class: Cannot deserialize as object.');

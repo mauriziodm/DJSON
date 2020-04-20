@@ -281,8 +281,9 @@ begin
   case LTypeInfoCacheItem.DuckType of
     dtNone:
     begin
+      // If the JSONValue is a TJSONNull (Mauri 19/04/2020: Non fa più il FreeAndNil perchè in alcuni casi era un problema)
       if (AJSONValue = nil) or (AJSONValue.Typ = TJsonDataType.jdtNone) then
-        FreeAndNil(AChildObj)
+//        FreeAndNil(AChildObj)
       else if AJSONValue.Typ = TJsonDataType.jdtObject then
         AChildObj := DeserializeObject(AJSONValue.ObjectValue, AChildObj, AParams)
       else
