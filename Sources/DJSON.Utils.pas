@@ -275,7 +275,8 @@ var
 begin
   JVal := TJSONObject.ParseJSONValue(AJSON);
   try
-    Result := TJSON.Format(JVal);
+//    Result := TJSON.Format(JVal); // NB: Deprecated
+    Result := JVal.Format(2);
   finally
     JVal.Free;
   end;

@@ -473,12 +473,14 @@ procedure TMainForm.ButtonSerializeSignleObjectClick(Sender: TObject);
 var
   LPerson: TPerson;
   LParams: IdjParams;
+  LTempJSON: String;
 begin
   LParams := BuildMapperParams;
   LPerson := BuildSampleObjectWithoutPhones;
   try
+    LTempJSON := dj.From(LPerson, LParams).ToJSON;
     Memo1.Clear;
-    Memo1.Lines.Text := dj.From(LPerson, LParams).ToJSON;
+    Memo1.Lines.Text := dj.Pretty(LTempJSON);
   finally
     LPerson.Free;
   end;

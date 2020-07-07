@@ -362,8 +362,8 @@ var
   LJSONArray, LTmpKeyJSONArray: TJSONArray;
   LKey, LValue: TValue;
 begin
-  LKeyJSONValue := nil;
-  LValueJSONValue := nil;
+//  LKeyJSONValue := nil;  // Hint prevention
+//  LValueJSONValue := nil;  // Hint prevention
   LTmpKeyJSONArray := nil;
   // Checks
   if (not Assigned(AJSONValue))
@@ -1039,7 +1039,7 @@ begin
   // Init
   LKeyQualifiedTypeName   := '';
   LValueQualifiedTypeName := '';
-  LJSONValue := nil;
+//  LJSONValue := nil;  NB: Hint prevention
   // Create the Items JSON array
   LJSONArray := TJSONArray.Create;
   // Loop

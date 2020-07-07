@@ -634,7 +634,7 @@ var
   ResultValue: TValue;
 begin
   try
-    Result := nil;
+//    Result := nil;  NB: Hint prevention
     ResultValue := FParams.GetEngineClass.Deserialize(FJSONText, nil, nil, nil, FParams);
     Result := ResultValue.AsObject;
   finally
@@ -1052,7 +1052,7 @@ var
   ResultValue: TValue;
 begin
   try
-    Result := nil;
+//    Result := nil;  NB: Hint prevention
     ResultValue := TdjEngineStreamBSON.Deserialize(FBytesStream, nil, nil, nil, FParams);
     Result := ResultValue.AsObject;
   finally
