@@ -7903,3 +7903,4 @@ initialization
   JSONFormatSettings.DecimalSeparator := '.';
 
 end.
+

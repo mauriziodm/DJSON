@@ -669,7 +669,7 @@ begin
   if LValueQualifiedTypeName.IsEmpty then
     LValueType := AValueType
   else
-    LValueType := TdjRTTI.QualifiedTypeNameToRttiType(LValueQualifiedTypeName);
+    LValueType := TdjRTTI.QualifiedTypeNameToRttiTypeWithDefault(LValueQualifiedTypeName, AValueType);
   // ---------------------------------------------------------------------------
   // If a custom serializer exists for the current type then use it
   if  AParams.EnableCustomSerializers

@@ -60,6 +60,7 @@ type
     class function TypeInfoToQualifiedTypeName(const ATypeInfo: PTypeInfo): String; static;
     class function TypeInfoToRttiType(const ATypeInfo: PTypeInfo): TRttiType; static;
     class function QualifiedTypeNameToRttiType(const AQualifiedTypeName:String): TRttiType; static;
+    class function QualifiedTypeNameToRttiTypeWithDefault(const AQualifiedTypeName:String; const ADefault: TRttiType): TRttiType; static;
     class function CreateObject(ARttiType: TRttiType): TObject; overload; static;
     class function CreateObject(const AQualifiedClassName: string): TObject; overload; static;
     class function HasAttribute<T: class>(const ARTTIMember: TRttiNamedObject): boolean; overload;
@@ -205,6 +206,13 @@ class function TdjRTTI.QualifiedTypeNameToRttiType(
   const AQualifiedTypeName: String): TRttiType;
 begin
   Result := Ctx.FindType(AQualifiedTypeName);
+end;
+
+class function TdjRTTI.QualifiedTypeNameToRttiTypeWithDefault(const AQualifiedTypeName: String; const ADefault: TRttiType): TRttiType;
+begin
+  Result := Ctx.FindType(AQualifiedTypeName);
+  if Result = nil then
+    Result := ADefault;
 end;
 
 initialization

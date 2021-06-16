@@ -69,8 +69,8 @@ type
     FQualifiedName: String;
   public
     constructor Create; overload;  // For initialization
-    constructor Create(const Value: TClass); overload;  // Use with lists (for compatibility)
-    constructor Create(const ATypeInfo: PTypeInfo); overload;  // Use with lists
+    constructor Create(const Value: TClass); overload;
+    constructor Create(const ATypeInfo: PTypeInfo); overload;
     property QualifiedName: String read FQualifiedName;
   end;
 
