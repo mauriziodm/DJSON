@@ -351,13 +351,11 @@ type
   TdjSerializersContainerItem = class
   strict private
     FDOMSerializer: TdjDOMCustomSerializerRef;
-    FJDOSerializer: TdjJDOCustomSerializerRef;
 //    FXMLSerializer: TdjXMLCustomSerializerRef;
     FStreamSerializer: TdjStreamCustomSerializerRef;
   public
     constructor Create;
     property DOMSerializer:TdjDOMCustomSerializerRef read FDOMSerializer write FDOMSerializer;
-    property JDOSerializer:TdjJDOCustomSerializerRef read FJDOSerializer write FJDOSerializer;
 //    property XMLSerializer:TdjXMLCustomSerializerRef read FXMLSerializer write FXMLSerializer;
     property StreamSerializer:TdjStreamCustomSerializerRef read FStreamSerializer write FStreamSerializer;
   end;
@@ -370,15 +368,12 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure &Register(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjDOMCustomSerializerRef); overload;
-    procedure &Register(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjJDOCustomSerializerRef); overload;
 //    procedure &Register(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjXMLCustomSerializerRef); overload;
     procedure &Register(const ATargetTypeInfo:PTypeInfo; const ASerializer:TdjStreamCustomSerializerRef); overload;
     procedure &Register(const ATargetClass:TClass; const ASerializer:TdjDOMCustomSerializerRef); overload;
-    procedure &Register(const ATargetClass:TClass; const ASerializer:TdjJDOCustomSerializerRef); overload;
 //    procedure &Register(const ATargetClass:TClass; const ASerializer:TdjXMLCustomSerializerRef); overload;
     procedure &Register(const ATargetClass:TClass; const ASerializer:TdjStreamCustomSerializerRef); overload;
     procedure &Register<Target>(const ASerializer:TdjDOMCustomSerializerRef); overload;
-    procedure &Register<Target>(const ASerializer:TdjJDOCustomSerializerRef); overload;
 //    procedure &Register<Target>(const ASerializer:TdjXMLCustomSerializerRef); overload;
     procedure &Register<Target>(const ASerializer:TdjStreamCustomSerializerRef); overload;
     procedure Unregister(const ATargetTypeInfo:PTypeInfo); overload;
@@ -387,15 +382,12 @@ type
     function _GetSerializerItem(const ATargetTypeInfo:PTypeInfo): TdjSerializersContainerItem;
     function _Exists(const ATargetTypeInfo:PTypeInfo): Boolean;
     function Exists_DOM(const ATargetTypeInfo:PTypeInfo): Boolean; overload;
-    function Exists_JDO(const ATargetTypeInfo:PTypeInfo): Boolean; overload;
 //    function Exists_XML(const ATargetTypeInfo:PTypeInfo): Boolean; overload;
     function Exists_Stream(const ATargetTypeInfo:PTypeInfo): Boolean; overload;
     function Exists_DOM(const ATargetClass:TClass): Boolean; overload;
-    function Exists_JDO(const ATargetClass:TClass): Boolean; overload;
 //    function Exists_XML(const ATargetClass:TClass): Boolean; overload;
     function Exists_Stream(const ATargetClass:TClass): Boolean; overload;
     function Exists_DOM<T>: Boolean; overload;
-    function Exists_JDO<T>: Boolean; overload;
 //    function Exists_XML<T>: Boolean; overload;
     function Exists_Stream<T>: Boolean; overload;
   end;
@@ -802,7 +794,6 @@ constructor TdjSerializersContainerItem.Create;
 begin
   inherited Create;
   FDOMSerializer := nil;
-  FJDOSerializer := nil;
 //  FXMLSerializer := nil;
   FStreamSerializer := nil;
 end;
@@ -835,23 +826,6 @@ end;
 function TdjSerializersContainer.Exists_DOM<T>: Boolean;
 begin
   Result := Self.Exists_DOM(TypeInfo(T));
-end;
-
-function TdjSerializersContainer.Exists_JDO(
-  const ATargetClass: TClass): Boolean;
-begin
-  Result := Self.Exists_JDO(ATargetClass.ClassInfo);
-end;
-
-function TdjSerializersContainer.Exists_JDO(
-  const ATargetTypeInfo: PTypeInfo): Boolean;
-begin
-  Result := _Exists(ATargetTypeInfo) and Assigned(_GetSerializerItem(ATargetTypeInfo).JDOSerializer);
-end;
-
-function TdjSerializersContainer.Exists_JDO<T>: Boolean;
-begin
-  Result := Self.Exists_JDO(TypeInfo(T));
 end;
 
 function TdjSerializersContainer.Exists_Stream(
@@ -942,27 +916,9 @@ end;
 //end;
 
 procedure TdjSerializersContainer.Register(const ATargetClass: TClass;
-  const ASerializer: TdjJDOCustomSerializerRef);
-begin
-  Self.Register(ATargetClass.ClassInfo, ASerializer);
-end;
-
-procedure TdjSerializersContainer.Register(const ATargetTypeInfo: PTypeInfo;
-  const ASerializer: TdjJDOCustomSerializerRef);
-begin
-  Self._GetOrCreateSerializersContainerItem(ATargetTypeInfo).JDOSerializer := ASerializer;
-end;
-
-procedure TdjSerializersContainer.Register(const ATargetClass: TClass;
   const ASerializer: TdjStreamCustomSerializerRef);
 begin
   Self.Register(ATargetClass.ClassInfo, ASerializer);
-end;
-
-procedure TdjSerializersContainer.Register<Target>(
-  const ASerializer: TdjJDOCustomSerializerRef);
-begin
-  Self.Register(TypeInfo(Target), ASerializer);
 end;
 
 //procedure TdjSerializersContainer.Register<Target>(

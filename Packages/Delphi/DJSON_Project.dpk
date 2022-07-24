@@ -48,11 +48,8 @@ contains
   DJSON.Duck.Interfaces in '..\..\Sources\DJSON.Duck.Interfaces.pas',
   DJSON.Exceptions in '..\..\Sources\DJSON.Exceptions.pas',
   DJSON.Engine.Stream in '..\..\Sources\DJSON.Engine.Stream.pas',
-  JsonDataObjects in '..\..\Sources\JsonDataObjects.pas',
-  DJSON.Engine.JDO in '..\..\Sources\DJSON.Engine.JDO.pas',
   DJSON.TypeInfoCache in '..\..\Sources\DJSON.TypeInfoCache.pas',
   DJSON.Engine.Stream.BSON in '..\..\Sources\DJSON.Engine.Stream.BSON.pas',
-  DJSON.ISO8601Processor in '..\..\Sources\DJSON.ISO8601Processor.pas',
-  DJSON.Engine.JDO.Turbo in '..\..\Sources\DJSON.Engine.JDO.Turbo.pas';
+  DJSON.ISO8601Processor in '..\..\Sources\DJSON.ISO8601Processor.pas';
 
 end.

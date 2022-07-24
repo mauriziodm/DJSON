@@ -102,9 +102,6 @@ type
   // djSerializerDOM
   djSerializerDOMAttribute = class(djSerializerAttribute<TdjDOMCustomSerializerRef>)
   end;
-  // djSerializerJDO
-  djSerializerJDOAttribute = class(djSerializerAttribute<TdjJDOCustomSerializerRef>)
-  end;
   // djSerializerXML
 //  djSerializerXMLAttribute = class(djSerializerAttribute<TdjXMLCustomSerializerRef>)
 //  end;

@@ -44,8 +44,7 @@ uses
   System.Rtti,
   System.JSON,
   System.JSON.Writers,
-  System.JSON.Readers,
-  JsonDataObjects;
+  System.JSON.Readers;
 
 type
   TdjDOMCustomSerializerRef = class of TdjDOMCustomSerializer;
@@ -54,15 +53,6 @@ type
   public
     class function Serialize(const AValue: TValue): TJSONValue; virtual;
     class function Deserialize(const AJSONValue: TJSONValue; const AExistingValue: TValue): TValue; virtual;
-    class function isTypeNotificationCompatible: Boolean; virtual;
-  end;
-
-  TdjJDOCustomSerializerRef = class of TdjJDOCustomSerializer;
-
-  TdjJDOCustomSerializer = class abstract
-  public
-    class procedure Serialize(const AJSONValue: PJsonDataValue; const AValue: TValue); virtual;
-    class function Deserialize(const AJSONValue: PJsonDataValue; const AExistingValue: TValue): TValue; virtual;
     class function isTypeNotificationCompatible: Boolean; virtual;
   end;
 
@@ -121,25 +111,6 @@ begin
 end;
 
 class procedure TdjStreamCustomSerializer.Serialize(const AJSONWriter: TJSONWriter; const AValue: TValue);
-begin
-  // None
-end;
-
-{ TdjJDOCustomSerializer }
-
-class function TdjJDOCustomSerializer.Deserialize(const AJSONValue: PJsonDataValue; const AExistingValue: TValue): TValue;
-begin
-  // None
-  Result := nil;
-end;
-
-class function TdjJDOCustomSerializer.isTypeNotificationCompatible: Boolean;
-begin
-  // TypeNotification not compatible by default
-  Result := False;
-end;
-
-class procedure TdjJDOCustomSerializer.Serialize(const AJSONValue: PJsonDataValue; const AValue: TValue);
 begin
   // None
 end;
