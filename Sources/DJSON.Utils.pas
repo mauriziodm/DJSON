@@ -263,6 +263,10 @@ class function TdjUtils.IsPropertyToBeIgnored(
 var
   LIgnoredProperty: String;
 begin
+  if (TdjDuckPropField.RttiType(APropField).Name = 'TioObjStatus') and AParams.IgnoreObjStatus then
+    Exit(True);
+  if Length(AParams.IgnoredProperties) = 0 then
+    Exit(False);
   for LIgnoredProperty in AParams.IgnoredProperties do
     if SameText(APropField.Name, LIgnoredProperty) then
       Exit(True);

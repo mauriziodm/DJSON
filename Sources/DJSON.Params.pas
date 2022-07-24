@@ -98,6 +98,10 @@ type
     procedure SetTypeAnnotations(const AValue: Boolean);
     function GetTypeAnnotations: Boolean;
     property TypeAnnotations: Boolean read GetTypeAnnotations write SetTypeAnnotations;
+    // IgnoreObjStatus
+    procedure SetIgnoreObjStatus(const AValue: Boolean);
+    function GetIgnoreObjStatus: Boolean;
+    property IgnoreObjStatus: Boolean read GetIgnoreObjStatus write SetIgnoreObjStatus;
     // IgnoredProperties
     procedure SetIgnoredProperties(const AValue: TdjIgnoredProperties);
     function GetIgnoredProperties: TdjIgnoredProperties;
@@ -234,6 +238,7 @@ type
     FISO8601Processor: TdjISO8601Processor;
     FClearCollection: Boolean;
     FPropInfoCache: TdjPropInfoCache;
+    FIgnoreObjStatus: Boolean;
     // Engine (No property)
     function GetEngineClass: TdjEngineRef;
     // EngineType
@@ -251,6 +256,9 @@ type
     // DataTypesAnnotation
     procedure SetTypeAnnotations(const AValue: Boolean);
     function GetTypeAnnotations: Boolean;
+    // IgnoreObjStatus
+    procedure SetIgnoreObjStatus(const AValue: Boolean);
+    function GetIgnoreObjStatus: Boolean;
     // IgnoredProperties
     procedure SetIgnoredProperties(const AValue: TdjIgnoredProperties);
     function GetIgnoredProperties: TdjIgnoredProperties;
@@ -426,6 +434,7 @@ begin
   SetDateTimeFormat(TdjDateTimeFormat.dfISO8601);  // Use the setter
   FClearCollection := False;
   FPropInfoCache := TdjPropInfoCache.Create;
+  FIgnoreObjStatus := False;
 end;
 
 destructor TdjParams.Destroy;
@@ -549,6 +558,11 @@ end;
 function TdjParams.GetIgnoredProperties: TdjIgnoredProperties;
 begin
   Result := FIgnoredProperties;
+end;
+
+function TdjParams.GetIgnoreObjStatus: Boolean;
+begin
+  Result := FIgnoreObjStatus;
 end;
 
 function TdjParams.GetISO8601Processor: PdjISO8601Processor;
@@ -729,6 +743,11 @@ end;
 procedure TdjParams.SetIgnoredProperties(const AValue: TdjIgnoredProperties);
 begin
   FIgnoredProperties := AValue;
+end;
+
+procedure TdjParams.SetIgnoreObjStatus(const AValue: Boolean);
+begin
+  FIgnoreObjStatus := AValue;
 end;
 
 procedure TdjParams.SetItemsKeyDefaultQualifiedName(const AValue: String);

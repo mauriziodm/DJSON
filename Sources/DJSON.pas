@@ -66,7 +66,8 @@ type
     class function From(const AInterface:IInterface; const AParams:IdjParams=nil): TdjValueDestination; overload;
     class function From(const APointer: Pointer; const ATypeInfo: PTypeInfo; const AParams:IdjParams=nil): TdjValueDestination; overload;
     class function From<T>(const APointer: Pointer; const AParams:IdjParams=nil): TdjValueDestination; overload;
-    class function FromJson(const AJSONText:String; const AParams:IdjParams=nil): TdjJSONDestination;
+    class function FromJson(const AJSONText:String; const AParams:IdjParams=nil): TdjJSONDestination; overload;
+    class function FromJson(const AJSONValue:TJSONValue; const AParams:IdjParams=nil): TdjJSONDestination; overload;
     class function FromBson(const ABytesStream:TStream; const AParams:IdjParams=nil): TdjBSONDestination; overload;
     class function FromBson(const ABytes:TBytes; const AParams:IdjParams=nil): TdjBSONDestination; overload;
     // Other
@@ -81,10 +82,12 @@ type
     constructor Create(const AValue: TValue; const AParams:IdjParams);
     // Destinations
     function ToJson: String;
+    function ToJsonValue: TJSONValue;
     function ToBsonAsStream: TBytesStream;
     function ToBsonAsBytes: TBytes;
     // Params
     function Params(const AParams:IdjParams): TdjValueDestination;
+    function IgnoreObjStatus: TdjValueDestination;
     function ItemsOfType(const AValueType: PTypeInfo): TdjValueDestination; overload;
     function ItemsOfType(const AKeyType, AValueType: PTypeInfo): TdjValueDestination; overload;
     function ItemsOfType<Value>: TdjValueDestination; overload;
@@ -148,6 +151,7 @@ type
     procedure &To(const AInterface: IInterface); overload;
     // Params
     function Params(const AParams:IdjParams): TdjJSONDestination;
+    function IgnoreObjStatus: TdjJSONDestination;
     function ItemsOfType(const AValueType: PTypeInfo): TdjJSONDestination; overload;
     function ItemsOfType(const AKeyType, AValueType: PTypeInfo): TdjJSONDestination; overload;
     function ItemsOfType<Value>: TdjJSONDestination; overload;
@@ -270,6 +274,11 @@ class function dj.FromBson(const ABytes: TBytes;
   const AParams: IdjParams): TdjBSONDestination;
 begin
   Result := TdjBSONDestination.Create(ABytes, AParams);
+end;
+
+class function dj.FromJson(const AJSONValue: TJSONValue; const AParams: IdjParams): TdjJSONDestination;
+begin
+  Result := TdjJSONDestination.Create(AJSONValue.ToJSON, AParams);
 end;
 
 class function dj.FromJson(const AJSONText: String;
@@ -593,6 +602,12 @@ begin
   Result := Self;
 end;
 
+function TdjJSONDestination.IgnoreObjStatus: TdjJSONDestination;
+begin
+  FParams.IgnoreObjStatus := True;
+  Result := Self;
+end;
+
 function TdjJSONDestination.ItemsOfType(const AKeyType,
   AValueType: PTypeInfo): TdjJSONDestination;
 begin
@@ -773,6 +788,12 @@ begin
   Result := Self;
 end;
 
+function TdjValueDestination.IgnoreObjStatus: TdjValueDestination;
+begin
+  FParams.IgnoreObjStatus := True;
+  Result := Self;
+end;
+
 function TdjValueDestination.ItemsOfType(const AKeyType,
   AValueType: PTypeInfo): TdjValueDestination;
 begin
@@ -913,6 +934,16 @@ function TdjValueDestination.ToJSON: String;
 begin
   try
     Result := FParams.GetEngineClass.Serialize(FValue, nil, FParams);
+  finally
+    Self.Free;
+  end;
+end;
+
+function TdjValueDestination.ToJsonValue: TJSONValue;
+begin
+  try
+    // Note: this is compatible only with TdjEngineDOM
+    Result := TdjEngineDOM.SerializeToJsonValue(FValue, nil, FParams);
   finally
     Self.Free;
   end;
