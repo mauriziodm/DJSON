@@ -49,7 +49,8 @@ uses
 
 type
 
-  TdjEngine = (eDelphiDOM, eDelphiStream, eJDO, eTurboJDO);
+//  TdjEngine = (eDelphiDOM, eDelphiStream, eJDO, eTurboJDO);
+  TdjEngine = (eDelphiDOM, eDelphiStream);
 
   TdjNameCase = (ncUndefinedCase, ncUpperCase, ncLowerCase);
 
