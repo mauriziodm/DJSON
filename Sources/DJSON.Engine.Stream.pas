@@ -300,6 +300,11 @@ class procedure TdjEngineStream.DeserializeClassCommon(var AChildObj: TObject;
 var
   LTypeInfoCacheItem: TdjTypeInfoCacheItem;
 begin
+  // Some checks
+//  if (AJSONValue = nil) or (AJSONValue is TJSONNull) then
+  if (AJSONReader.TokenType = TJsonToken.Null) then
+    Exit;
+  // Get the TypeInfoCache for the current object then deserialize it property
   LTypeInfoCacheItem := AParams.TypeInfoCache.Get(AChildObj);
   case LTypeInfoCacheItem.DuckType of
     dtNone:

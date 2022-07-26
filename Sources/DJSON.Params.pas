@@ -411,7 +411,10 @@ uses
 constructor TdjParams.Create;
 begin
   inherited;
+  // Set the default engine
+//  SetEngine(TdjEngine.eDelphiDOM);
   SetEngine(TdjEngine.eDelphiStream);
+
   FTypeInfoCache := TdjTypeInfoCache.Create;
   FSerializers := TdjSerializersContainer.Create;
   FTypeAnnotations := False;
