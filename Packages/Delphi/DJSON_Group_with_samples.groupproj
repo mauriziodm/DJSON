@@ -3,7 +3,7 @@
         <ProjectGuid>{069250D2-3DD8-40FE-BF38-C6851799756F}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="DJSON_RT_DoNotInstall.dproj">
+        <Projects Include="DJSON_RT.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="..\..\Tests\Tests.dproj">
@@ -21,9 +21,6 @@
         <Projects Include="..\..\Samples\Mapper_Pizza_Image\MapperPizzaImageExample.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\..\Samples\PerformanceTest\PerformanceTest.dproj">
-            <Dependencies/>
-        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -32,14 +29,14 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
-    <Target Name="DJSON_RT_DoNotInstall">
-        <MSBuild Projects="DJSON_RT_DoNotInstall.dproj"/>
+    <Target Name="DJSON_RT">
+        <MSBuild Projects="DJSON_RT.dproj"/>
     </Target>
-    <Target Name="DJSON_RT_DoNotInstall:Clean">
-        <MSBuild Projects="DJSON_RT_DoNotInstall.dproj" Targets="Clean"/>
+    <Target Name="DJSON_RT:Clean">
+        <MSBuild Projects="DJSON_RT.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="DJSON_RT_DoNotInstall:Make">
-        <MSBuild Projects="DJSON_RT_DoNotInstall.dproj" Targets="Make"/>
+    <Target Name="DJSON_RT:Make">
+        <MSBuild Projects="DJSON_RT.dproj" Targets="Make"/>
     </Target>
     <Target Name="Tests">
         <MSBuild Projects="..\..\Tests\Tests.dproj"/>
@@ -86,23 +83,14 @@
     <Target Name="MapperPizzaImageExample:Make">
         <MSBuild Projects="..\..\Samples\Mapper_Pizza_Image\MapperPizzaImageExample.dproj" Targets="Make"/>
     </Target>
-    <Target Name="PerformanceTest">
-        <MSBuild Projects="..\..\Samples\PerformanceTest\PerformanceTest.dproj"/>
-    </Target>
-    <Target Name="PerformanceTest:Clean">
-        <MSBuild Projects="..\..\Samples\PerformanceTest\PerformanceTest.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="PerformanceTest:Make">
-        <MSBuild Projects="..\..\Samples\PerformanceTest\PerformanceTest.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Build">
-        <CallTarget Targets="DJSON_RT_DoNotInstall;Tests;MapperPhonebookExample;MapperPhonebookDictionaryExample;MapperPhonebookArrayExample;MapperPizzaImageExample;PerformanceTest"/>
+        <CallTarget Targets="DJSON_RT;Tests;MapperPhonebookExample;MapperPhonebookDictionaryExample;MapperPhonebookArrayExample;MapperPizzaImageExample"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="DJSON_RT_DoNotInstall:Clean;Tests:Clean;MapperPhonebookExample:Clean;MapperPhonebookDictionaryExample:Clean;MapperPhonebookArrayExample:Clean;MapperPizzaImageExample:Clean;PerformanceTest:Clean"/>
+        <CallTarget Targets="DJSON_RT:Clean;Tests:Clean;MapperPhonebookExample:Clean;MapperPhonebookDictionaryExample:Clean;MapperPhonebookArrayExample:Clean;MapperPizzaImageExample:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="DJSON_RT_DoNotInstall:Make;Tests:Make;MapperPhonebookExample:Make;MapperPhonebookDictionaryExample:Make;MapperPhonebookArrayExample:Make;MapperPizzaImageExample:Make;PerformanceTest:Make"/>
+        <CallTarget Targets="DJSON_RT:Make;Tests:Make;MapperPhonebookExample:Make;MapperPhonebookDictionaryExample:Make;MapperPhonebookArrayExample:Make;MapperPizzaImageExample:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
