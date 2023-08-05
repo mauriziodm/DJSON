@@ -509,7 +509,7 @@ begin
     Result := TValue.From<TDate>(TdjUtils.ISOStrToDate(AJSONReader.Value.AsString, AParams))
   else
   // TDateTime (string expected)
-  if (LQualifiedTypeName = 'System.TDateTime') and (AJSONReader.TokenType = TJsonToken.String) then
+  if (LQualifiedTypeName = 'System.TDateTime') or (LQualifiedTypeName = 'iORM.CommonTypes.TioObjCreated') or (LQualifiedTypeName = 'iORM.CommonTypes.TioObjUpdated') then
     Result := TValue.From<TDateTime>(TdjUtils.ISOStrToDateTime(AJSONReader.Value.AsString, AParams))
   else
   // TTime (string expected)
@@ -698,7 +698,7 @@ begin
     or (LPropField.Name = 'FRefCount')
     or (LPropField.Name = 'RefCount')
     or (not TdjDuckPropField.IsWritable(LPropField) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkClass) and (TdjDuckPropField.RttiType(LPropField).TypeKind <> tkInterface))
-    or (AParams.IsToSkip(LPropField))
+    or (AParams.IsToBeSkipped(LPropField))
     or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
     then
       Continue;
@@ -1197,7 +1197,7 @@ begin
     else
       AJSONWriter.WriteValue(TdjUtils.ISODateToString(AValue.AsExtended, AParams));
   end
-  else if LQualifiedTypeName = 'System.TDateTime' then
+  else if (LQualifiedTypeName = 'System.TDateTime') or (LQualifiedTypeName = 'iORM.CommonTypes.TioObjCreated') or (LQualifiedTypeName = 'iORM.CommonTypes.TioObjUpdated') then
   begin
     if AValue.AsExtended = 0 then
       AJSONWriter.WriteNull
@@ -1307,7 +1307,7 @@ begin
     // Check for "DoNotSerializeAttribute" or property to ignore
     if (LPropField.Name = 'FRefCount')
     or (LPropField.Name = 'RefCount')
-    or (AParams.IsToSkip(LPropField))
+    or (AParams.IsToBeSkipped(LPropField))
     or TdjUtils.IsPropertyToBeIgnored(LPropField, AParams)
     then
       Continue;
